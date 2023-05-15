@@ -1,17 +1,16 @@
 #' @title Calculating all possible test statistic values for every strata
-#'
-#' Generate a list of lists, where elements are all possible test statistic value for every possible null hypothesis in each stratum,
+#' @description Generate a list of lists, where elements are all possible test statistic value for every possible null hypothesis in each stratum,
 #' using user-specified score function.
-#' 
+#'
 #' @param Z n-dimensional treatment assignment vector, for every units.
 #' @param Y n-dimensional observed outcome vector, for every units.
 #' @param block n-dimensional vector specifying stratum status of each units.
 #' @param c A scalar specifying the bounded null hypothesis.
-#' @param method.list.all list of every stratified rank sum statistics, where each element(list)s is method for every stratum.List of stratified rank sum statistic. The structure should be list of lists of lists. 
+#' @param method.list.all list of every stratified rank sum statistics, where each element(list)s is method for every stratum.List of stratified rank sum statistic. The structure should be list of lists of lists.
 
 
 ###################################################
-# function for calculate all possible t_s^h(z, y - z \circ xi) 
+# function for calculate all possible t_s^h(z, y - z \circ xi)
 # by choice of l_s
 # note, now score function is not neither Stephenson nor Wilcoxon.
 ###################################################
@@ -19,10 +18,10 @@
 comb_matrix_block = function(Z, Y, block, c, methods.list.all){
   if(!is.factor(block)){
     block = as.factor(block)
-  } 
+  }
   total.list = list()
   n = length(methods.list.all)
-  
+
   N = length(Y)
   B = length(levels(block))
   block.levels = levels(block)
@@ -31,11 +30,11 @@ comb_matrix_block = function(Z, Y, block, c, methods.list.all){
   for(i in 1:B){
     nb[i] = sum(block == block.levels[i])
   }
-  
-  
+
+
   for (l in 1:n){
     method.list.all = methods.list.all[[l]]
-    
+
     Tlist = list()
     for(i in 1:B){
       Zb = Z[block == block.levels[i]]
@@ -55,4 +54,4 @@ comb_matrix_block = function(Z, Y, block, c, methods.list.all){
     total.list[[l]] <- Tlist
   }
   return(total.list)
-}  
+}
