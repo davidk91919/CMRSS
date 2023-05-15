@@ -8,7 +8,7 @@
 #' @param coeflists All possible test statistics value, which will usually be a output from \emph{comb_matrix_block} function.
 #' @param p N-k, where k is given in null hypothesis as \eqn{H_{N,k,c} = \tau_{k} \leq c}.
 #' @param mu_sigma_list List of population mean / variance of every stratified rank sum statistics. This will usually be a output from \emph{mu_sigma_list} function.
-#' @param exact ## what was this?? 
+#' @param exact 
 
 ########################################################
 ### function for implement Gurobi for our ILP problem
