@@ -2,6 +2,8 @@
 #'
 #' @param methods.list lists of methods. Should be list of lists
 #' @param combine Function will be used for combining values. Maximum function is default.
+#'
+#' @export
 
 
 combine_min_stat <- function(Z, Y, k, c, methods.list = NULL,

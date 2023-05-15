@@ -7,6 +7,8 @@
 #' @param block n-dimensional vector specifying stratum status of each units.
 #' @param c A scalar specifying the bounded null hypothesis.
 #' @param method.list.all list of every stratified rank sum statistics, where each element(list)s is method for every stratum.List of stratified rank sum statistic. The structure should be list of lists of lists.
+#'
+#' @export
 
 
 ###################################################
