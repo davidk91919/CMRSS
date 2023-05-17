@@ -7,7 +7,8 @@
 #' @param score The list of possible scores of the units (under a null,
 #'  invariant under treatment assignment). If null will generate from the
 #'  passed method.list and given n, m. 
-#'
+#' @param nperm Number of random permutations
+#' @Z.perm User-specified matrix for random permutations
 
 null_dist <- function(n, m, method.list = NULL, score = NULL, 
                       nperm = 10^5, Z.perm = NULL){
