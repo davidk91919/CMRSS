@@ -4,6 +4,9 @@
 #'
 #' @param n Sample size
 #' @param method.list List of method. Standarizing and scaling is available for Polynomial rank score. Scaling is available for Wilcoxon and Stephenson.
+#' @param std Option for Polynomial rank score. If TRUE, then standardized polynomial rank score will be calculated ((r / n)^{r-1}) 
+#' @param scale Option for both rank scores. If TRUE, then final rank score will be scaled to have mean zero and variance one. 
+
 
 rank_score   <- function(n, 
                          method.list = list(
