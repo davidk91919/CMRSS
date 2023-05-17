@@ -8,16 +8,10 @@
 #' @param coeflists All possible test statistics value, which will usually be a output from \emph{comb_matrix_block} function.
 #' @param p N-k, where k is given in null hypothesis as \eqn{H_{N,k,c} = \tau_{k} \leq c}.
 #' @param mu_sigma_list List of population mean / variance of every stratified rank sum statistics. This will usually be a output from \emph{mu_sigma_list} function.
-#' @param exact ## what was this??
+#' @param exact Option for type of optimization problem. If exact = TRUE, will try ILP(integer linear programming). If exact = FALSE, will relax the integer constraints and try linear programming. 
 #'
 #' @export
 
-########################################################
-### function for implement Gurobi for our ILP problem
-### updated: using standardization
-### updated: used sparse matrix structure; faster computation speed and much less memory used
-### updated: included weight option
-########################################################
 Gurobi_sol_com <- function(Z, block, weight = NULL, coeflists, p, mu_sigma_list, exact = TRUE){
 
   ## n: number of all units + B
@@ -90,12 +84,10 @@ Gurobi_sol_com <- function(Z, block, weight = NULL, coeflists, p, mu_sigma_list,
   model$rhs = c(rep(1, H*B), rep(p, H), rep(0, H), mu*sig_rev)
   model$sense = c(rep("=", H*B), rep("<=", H), rep("=", H), rep("<=", H))
   model$lb = c(rep(0, n*H), rep(-Inf, H + 1))
-  #model$vtype = c(rep("B", length(Q)), rep("C", (2 * H + 1) ))
   if(exact){
     model$vtype = c(rep("B", n*H), rep("C", (H + 1) ))
   }
 
-  #  gurobi(model)           ## can omit this when we only want to check the output, not the optimization process
   params <- list(OutputFlag = 0)
   result = gurobi::gurobi(model,params)
 
