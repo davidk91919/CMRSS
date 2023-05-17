@@ -1,6 +1,6 @@
 #' @title Minimum stat value in H_{k,c}
 #'
-#' @description The function
+#' @description Function calculates minimum rank score stat value for given quantile null hypothesis H_k,c.
 #'
 #' @param Z Given assignment vector
 #' @param Y Outcome vector
