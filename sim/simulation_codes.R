@@ -6,6 +6,7 @@
 # Required Source and Libraries
 ################################
 #source("Fun_multiple_stephenson_0126.R")
+library(CMRSS)
 library(gurobi)
 library(psych)
 library(randomizr)
@@ -17,28 +18,20 @@ library(skewt)
 ##################################
 
 
-n = 150
-m = 0.5 * n
-nperm = 10^4
-alpha = 0.1
+n = 150         # total number of units
+m = 0.5 * n     # number of treated units
+nperm = 10^4    # total number of permutation in simulation
+alpha = 0.1     
 k = ceiling(n * 0.9)    ## testing for 90% quantile treatment effect
 c = 0
 
 
-s.vec = c(2, 4, 10, 20, 30, 60, 90, 120, 150, 200, 250)
+s.vec = c(2, 4, 10, 20, 30, 60, 90, 120, 150, 200, 250)    ## parameter vector for both Stephenson and Polynomial rank score statistic
 
 H = length(s.vec)
 stat.null.all <- matrix(NA, nrow = nperm, ncol =  ( 2* length(s.vec) + 2 ) )
 Z.perm = assign_CRE(n, m, nperm)
-thres.all <- rep(NA, (2 * length(s.vec) + 2) )
-
-methods.list <- list()
-for(i in 1 : length(s.vec)) {
-  methods.list[[i]] <- list(name = "Stephenson",
-                            s = s.vec[i],
-                            scale = TRUE)
-}
-
+thres.all <- rep(NA, (2 * length(s.vec) + 2) )    ## generate threshold vector for simulated test statistics
 
 for(i in 1: H ){
   stat.null.all[, i] = null_dist(n, m, 
@@ -58,17 +51,19 @@ for(i in 1: H ){
   thres.all[H + i] = sort(stat.null.all[, H + i], decreasing = TRUE)[ floor(nperm * alpha) + 1 ]
 }
 
+## threshold for combinded Stephenson
 stat.null.all[, 2 * length(s.vec) + 1] = apply( stat.null.all[, 1 : (length(s.vec) - 2)  ], 1, max)
 thres.all[2 * length(s.vec) + 1] = thres = sort(stat.null.all[, 2 * length(s.vec) + 1], decreasing = TRUE)[ floor(nperm * alpha) + 1]
 
+# threshold for combinded Polynomial
 stat.null.all[, 2 * length(s.vec) + 2] = apply( stat.null.all[, (H + 1) : (H + length(s.vec) ) ], 1, max)
 thres.all[2 * length(s.vec) + 2] = thres = sort(stat.null.all[, 2 * length(s.vec) + 2], decreasing = TRUE)[ floor(nperm * alpha) + 1]
 
 
 iter.max = 1000
-sig = seq(0,5, by = 0.5)
-r.sim = matrix(NA, nrow = length(sig), ncol = (2 * length(s.vec) + 2) )
-eff.r.sim = rep(NA, length(sig))
+sig = seq(0,5, by = 0.5)    ## sequence of sigma; variance of simulated outcome
+r.sim = matrix(NA, nrow = length(sig), ncol = (2 * length(s.vec) + 2) ) ## matrix resulted by simulaton. each elements corresponds to each cases - sigma and method
+eff.r.sim = rep(NA, length(sig))      ## true effect vector corresponding to each sigma
 p = n - k 
 
 for(j in 1 : length(sig)){
@@ -124,7 +119,8 @@ for(j in 1 : length(sig)){
   eff.r.sim[j] = sort(Y1 - Y0, decreasing = TRUE)[p]
 }
 
-
+r.sim
+eff.r.sim
 
 
 
@@ -137,11 +133,11 @@ for(j in 1 : length(sig)){
 ##################################
 ## Simulation Data and listing methods
 
-s = 100
-n = 50
-m = 0.5 * n
-N = s * n
-k = ceiling(0.95 * N)
+s = 100     ## number of strata
+n = 50      ## number of units in each strata
+m = 0.5 * n ## number of treated units
+N = s * n   
+k = ceiling(0.95 * N) ## k corresponding to the null H_0: \tau_{k} \leq c
 p = N - k
 c = 0
 
@@ -181,6 +177,8 @@ H = h = length(comb.methods.list.all)
 r.seq = ceiling(seq(2, n, len = H))
 # r = c(2, 8, 13, 18, 24, 29, 34, 40, 45, 50) here 
 
+## specifying methods for Polynomial rank score statistics
+
 for (j in 1 : H){
   for(i in 1 : s){
     comb.methods.list.all[[j]][[i]] = list(name = "Polynomial",
@@ -190,6 +188,7 @@ for (j in 1 : H){
   }
 }
 
+## specifying methods for Stephenson(Wilcoxon) rank score statistics
 
 for(i in 1 : s){
   prev.methods.list.all[[1]][[i]] = list(name = "Wilcoxon",
@@ -243,8 +242,8 @@ for(j in 1 : h){
 
 iter.max = 10^2 ## total number for simulations
 sig = seq(0,5, by = 0.5)
-p.sim.eq.95.loc = matrix(NA, nrow = length(sig), ncol = 2 * H + 1)
-eff.p.sim.eq.95.loc = rep(NA, length(sig))
+p.sim.eq.95.loc = matrix(NA, nrow = length(sig), ncol = 2 * H + 1)   ## matrix resulted by simulaton. each elements corresponds to each cases - sigma and method
+eff.p.sim.eq.95.loc = rep(NA, length(sig))  ## vector for true effect size for each cases(each sigma)
 
 for(j in 1 : length(sig)){
   reject.all = matrix(0, nrow = 2 * H + 1, ncol = iter.max)
@@ -313,7 +312,7 @@ for(j in 1 : length(sig)){
 ## Simulation Data and listing methods
 
 s = 100
-n = sample(20 : 60, size = s, replace = TRUE)
+n = sample(20 : 60, size = s, replace = TRUE)   ## units for each strata; now this is unequal
 n.temp = c(0, cumsum(n))
 N = sum(n)
 Z = rep(0, N)
@@ -354,7 +353,7 @@ H = h = length(comb.methods.list.all)
 ## if we want to use different hyperparameters('r' or 's') in each strata for same method
 
 r.seq = list()
-r.seq = ceiling(seq(2, 40, len = H))  ## should change this. 
+r.seq = ceiling(seq(2, 40, len = H)) 
 
 for(j in 1 : H){
   for(i in 1 : s){
@@ -381,6 +380,7 @@ for (j in 2 : H){
 }
 
 ## if we want to use ** same ** hyperparameters ('r' or 's') in each strata for same method
+### this will be mainly used
 
 max.n = max(n)
 r.seq = ceiling(seq(2, max.n, length.out = H))
@@ -439,8 +439,8 @@ for(j in 1 : h){
 
 iter.max = 10^2
 sig = seq(0,5, by = 0.5)
-p.sim.uneq.95.loc = matrix(NA, nrow = length(sig), ncol = 2 * H + 1)
-eff.p.sim.uneq.95.loc = rep(NA, length(sig))
+p.sim.uneq.95.loc = matrix(NA, nrow = length(sig), ncol = 2 * H + 1)    ## matrix resulted by simulaton. each elements corresponds to each cases - sigma and method
+eff.p.sim.uneq.95.loc = rep(NA, length(sig))  ## vector for true effect size. 
 
 for(j in 1 : length(sig)){
   reject.all = matrix(0, nrow = 2 * H + 1, ncol = iter.max)
