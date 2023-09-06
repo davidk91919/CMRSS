@@ -7,8 +7,7 @@ pval_comb <- function(Z, Y, k, c,
                       weight = NULL,
                       stat.null = NULL,
                       null.max = 10^5,
-                      Z.perm.all = NULL,
-                      mu_sigma_list){
+                      Z.perm.all = NULL){
 
   N = length(Y)
   p = N - k
@@ -16,6 +15,9 @@ pval_comb <- function(Z, Y, k, c,
   if(!is.factor(block)){
     block = as.factor(block)
   }  
+
+  ms_list = mu_sigma_list(Z = Z, block = block, 
+                         methods.list.all = methods.list.all)
   
   if(is.null(stat.null)){
     stat.null = com_null_dist_block(Z = Z, block = block, 
