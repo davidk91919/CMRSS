@@ -16,6 +16,8 @@ mu_sigma_list = function(Z, block, methods.list.all){
   if(!is.factor(block)){
     block = as.factor(block)
   }
+
+  Z_block = block 
   
   H = length(methods.list.all)
   mean = rep(0, H)
