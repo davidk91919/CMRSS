@@ -24,7 +24,7 @@ pval_comb <- function(Z, Y, k, c,
                                     methods.list.all = methods.list.all,
                                     null.max = 10^5, 
                                     Z.perm.all = NULL,
-                                    mu_sigma_list = mu_sigma_list)
+                                    mu_sigma_list = ms_list)
   }
   
   coeflists = comb_matrix_block(Z = Z, Y = Y, block = block, c = c,
@@ -34,7 +34,7 @@ pval_comb <- function(Z, Y, k, c,
                             weight = weight,
                             coeflists = coeflists,
                             p = p,
-                            mu_sigma_list = mu_sigma_list,
+                            mu_sigma_list = ms_list,
                             exact = TRUE)
   pval = mean(stat.null >= stat.min)
   
