@@ -1,0 +1,41 @@
+
+###### p-value for testing tau_{(k)} \leq c, using combined statistic ######
+
+pval_comb <- function(Z, Y, k, c,
+                      block,
+                      methods.list.all,
+                      weight = NULL,
+                      stat.null = NULL,
+                      null.max = 10^5,
+                      Z.perm.all = NULL,
+                      mu_sigma_list){
+
+  N = length(Y)
+  p = N - k
+  
+  if(!is.factor(block)){
+    block = as.factor(block)
+  }  
+  
+  if(is.null(stat.null)){
+    stat.null = com_null_dist_block(Z = Z, block = block, 
+                                    methods.list.all = methods.list.all,
+                                    null.max = 10^5, 
+                                    Z.perm.all = NULL,
+                                    mu_sigma_list = mu_sigma_list)
+  }
+  
+  coeflists = comb_matrix_block(Z = Z, Y = Y, block = block, c = c,
+                                methods.list.all = methods.list.all)
+  
+  stat.min = Gurobi_sol_com(Z = Z, block = block, 
+                            weight = weight,
+                            coeflists = coeflists,
+                            p = p,
+                            mu_sigma_list = mu_sigma_list,
+                            exact = TRUE)
+  pval = mean(stat.null >= stat.min)
+  
+  return(pval)
+}
+
