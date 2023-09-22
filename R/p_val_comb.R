@@ -40,7 +40,11 @@ pval_comb <- function(Z, Y, k, c,
                             exact = TRUE)$obj
 
   pval = mean(stat.null >= stat.min)
-
-  return(pval)
+  
+   if(statistic == TRUE) {
+  result = c(pval, stat.min)
+  names(result) = c("p.value", "test.stat")
+  return(result)
+  } else return(pval)
 }
 
