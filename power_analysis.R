@@ -172,39 +172,3 @@ power_sim_block_quant(Z = pbs1$trt,
                       methods.list.all = methods.list,
                       iter.sim = 100,
                       alpha = 0.05)
-
-# result: power for lm.robust: 0.98 ///// 
-# power for new rank sum statistic 
-# for the null such that maximum quantile effect is upper bounded by 0: 1
-# 75% quantile bounded by 0: 0
-# median quantile effect bounded by 0: 
-
-med = power_sim_block_quant(Z = pbs1$trt, 
-                      Y0 = Y0_tmp, 
-                      Y1 = Y1_tmp,
-                      block = factor(pbs1$STRA_BLOCK), 
-                      k = floor(1/2 * length(pbs1$R01TMCRET)),
-                      c = 0,
-                      methods.list.all = methods.list,
-                      iter.sim = 100,
-                      alpha = 0.05)
-
-threefour = power_sim_block_quant(Z = pbs1$trt, 
-                            Y0 = Y0_tmp, 
-                            Y1 = Y1_tmp,
-                            block = factor(pbs1$STRA_BLOCK), 
-                            k = floor(0.75 * length(pbs1$R01TMCRET)),
-                            c = 0,
-                            methods.list.all = methods.list,
-                            iter.sim = 100,
-                            alpha = 0.05)
-
-ninety = power_sim_block_quant(Z = pbs1$trt, 
-                                Y0 = Y0_tmp, 
-                                Y1 = Y1_tmp,
-                                block = factor(pbs1$STRA_BLOCK), 
-                                k = floor(0.9 * length(pbs1$R01TMCRET)),
-                                c = 0,
-                                methods.list.all = methods.list,
-                                iter.sim = 100,
-                                alpha = 0.05)
