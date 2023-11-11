@@ -32,5 +32,6 @@ rank_score   <- function(n,
       score = scale(score)
     }
   }
+  score = score / max(score)
   return(score)
 }
