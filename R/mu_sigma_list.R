@@ -1,10 +1,9 @@
-#' Function calculating population mean / variance for each stratified rank sum statistic,
-#' to standardize test statistics globally before implementing optimization. 
-#' 
+#' mu_sigma_list
+#'
 #' @param Z n-dimensional treatment assignment vector, for every units.
 #' @param block n-dimensional vector, which specifies stratum status of each units.
-#' @param methods.list.all List of stratified rank sum statistic. The structure should be list of lists of lists. 
-
+#' @param methods.list.all List of stratified rank sum statistic. The structure should be list of lists of lists.
+#' @noRd
 
 
 
@@ -17,12 +16,10 @@ mu_sigma_list = function(Z, block, methods.list.all){
     block = as.factor(block)
   }
 
-  Z_block = block 
-  
   H = length(methods.list.all)
   mean = rep(0, H)
   sigma = rep(0, H)
-  
+
   #  B = s = length(methods.list.all[[1]][[1]])
   B = s = length(methods.list.all[[1]])
   block.levels = levels(Z_block)
@@ -30,9 +27,9 @@ mu_sigma_list = function(Z, block, methods.list.all){
   for (i in 1 : B){
     nb[i] = sum(Z_block == block.levels[i])
   }
-  
-  
-  for(i in 1 : H){    
+
+
+  for(i in 1 : H){
     method.list.all = methods.list.all[[i]]
     tmp1 <- 0
     tmp2 <- 0
@@ -40,7 +37,7 @@ mu_sigma_list = function(Z, block, methods.list.all){
       method.list = method.list.all[[j]]
       ns = nb[j]
       ms = sum(Z[block == block.levels[j]])
-      
+
       score = rank_score(ns, method.list)
       tmp1 = tmp1 + ms * 1/ns * sum(score)
       tmp2 = tmp2 + ms^2 * (1/ms - 1/ns) * (1 / (ns - 1)) *
@@ -51,4 +48,4 @@ mu_sigma_list = function(Z, block, methods.list.all){
     sigma[i] = sqrt(tmp2)
   }
   return(list(mean = mean, sigma = sigma))
-}  
+}

@@ -1,15 +1,13 @@
-#' @title Calculating all possible test statistic values for every strata
-#' @description Generate a list of lists, where each lists contains all possible test statistic value for every possible null hypothesis in each stratum, corresponding to each list of methods,
-#' using user-specified score function.
+#' comb_matrix_block
+#'
+#' Generate a list of lists, where elements are all possible test statistic value for every possible null hypothesis in each stratum, using user-specified score function.
 #'
 #' @param Z n-dimensional treatment assignment vector, for every units.
 #' @param Y n-dimensional observed outcome vector, for every units.
 #' @param block n-dimensional vector specifying stratum status of each units.
 #' @param c A scalar specifying the bounded null hypothesis.
-#' @param method.list.all list of every stratified rank sum statistics, where each element(list)s is list of stratified rank sum statistic. The structure should be list of lists of lists.
-#'
-#' @export
-
+#' @param method.list.all list of every stratified rank sum statistics, where each element(list)s is method for every stratum.List of stratified rank sum statistic. The structure should be list of lists of lists.
+#' @noRd
 
 ###################################################
 # function for calculate all possible t_s^h(z, y - z \circ xi)

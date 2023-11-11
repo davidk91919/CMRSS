@@ -1,12 +1,8 @@
-#' @title Combined minimum stat values in CRE
-#' 
-#' @description Function calculates combined minimum stat values for given quantile null hypothesis H_k,c.
+#' combine_min_stat
 #'
 #' @param methods.list lists of methods. Should be list of lists
-#' @param combine Function will be used for combining values. Default option is maximum function.
-#'
-#' @export
-
+#' @returns Function will be used for combining values. Maximum function is default.
+#' @noRd
 
 combine_min_stat <- function(Z, Y, k, c, methods.list = NULL,
                              ind.sort.treat = NULL,

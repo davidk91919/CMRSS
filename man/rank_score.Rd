@@ -2,7 +2,7 @@
 % Please edit documentation in R/rank_score.R
 \name{rank_score}
 \alias{rank_score}
-\title{Score function of the ranks}
+\title{rank_score}
 \usage{
 rank_score(
   n,

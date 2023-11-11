@@ -1,6 +1,6 @@
-#' @title Minimum stat value in H_{k,c}
+#' min_stat
 #'
-#' @description Function calculates minimum rank score stat value for given quantile null hypothesis H_k,c.
+#'
 #'
 #' @param Z Given assignment vector
 #' @param Y Outcome vector
@@ -9,7 +9,7 @@
 #' @param method.list list of method.
 #' @param score user-specified score vector, if available
 #' @param ind.sort.treat user-specified alignment in treatment vector, if available
-
+#' @noRd
 
 min_stat <- function(Z, Y, k, c, method.list = NULL,
                      score = NULL,

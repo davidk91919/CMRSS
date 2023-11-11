@@ -1,3 +1,12 @@
+#' heatmap_pval
+#'
+#' A function to visualize multiple p-values corresponding to multiple choices of upper bounds and quantiles.
+#'
+#' @export
+
+
+
+
 
 ### Function for plotting heatmap, corresponding to multiple k(quantile of individual treatment effect) and c(upper bound on the null)
 
@@ -29,7 +38,8 @@ heatmap_pval = function(Z, Y,
                                weight = weight, 
                                stat.null = stat.null,
                                null.max = null.max,
-                               Z.perm.all = Z.perm.all)
+                               Z.perm.all = Z.perm.all,
+                               statistic = FALSE)
   }  
   colnames(res.mat) = round(c.vec, 2)
   rownames(res.mat) = k.vec

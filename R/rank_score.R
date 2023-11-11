@@ -1,14 +1,11 @@
-#' @title Score function of the ranks
+#' rank_score
 #'
 #' @description Calculating the scores of n units (ordered from low to high score) given specified test statistic, not allowing for ties.
 #'
 #' @param n Sample size
 #' @param method.list List of method. Standarizing and scaling is available for Polynomial rank score. Scaling is available for Wilcoxon and Stephenson.
-#' @param std Option for Polynomial rank score. If TRUE, then standardized polynomial rank score will be calculated ((r / n)^{r-1}) 
-#' @param scale Option for both rank scores. If TRUE, then final rank score will be scaled to have mean zero and variance one. 
 
-
-rank_score   <- function(n, 
+rank_score   <- function(n,
                          method.list = list(
                            name = "Polynomial", r, std = TRUE, scale = FALSE)
 ){
@@ -18,9 +15,9 @@ rank_score   <- function(n,
       score = (c(1:n) / n)^(r-1)
     } else {
       score = (c(1:n))^(r-1)
-    } 
+    }
     if(method.list$scale == TRUE){
-      score = scale(score) 
+      score = scale(score)
     }
   }
   if(method.list$name == "Stephenson"){

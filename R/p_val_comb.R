@@ -1,3 +1,12 @@
+#' p_val_comb
+#' 
+#' Calculate p-value for SCRE using combining multiple methods
+#' 
+#' @export
+
+
+
+
 
 ###### p-value for testing tau_{(k)} \leq c, using combined statistic ######
 
@@ -7,44 +16,38 @@ pval_comb <- function(Z, Y, k, c,
                       weight = NULL,
                       stat.null = NULL,
                       null.max = 10^5,
-                      Z.perm.all = NULL
-                      ){
+                      Z.perm.all = NULL){
 
   N = length(Y)
   p = N - k
-
-  ms_list = mu_sigma_list(Z = Z, block = block,
+  
+  ms_list = mu_sigma_list(Z = Z, block = block, 
                           methods.list.all = methods.list.all)
-
+  
   if(!is.factor(block)){
     block = as.factor(block)
-  }
-
+  }  
+  
   if(is.null(stat.null)){
-    stat.null = com_null_dist_block(Z = Z, block = block,
+    stat.null = com_null_dist_block(Z = Z, block = block, 
                                     methods.list.all = methods.list.all,
-                                    null.max = null.max,
+                                    null.max = null.max, 
                                     Z.perm.all = NULL,
-                                    mu_sigma_list = mu_sigma_list)
+                                    mu_sigma_list = ms_list)
   }
-
-  coeflists = comb_matrix_block(Z = Z, Y = Y,
+  
+  coeflists = comb_matrix_block(Z = Z, Y = Y, 
                                 block = block, c = c,
                                 methods.list.all = methods.list.all)
-
-  stat.min = Gurobi_sol_com(Z = Z, block = block,
+  
+  stat.min = Gurobi_sol_com(Z = Z, block = Z_block, 
                             weight = weight,
                             coeflists = coeflists,
                             p = p,
-                            mu_sigma_list = mu_sigma_list,
+                            mu_sigma_list = ms_list,
                             exact = TRUE)$obj
-
   pval = mean(stat.null >= stat.min)
   
-   if(statistic == TRUE) {
-  result = c(pval, stat.min)
-  names(result) = c("p.value", "test.stat")
-  return(result)
-  } else return(pval)
+  return(pval)
 }
 
