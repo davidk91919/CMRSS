@@ -14,7 +14,8 @@ pval_comb(
   weight = NULL,
   stat.null = NULL,
   null.max = 10^5,
-  Z.perm.all = NULL
+  Z.perm.all = NULL,
+  statistic = TRUE
 )
 }
 \description{
