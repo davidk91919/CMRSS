@@ -16,18 +16,20 @@ pval_comb <- function(Z, Y, k, c,
                       weight = NULL,
                       stat.null = NULL,
                       null.max = 10^5,
-                      Z.perm.all = NULL){
-
+                      Z.perm.all = NULL,
+                      statistic = TRUE){
+  
   N = length(Y)
   p = N - k
-  
-  ms_list = mu_sigma_list(Z = Z, block = block, 
-                          methods.list.all = methods.list.all)
   
   if(!is.factor(block)){
     block = as.factor(block)
   }  
   
+  ms_list = mu_sigma_list(Z = Z, block = block, 
+                          methods.list.all = methods.list.all)
+  
+
   if(is.null(stat.null)){
     stat.null = com_null_dist_block(Z = Z, block = block, 
                                     methods.list.all = methods.list.all,
@@ -40,14 +42,16 @@ pval_comb <- function(Z, Y, k, c,
                                 block = block, c = c,
                                 methods.list.all = methods.list.all)
   
-  stat.min = Gurobi_sol_com(Z = Z, block = Z_block, 
+  stat.min = Gurobi_sol_com(Z = Z, block = block, 
                             weight = weight,
                             coeflists = coeflists,
                             p = p,
                             mu_sigma_list = ms_list,
                             exact = TRUE)$obj
   pval = mean(stat.null >= stat.min)
-  
-  return(pval)
+  if(statistic == TRUE) {
+  result = c(pval, stat.min)
+  names(result) = c("p.value", "test.stat")
+  return(result)
+  } else return(pval)
 }
-
