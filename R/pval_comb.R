@@ -1,4 +1,4 @@
-#' p_val_comb
+#' pval_comb
 #' 
 #' Calculate p-value for SCRE using combining multiple methods
 #' 
