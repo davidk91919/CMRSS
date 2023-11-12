@@ -27,7 +27,7 @@ min_stat <- function(Z, Y, k, c, method.list = NULL,
 
   # sort the treated units
   if(is.null(ind.sort.treat)){
-    ind.sort.treat = RIQITE::sort_treat(Y, Z)
+    ind.sort.treat = sort_treat(Y, Z)
   }
 
   # get xi vector
