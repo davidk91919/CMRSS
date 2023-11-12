@@ -2,7 +2,6 @@
 #'
 #' Obtain the value of test statistic by optimization, for \eqn{\underset{h}{max} \frac{t^{(h)}(Z, Y) - \mu_h }{\sigma_h}}.
 #'
-#' @import Matrix 
 #'
 #' @param Z n-dimension treatment assignment vector, for every units.
 #' @param block n-dimension vector specifies stratum status of every units.
@@ -83,7 +82,7 @@ Gurobi_sol_com <- function(Z, block, weight = NULL, coeflists, p, mu_sigma_list,
   Aj = c(Aj, rep(n*H + H + 1, H), (n*H+1):(n*H+H))
   x = c(x, rep(-1, H), sig_rev)
 
-  A = sparseMatrix(Ai, Aj, x = x)
+  A = Matrix::sparseMatrix(Ai, Aj, x = x)
 
 
   model$A = A
