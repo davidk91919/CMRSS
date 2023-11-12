@@ -1,6 +1,6 @@
 #' min_stat
 #'
-#'
+#' @import RIQITE
 #'
 #' @param Z Given assignment vector
 #' @param Y Outcome vector
