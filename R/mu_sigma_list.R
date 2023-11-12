@@ -25,7 +25,7 @@ mu_sigma_list = function(Z, block, methods.list.all){
   block.levels = levels(block)
   nb = rep(NA, B)
   for (i in 1 : B){
-    nb[i] = sum(Z_block == block.levels[i])
+    nb[i] = sum(block == block.levels[i])
   }
 
 
