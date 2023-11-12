@@ -2,6 +2,8 @@
 #'
 #' Obtain the value of test statistic by optimization, for \eqn{\underset{h}{max} \frac{t^{(h)}(Z, Y) - \mu_h }{\sigma_h}}.
 #'
+#' @import Matrix 
+#'
 #' @param Z n-dimension treatment assignment vector, for every units.
 #' @param block n-dimension vector specifies stratum status of every units.
 #' @param weight Vector which has same length with total number of stratum. Giving weight on each stratum before optimization. Basic option is number of treated units on each stratum.
