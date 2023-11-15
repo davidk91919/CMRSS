@@ -20,7 +20,7 @@ pval_comb_auto = function(Z, Y, k, c,
   m = max(table(STRA_CODE, block, exclude=c())[2,])
 
   H = 10 # will combine 10 many rank sum statistics, using polynomial rank score
-  s = length(levels(block.obs)))
+  s = length(levels(block.obs))
   m.seq = ceiling(seq(2, m, len = H))
 
   # listing methods
