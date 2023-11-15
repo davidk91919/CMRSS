@@ -9,7 +9,6 @@ pval_comb_auto = function(Z, Y, k, c,
                           block,
                           null.max = 10^3,
                           STRA_CODE,
-                          STRA_BLOCK,
                           statistic = FALSE) {
 
   if(any(is.na(Y))){stop("Outcome Should Not Include NA Values")}
@@ -18,10 +17,10 @@ pval_comb_auto = function(Z, Y, k, c,
   Z.obs = Z
   block.obs = factor(block)
 
-  m = max(table(STRA_CODE, STRA_BLOCK,exclude=c())[2,])
+  m = max(table(STRA_CODE, block, exclude=c())[2,])
 
   H = 10 # will combine 10 many rank sum statistics, using polynomial rank score
-  s = length(levels(factor(STRA_BLOCK)))
+  s = length(levels(block.obs)))
   m.seq = ceiling(seq(2, m, len = H))
 
   # listing methods
