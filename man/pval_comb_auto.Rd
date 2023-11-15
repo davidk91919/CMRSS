@@ -12,7 +12,6 @@ pval_comb_auto(
   block,
   null.max = 10^3,
   STRA_CODE,
-  STRA_BLOCK,
   statistic = FALSE
 )
 }
