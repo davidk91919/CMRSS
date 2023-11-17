@@ -146,3 +146,34 @@ power_sim_block_quant(Z = Z.obs,
                       methods.list.all = methods.list,
                       iter.sim = 6,
                       alpha = 0.05)
+
+
+
+
+## let quantile treatment effect exist only after 80% quantile
+# with the same block structure
+
+Y0_tmp = rep(NA, N)
+Y1_tmp = rep(NA, N)
+trt_eff = rep(NA, N)
+for(u in 1 : B){
+  trt.b = Z.obs[Z_block == block.levels[u]]
+  Y.b = rep(0, length(trt.b))
+  eff.len = floor(length(trt.b) * 0.1)
+  eff.b = rep(c(0, 1), c( length(trt.b) - eff.len , eff.len))
+  
+  Y0_tmp[ (indx[u] + 1) : indx[u+1] ] = Y.b
+  Y1_tmp[ (indx[u] + 1) : indx[u+1] ] = Y.b + eff.b
+} # note Y0 and Y1 is also arranged here by block orders
+
+
+power_sim_block_quant(Z = Z.obs,
+                      Y0 = Y0_tmp,
+                      Y1 = Y1_tmp,
+                      block = Z_block,
+                      k = floor(0.95 * length(Y0_tmp) ),
+                      c = 0,
+                      methods.list.all = methods.list,
+                      iter.sim = 10,
+                      alpha = 0.05)
+
