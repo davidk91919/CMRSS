@@ -166,19 +166,21 @@ nb =  c(27,   16,   31,   51,   38,   31,   18,   18,   55,   28,   52,   31,   
 mb = c(15,   7,  15,  30,  23,  19,   9,  10,  31,  17,  31,  19,  22,  26,  18,  21,
 19,  14,  22,  16,  36,  18,   6,  15,   9,  18,  14,  37,  89, 188, 182, 252,
 75, 221, 115, 239, 761,  55, 191, 178, 152,  54,  38,  41)
+indx = c(0, cumsum(nb) )
 
 Z_block = as.factor( rep(1 : B, nb) )
 block.levels = levels(Z_block)
 
 Y0_tmp = rep(NA, N)
 Y1_tmp = rep(NA, N)
-trt_eff = rep(NA, N)
+Z.obs = rep(NA, N)
 for(u in 1 : B){
-  trt.b = Z.obs[Z_block == block.levels[u]]
+  trt.b = rep( c(0,1), c(nb[u] - mb[u], mb[u]) )
   Y.b = rep(0, length(trt.b))
   eff.len = floor(length(trt.b) * 0.1)
   eff.b = rep(c(0, 1), c( length(trt.b) - eff.len , eff.len))
 
+  Z.obs[ (indx[u] + 1) : indx[u+1] ] = trt.b
   Y0_tmp[ (indx[u] + 1) : indx[u+1] ] = Y.b
   Y1_tmp[ (indx[u] + 1) : indx[u+1] ] = Y.b + eff.b
 } # note Y0 and Y1 is also arranged here by block orders
