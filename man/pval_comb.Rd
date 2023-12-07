@@ -15,7 +15,8 @@ pval_comb(
   stat.null = NULL,
   null.max = 10^5,
   Z.perm.all = NULL,
-  statistic = TRUE
+  statistic = TRUE,
+  opt.method = "ILP_gurobi"
 )
 }
 \description{

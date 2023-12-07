@@ -12,7 +12,8 @@ pval_comb_auto(
   block,
   null.max = 10^3,
   STRA_CODE,
-  statistic = FALSE
+  statistic = FALSE,
+  opt.method = "ILP_gurobi"
 )
 }
 \description{
