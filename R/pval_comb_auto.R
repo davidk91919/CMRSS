@@ -5,11 +5,20 @@
 #' @export
 
 
+
 pval_comb_auto = function(Z, Y, k, c,
                           block,
                           null.max = 10^3,
                           STRA_CODE,
-                          statistic = FALSE) {
+                          statistic = FALSE,
+                          opt.method = "ILP_gurobi") {
+
+
+  #  if(opt.method == "ILP_gurobi"){
+  #    exact = TRUE
+  #  } else {
+  #    exact = FALSE
+  #  }
 
   if(any(is.na(Y))){stop("Outcome Should Not Include NA Values")}
 
@@ -61,8 +70,8 @@ pval_comb_auto = function(Z, Y, k, c,
                    block = block.obs,
                    methods.list.all = methods.list,
                    null.max = 10^3,
-                   statistic = FALSE))
+                   statistic = FALSE,
+                   opt.method = opt.method))
 
 }
-
 
