@@ -1,5 +1,5 @@
 ##### this is a building function for 'testing twice' for CMRSS.
-##### this will finally generate less conservative p-value than before, by comparing all possible pairs of (n1, n0) = (a, n - k - 1 - a). 
+##### this will finally generate less conservative p-value than before, by comparing all possible pairs of (n1, n0) = (a, n - k - 1 - a).
 
 switch_pval_comb <- function(Z, Y, k, c,
                              block,
@@ -10,28 +10,28 @@ switch_pval_comb <- function(Z, Y, k, c,
                              Z.perm.all = NULL,
                              statistic = TRUE,
                              opt.method = "ILP_gurobi"){
-  
+
   if(opt.method == "ILP_gurobi"){
     exact = TRUE
   } else {
     exact = FALSE
   }
-  
+
   N = length(Y)
   p = N - k
   m = sum(Z)
-  
-  p_switch = p - 1
-  
-  
+
+  p_switch = p - 1      ## upper bound for the sum of pairs(p value for controlled and treated)
+
+
   if(!is.factor(block)){
     block = as.factor(block)
   }
-  
+
   ms_list = mu_sigma_list(Z = Z, block = block,
                           methods.list.all = methods.list.all)
-  
-  
+
+
   if(is.null(stat.null)){
     stat.null = com_null_dist_block(Z = Z, block = block,
                                     methods.list.all = methods.list.all,
@@ -39,49 +39,55 @@ switch_pval_comb <- function(Z, Y, k, c,
                                     Z.perm.all = NULL,
                                     mu_sigma_list = ms_list)
   }
-  
+
+  ## get two lists of test statistics for both controlled and treated
+
   coeflists_trt = comb_matrix_block(Z = Z, Y = Y,
                                     block = block, c = c,
                                     methods.list.all = methods.list.all)
   coeflists_con = comb_matrix_block(Z = 1 - Z, Y = -Y,
                                     block = block, c = c,
                                     methods.list.all = methods.list.all)
-  
+
   #  switch_result = rep(NA, p_switch)
   pval = 1
   # p.trt = N - (N - m) - k
   # p.con = N - m - k
-  
+
   for(iter in 0 : p_switch){
     if(iter > m || p_switch - iter > N- m) break    #condition for each pairs; (iter, N-k-1-iter)
-    
+
     stat.min.trt = Gurobi_sol_com(Z = Z, block = block,
                                   weight = weight,
                                   coeflists = coeflists_trt,
-                                  #p = p.trt,    ## should match with iterations?
                                   p = iter,   ## now k_1(and also k_0) differ for each iterations
                                   mu_sigma_list = ms_list,
                                   exact = exact)$obj
+
     pval.trt = mean(stat.null >= stat.min.trt)
-    
+
     stat.min.control = Gurobi_sol_com(Z = 1 - Z, block = block,   ## should change this, since in optimization process Z is used for block treatment structure, which is switched in controlled case
                                       weight = weight,
                                       coeflists = coeflists_con,
-                                      #p = p.con,
                                       p = p_switch - iter,
                                       mu_sigma_list = ms_list,
                                       exact = exact)$obj
     pval.control = mean(stat.null >= stat.min.control)
-    
-    stat.min.tmp = ifelse(pval.control < pval.trt, stat.min.trt, stat.min.control) ## take maximum
+
+    #choose test statistic and p-value for each pair by taking maximum
+
+    stat.min.tmp = ifelse(pval.control < pval.trt, stat.min.trt, stat.min.control)
     pval.tmp = max(pval.trt, pval.control)
-    
-    stat.min = ifelse(pval < pval.tmp, stat.min, stat.min.tmp) ## take minimum
+
+    #choose test statistic and p-value on every pair by taking minimum
+
+    stat.min = ifelse(pval < pval.tmp, stat.min, stat.min.tmp)
     pval = ifelse(pval < pval.tmp, pval, pval.tmp)
     print(iter)
   }
+
   pval = 2 * pval
-  
+
   if(statistic == TRUE) {
     result = c(pval, stat.min)
     names(result) = c("p.value", "test.stat")
@@ -90,7 +96,7 @@ switch_pval_comb <- function(Z, Y, k, c,
 }
 
 
-#double check the function
+#double check the function for simulated data
 
 N = 6
 m = N / 2
@@ -118,8 +124,6 @@ for (j in 1 : H){
                                   scale = TRUE)
   }
 }
-
-
 
 dumb.prop = 0.5 ## proportion of effected units
 eff.len = floor(N * dumb.prop)    ### since k on tau_k is about the whole unit
