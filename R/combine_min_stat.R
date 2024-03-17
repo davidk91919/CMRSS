@@ -5,6 +5,7 @@
 #' @noRd
 
 combine_min_stat <- function(Z, Y, k, c, methods.list = NULL,
+                             scores = NULL,
                              ind.sort.treat = NULL,
                              combine = max) {
 
