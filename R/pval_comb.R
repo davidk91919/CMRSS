@@ -19,6 +19,7 @@ pval_comb <- function(Z, Y, k, c,
                       null.max = 10^5,
                       Z.perm.all = NULL,
                       statistic = TRUE,
+                      switch = TRUE,
                       opt.method = "ILP_gurobi"){
 
   if(opt.method == "ILP_gurobi"){
@@ -34,9 +35,25 @@ pval_comb <- function(Z, Y, k, c,
     block = as.factor(block)
   }
 
+  
+  if(switch){
+    B = length(levels(block))
+    nb = rep(NA, B)
+    zb = rep(NA, B)
+    for(i in 1:B){
+      nb[i] = sum(block == levels(block)[i])
+      zb[i] = sum(Z[block == levels(block)[i]])
+    }
+    for(i in 1:B){
+      if(zb[i]<nb[i]/2){
+        Z[block == levels(block)[i]] = 1 - Z[block == levels(block)[i]]
+        Y[block == levels(block)[i]] = -Y[block == levels(block)[i]]
+      }
+    }
+  }
+ 
   ms_list = mu_sigma_list(Z = Z, block = block,
                           methods.list.all = methods.list.all)
-
 
   if(is.null(stat.null)){
     stat.null = com_null_dist_block(Z = Z, block = block,
