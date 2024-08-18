@@ -47,7 +47,7 @@ comb_matrix_block = function(Z, Y, block, c, methods.list.all){
         }else{
           method.list = method.list.all[[i]]
         }
-        Ti[2, ii+1] = min_stat(Zb, Yb, nb[i]-ii, c, method.list = method.list)
+        Ti[2, ii+1] = CMRSS::min_stat(Zb, Yb, nb[i]-ii, c, method.list = method.list)
       }
       Tlist[[i]] = Ti
     }
