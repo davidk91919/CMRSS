@@ -50,7 +50,7 @@ com_null_dist_block <- function(Z, block,
       }else{
         method.list = method.list.all[[i]]
       }
-      temp[j,] = temp[j,] + null_dist(nb[i], mb[i],
+      temp[j,] = temp[j,] + CMRSS::null_dist(nb[i], mb[i],
                                       method.list = method.list,
                                       Z.perm = Z.perm.i)
     }
