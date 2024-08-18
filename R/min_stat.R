@@ -22,7 +22,7 @@ min_stat <- function(Z, Y, k, c, method.list = NULL,
   }
 
   if(is.null(score)){
-    score = rank_score(n, method.list)
+    score = CMRSS::rank_score(n, method.list)
   }
 
   # sort the treated units
