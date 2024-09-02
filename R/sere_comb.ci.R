@@ -113,8 +113,7 @@ com_block_conf_quant_larger_trt = function(Z, Y,
                              block,
                              methods.list.all,
                              null.max = null.max,
-                             statistic = TRUE,
-                             switch = FALSE)[2]
+                             statistic = TRUE)[2]
         return(stat.min - thres)
       }
       if( f(c.min) <= 0){
@@ -164,8 +163,7 @@ com_block_conf_quant_larger_trt = function(Z, Y,
                              block,
                              methods.list.all,
                              null.max = null.max,
-                             statistic = TRUE,
-                             switch = FALSE)[2]
+                             statistic = TRUE)[2]
         return(stat.min - thres)
       }
       if( f(c.min) <= 0){
