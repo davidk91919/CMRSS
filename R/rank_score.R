@@ -4,7 +4,6 @@
 #'
 #' @param n Sample size
 #' @param method.list List of method. Standarizing and scaling is available for Polynomial rank score. Scaling is available for Wilcoxon and Stephenson.
-#' @noRd
 
 rank_score   <- function(n,
                          method.list = list(
@@ -33,6 +32,5 @@ rank_score   <- function(n,
       score = scale(score)
     }
   }
-  score = score / max(score)
   return(score)
 }

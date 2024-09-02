@@ -1,6 +1,6 @@
 #' min_stat
 #'
-#' 
+#'
 #'
 #' @param Z Given assignment vector
 #' @param Y Outcome vector
@@ -22,7 +22,7 @@ min_stat <- function(Z, Y, k, c, method.list = NULL,
   }
 
   if(is.null(score)){
-    score = CMRSS::rank_score(n, method.list)
+    score = rank_score(n, method.list)
   }
 
   # sort the treated units

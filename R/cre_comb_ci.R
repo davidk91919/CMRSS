@@ -40,7 +40,7 @@ comb_null_dist_cre = function(n, m, methods.list, Z.perm = NULL,nperm = 10^4){
 
   H = length(methods.list)
   if(is.null(Z.perm)){
-  Z.perm = RIQITE::assign_CRE(n, m, nperm)
+    Z.perm = RIQITE::assign_CRE(n, m, nperm)
   }
   nperm = ncol(Z.perm)
   stat.dist = matrix(NA, nrow = H, ncol = nperm)
@@ -74,7 +74,7 @@ min_p_val_cre = function(Z, Y, k, c, stat.null = NULL,
 
   if(is.null(stat.null)){
     null.dist = comb_null_dist_cre(n = n, m = m,
-                                 methods.list = methods.list, Z.perm = Z.perm, nperm = nperm)
+                                   methods.list = methods.list, Z.perm = Z.perm, nperm = nperm)
   }else{
     null.dist = stat.null
   }
@@ -218,7 +218,7 @@ com_conf_quant_larger_trt <- function( Z, Y, methods.list = NULL,
     if(j.min > 1){
       c.limit[1:(j.min-1)] = c.limit[j.min]
     }
-#    c.limit[c.limit > (Y1.max - Y0.min) + 10^{-log10(tol)} / 2] = Inf
+    #    c.limit[c.limit > (Y1.max - Y0.min) + 10^{-log10(tol)} / 2] = Inf
   }
 
   return( c.limit )
