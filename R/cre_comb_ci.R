@@ -6,8 +6,8 @@
 
 #library(CMRSS)
 
-## function calculating one p-value for individual methods(including polynomial scores)
-
+#' function calculating one p-value for individual methods(including polynomial scores)
+#'
 pval_cre <- function(Z, Y, k, c,
                      method.list, score = NULL, stat.null = NULL,
                      nperm = 10^3, Z.perm = NULL, ind.sort.treat = NULL){
@@ -33,7 +33,8 @@ pval_cre <- function(Z, Y, k, c,
   return(pval)
 }
 
-## function generating null distribution for minimum among tail probabilities
+#' function generating null distribution for minimum among tail probabilities
+#'
 
 comb_null_dist_cre = function(n, m, methods.list, Z.perm = NULL,nperm = 10^4){
 
@@ -50,21 +51,15 @@ comb_null_dist_cre = function(n, m, methods.list, Z.perm = NULL,nperm = 10^4){
     stat.dist[i,] = CMRSS::null_dist(n, m, method.list, Z.perm = Z.perm)
   }
   for(j in 1 : H){
-  #  prob.dist[j,] = (nperm + 1 - rank(stat.dist[j,])) / nperm
     prob.dist[j,] = rank(stat.dist[j,]) / nperm
   }
-#  for(j in 1 : H){
-#    tmp.dist = stat.dist[j,]
-#    for(iter in 1 : nperm){
-#      prob.dist[j,iter] = mean(tmp.dist >= stat.dist[j,iter])
-#    }
-#  }
+
 
   result = apply(prob.dist, 2, min)
   return(result)
 }
 
-## function for calculating valid minimum p-value
+#' function for calculating valid minimum p-value
 
 min_p_val_cre = function(Z, Y, k, c, stat.null = NULL,
                          methods.list, nperm){
@@ -94,10 +89,8 @@ min_p_val_cre = function(Z, Y, k, c, stat.null = NULL,
   return(result)
 }
 
-# Simultaneous Inference for multiple quantiles on CRE
-
-## helper function
-## maybe in the form of maximum test statistic will be much efficient, but not sure about their equivalence
+#' Helper function for Simultaneous Inference for multiple quantiles on CRE
+#'
 
 com_conf_quant_larger_trt <- function( Z, Y, methods.list = NULL,
                                        stat.null = NULL,
@@ -110,10 +103,6 @@ com_conf_quant_larger_trt <- function( Z, Y, methods.list = NULL,
   n = length(Z)
   m = sum(Z)
 
-  # get score if score is null #
-  #  if(is.null(score)){
-  #    score = rank_score( n, method.list )
-  #  }
 
   # emp null dist #
   if(is.null(stat.null)){
@@ -235,8 +224,10 @@ com_conf_quant_larger_trt <- function( Z, Y, methods.list = NULL,
   return( c.limit )
 }
 
-## main function
-## generates lower bound of each confidence interval of c's on every k's. (so for all individual treatment effects)
+#' Simultaneous confidence interval using CMRSS for CRE
+#'
+#' Getting Lower bound for every null c's
+#' @export
 
 com_conf_quant_larger_cre = function( Z, Y, methods.list = NULL,
                                       stat.null = NULL, # by now, this is just for the treated ones(will add option for scores for control units)
