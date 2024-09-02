@@ -43,7 +43,7 @@ pval_comb <- function(Z, Y, k, c,
                                     methods.list.all = methods.list.all,
                                     null.max = null.max,
                                     Z.perm.all = NULL,
-                                    mu_sigma_list = ms_list)
+                                    ms.list = ms_list)
   }
 
   coeflists = comb_matrix_block(Z = Z, Y = Y,
