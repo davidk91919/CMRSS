@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Combining Multiple Rank Sum Statistics • CMRSS</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Combining Multiple Rank Sum Statistics">
 <meta name="description" content="Randomization inference for quantiles of individual treatment effects using combined rank sum statistics. Supports both completely randomized experiments (CRE) and stratified randomized experiments (SRE). The optimization can be performed using either the open-source HiGHS solver or the commercial Gurobi solver.">
@@ -122,34 +122,34 @@
 <col width="48%">
 <col width="52%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>opt.method</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>"ILP_highs"</code></td>
 <td>Integer linear programming with HiGHS (open-source)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>"LP_highs"</code></td>
 <td>Linear programming relaxation with HiGHS</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>"ILP_gurobi"</code></td>
 <td>Integer linear programming with Gurobi</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>"LP_gurobi"</code></td>
 <td>Linear programming relaxation with Gurobi</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>
 <code>"ILP"</code> or <code>"ILP_auto"</code>
 </td>
 <td>Auto-select available solver (prefers Gurobi)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>
 <code>"LP"</code> or <code>"LP_auto"</code>
 </td>

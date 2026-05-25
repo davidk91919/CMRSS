@@ -7,6 +7,7 @@
 ## Installation
 
 ``` r
+
 devtools::install_github("jwbowers/CMRSS")
 ```
 
@@ -18,6 +19,7 @@ optimization solver. You have two options:
 **Option 1: HiGHS (Recommended - Open Source)**
 
 ``` r
+
 install.packages("highs")
 ```
 
@@ -26,6 +28,7 @@ HiGHS is a high-performance open-source solver that requires no license.
 **Option 2: Gurobi (Commercial)**
 
 ``` r
+
 # Requires a Gurobi license (free for academics)
 # See: https://www.gurobi.com/documentation/current/quickstart_mac/r_ins_the_r_package.html
 ```
@@ -36,12 +39,14 @@ without a Gurobi license.
 ## Load the Package
 
 ``` r
+
 library(CMRSS)
 ```
 
 ## Quick Start: Stratified Randomized Experiments
 
 ``` r
+
 # Example: Testing treatment effects in a stratified experiment
 set.seed(123)
 
@@ -76,18 +81,19 @@ print(result)
 
 The `opt.method` parameter controls which optimization solver to use:
 
-| opt.method              | Description                                         |
-|-------------------------|-----------------------------------------------------|
-| `"ILP_highs"`           | Integer linear programming with HiGHS (open-source) |
-| `"LP_highs"`            | Linear programming relaxation with HiGHS            |
-| `"ILP_gurobi"`          | Integer linear programming with Gurobi              |
-| `"LP_gurobi"`           | Linear programming relaxation with Gurobi           |
-| `"ILP"` or `"ILP_auto"` | Auto-select available solver (prefers Gurobi)       |
-| `"LP"` or `"LP_auto"`   | Auto-select for LP relaxation                       |
+| opt.method | Description |
+|----|----|
+| `"ILP_highs"` | Integer linear programming with HiGHS (open-source) |
+| `"LP_highs"` | Linear programming relaxation with HiGHS |
+| `"ILP_gurobi"` | Integer linear programming with Gurobi |
+| `"LP_gurobi"` | Linear programming relaxation with Gurobi |
+| `"ILP"` or `"ILP_auto"` | Auto-select available solver (prefers Gurobi) |
+| `"LP"` or `"LP_auto"` | Auto-select for LP relaxation |
 
 ### Checking Solver Availability
 
 ``` r
+
 # Check which solvers are installed
 solver_available("highs")   # TRUE if highs package is installed
 solver_available("gurobi")  # TRUE if gurobi package is installed
@@ -101,6 +107,7 @@ get_default_solver()  # Returns "highs" or "gurobi"
 Both HiGHS and Gurobi produce equivalent results. You can verify this:
 
 ``` r
+
 # Same results with different solvers
 result_highs <- pval_comb_block(Z, Y, k, c, block, methods.list.all,
                                 opt.method = "ILP_highs")
@@ -117,6 +124,7 @@ all.equal(result_highs, result_gurobi)
 ### Completely Randomized Experiments (CRE)
 
 ``` r
+
 ?comb_p_val_cre              # Get p-value from combined statistics in CRE
 ?com_conf_quant_larger_cre   # Get confidence intervals for quantiles in CRE
 ```
@@ -124,6 +132,7 @@ all.equal(result_highs, result_gurobi)
 ### Stratified Randomized Experiments (SRE)
 
 ``` r
+
 ?pval_comb_block             # Get p-value from combined statistics in SRE
 ?com_block_conf_quant_larger # Get confidence intervals for quantiles in SRE
 ```
@@ -131,6 +140,7 @@ all.equal(result_highs, result_gurobi)
 ### Solver Utilities
 
 ``` r
+
 ?solve_optimization   # Unified optimization interface
 ?solver_available     # Check if a solver is available
 ?get_default_solver   # Get the default solver
@@ -142,6 +152,7 @@ all.equal(result_highs, result_gurobi)
 ### Example 1: P-value Calculation
 
 ``` r
+
 library(CMRSS)
 
 # Setup
@@ -168,6 +179,7 @@ cat("Test statistic:", result["test.stat"], "\n")
 ### Example 2: Confidence Intervals
 
 ``` r
+
 # Compute simultaneous confidence intervals for treatment effect quantiles
 ci <- com_block_conf_quant_larger(Z, Y, block,
                                   set = "treat",  # for treated units

@@ -94,6 +94,7 @@ For SRE, methods must be specified per stratum in a nested list
 structure:
 
 ``` r
+
 # H statistics, each with B block-specific methods
 methods.list.all <- list(
   lapply(1:B, function(i) list(name = "Polynomial", r = 2, std = TRUE, scale = FALSE)),
@@ -118,6 +119,7 @@ wrappers
 Example test pattern:
 
 ``` r
+
 test_that("description", {
   skip_if_not(solver_available("highs"), "HiGHS not available")
   # test code
