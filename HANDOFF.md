@@ -8,7 +8,124 @@ tests that needed to be revisited when David replied. Updated 2026-05-19
 to record the closure of item 1A (treated-only convention adopted; tests
 re-enabled in CMRSS 0.2.7) and scenario-(a) step 3
 (`com_block_conf_quant_larger` wrapper audit; no bug; function
-documentation added). Read top to bottom.
+documentation added). Updated 2026-09-07 to record the merge with
+`upstream/main`, the arrival of the revise-and-resubmit decision on the
+paper, David Kim’s step back from the project, and a verification that
+the paper still reproduces from its pinned CMRSS commit. Read top to
+bottom.
+
+## TL;DR for the next session (2026-09-07 onward)
+
+Read this section first. The 2026-05-20 TL;DR below it is still accurate
+about item 1A, but its `main` SHA and its paper-status paragraph have
+both been overtaken; both are corrected in place.
+
+### Where the repositories stand
+
+`main` is `b198562` and is identical on the local clone, on `origin`
+(`bowers-illinois-edu/CMRSS`), and on `upstream` (`davidk91919/CMRSS`).
+The divergence that existed at the start of the session is gone: 13
+ahead, 0 behind became 0 and 0.
+
+`b198562` is a merge commit. Its second parent is David’s `b67c935`
+(2026-05-25), which changed one line of `tests/testthat/test-pval-cre.R`
+from `k <- floor(0.8 * n)` to `k <- floor(0.8 * m)`. The conflict was
+resolved in favor of our version of that file, and the merge changed no
+files: `git diff aa67001 b198562` is empty. The merge commit message
+carries the derivation of why our version is the correct one; read it
+before reopening the question.
+
+Why David’s edit was not taken: it fixes the CMRSS side of that test but
+leaves the RIQITE side alone, and RIQITE implements the all-units null
+`H_{k,c}` of `main.tex` eq:H_kc (line 510, `k in 1..n`) while CMRSS
+implements the treated-only null `H_{k,c}^treat` of eq:H_kc_t (line 459,
+`k in 1..n_treat`). Passing one `k` to both compares different
+hypotheses. At `n = 50`, `m = 25`, `k = 20`, RIQITE’s constraint on the
+treated units is vacuous (`20 - 25 = -5`) and it returns exactly
+1.00000, against CMRSS’s 0.77923 (Wilcoxon) and 0.71548 (Stephenson);
+the test asserts agreement at `tolerance = 0.01`, so David’s version
+fails by 0.22 and 0.28.
+
+Jake has `push: true` on `davidk91919/CMRSS` and pushed `main` there
+directly on 2026-09-07, so the canonical repo went from 0.2.5 to 0.2.7
+in one step. He drafted a Slack note to David explaining the one place
+they differ. He declined a dual push URL on `origin`, preferring to push
+to the canonical repo deliberately, so `main` can drift again. Check
+`git rev-list --count upstream/main..main` before assuming the two
+agree.
+
+`gh-pages` differs between the two repos and always will, since each
+repo’s pkgdown workflow builds its own site. Leave it alone.
+
+### The paper is at revise-and-resubmit
+
+This supersedes the “manuscript under review” risk posture stated in the
+2026-05-20 TL;DR and in the next-session menu at the bottom of this
+file. The wait for the R&R signal is over.
+
+The constraint that replaces it, in Jake’s words: he needs to reproduce
+the results as submitted, exactly, before making any revision. So the
+gating question for an item is no longer “does this change numerical
+outputs before the R&R,” it is “has Jake reproduced and recorded the
+submitted numbers yet.” Ask him before starting any item under “Possible
+numerical change” in the menu below.
+
+One operational rule follows, and it belongs to the paper repo rather
+than this one: do not run
+[`renv::snapshot()`](https://rstudio.github.io/renv/reference/snapshot.html)
+or
+[`renv::update()`](https://rstudio.github.io/renv/reference/update.html)
+in `~/repos/combined_stephenson_tests` until the submitted numbers are
+reproduced and saved. Either command would move the CMRSS pin off
+`1371f315` and destroy the reference point.
+
+### Replication is safe, and was verified rather than assumed
+
+`~/repos/combined_stephenson_tests/renv.lock` pins CMRSS 0.2.5 at commit
+`1371f315` from `bowers-illinois-edu/CMRSS` (2025-12-24). Confirmed
+2026-09-07 via the GitHub API that the commit is still fetchable, so the
+April archive-and-recreate of that repo did not break the pin.
+
+More than that, the pin barely matters. Between `1371f315` and `b198562`
+the only executable change anywhere in `R/` is the six-line range check
+on `k` inside `pval_comb_block`; everything else is roxygen text plus
+the `DESCRIPTION` bump. The paper’s four run scripts call
+`com_block_conf_quant_larger` and `com_conf_quant_larger_cre`, which
+reach the solver through `com_block_conf_quant_larger_trt` and never
+route through `pval_comb_block`. So the guard cannot fire on the paper’s
+code path, and current `main` reproduces the submitted numbers as well
+as the pin does. This closes scenario-(a) step 5 (the paper-script
+audit) as verified rather than deferred.
+
+`code/sre_simulation_run.R` calls
+[`library(gurobi)`](https://rdrr.io/r/base/library.html), so reproducing
+the SRE simulation needs a live Gurobi license. The electric-teachers
+scripts and the CRE simulation do not load it.
+
+### David Kim is stepping back
+
+He has taken an industry job, and the active authors are now Jake and
+Xinran Li. Jake’s decision on 2026-09-07: `davidk91919/CMRSS` stays the
+canonical home for now, so the repo-layout section further down this
+file is still correct. Do not propose archiving or renaming without
+asking.
+
+### State of the tree
+
+`devtools::test()` on `b198562` reports 0 failures, 0 warnings, 150
+tests passing, and 4 skipped, all four being the Gurobi-gated
+comparisons in `test-solvers.R` that skip because Gurobi is not
+installed on this machine. `devtools::check()` was not re-run this
+session because the merge changed no files and `aa67001` was already
+check-clean at 0 errors, 0 warnings, and 2 repo-hygiene NOTEs.
+
+### What was not done
+
+Nothing in `R/` or `tests/` changed this session. The open PLAN items
+are exactly as the menu at the bottom of this file lists them, with the
+R&R gating rewritten. Scenario-(a) step 4 (refactoring
+`com_block_conf_quant_larger_trt` from all-units `k` to treated-only
+`k`) is still deferred and still Jake’s call.
 
 ## TL;DR for the next session (2026-05-20 onward)
 
@@ -19,8 +136,8 @@ RIQITE uses the `k_R = k_C + (n - m)` translation under a shared
 `set = "control"` paths were audited against `main.tex` and found
 correct; tests and function documentation are in place.
 `devtools::check()` is clean (0 errors, 0 warnings, 2 pre-existing
-repo-hygiene NOTEs). `main` is at `99af2eb` (pushed). Working tree
-should be clean.
+repo-hygiene NOTEs). `main` was at `99af2eb` when this paragraph was
+written; as of 2026-09-07 it is `b198562`. Working tree should be clean.
 
 **Status of the older “paused indefinitely” framing below: stale.** The
 2026-04-28 section and several below it describe a state of waiting for
@@ -28,12 +145,11 @@ David Kim’s reply on item 1A. That wait is over and the resolution is
 recorded in the 2026-05-19 update. Read those older sections only for
 forensic context, not for next-step guidance.
 
-**Paper status:** the manuscript is under review. Risk posture for the
-package: ideally no numerical-output changes between now and the
-revise-and-resubmit (R&R) signal. If a fix demonstrably requires a
-numerical-output change, it can still land – that change would be folded
-into the R&R revision. Tomorrow-Claude should mention this tradeoff
-before any user-visible default change (2A, 2B, possibly 1B).
+Paper status, as written on 2026-05-19 and now superseded: the
+manuscript was under review, and the risk posture was to avoid
+numerical-output changes until the R&R signal arrived. It has arrived.
+See “The paper is at revise-and-resubmit” in the 2026-09-07 section
+above for the constraint that replaces it.
 
 **The “Suggested next session opening” section at the bottom of this
 file is up to date** (rewritten 2026-05-19). Start there.
@@ -517,8 +633,11 @@ docstring fixes. See `PLAN.md` for detail.
     before any code work. Re-read the terminology memory at
     `feedback_terminology_function_documentation.md` (write “function
     documentation,” not “docstring”).
-4.  Ask Jake which open item to tackle. The live menu, ordered by risk
-    against the under-review manuscript:
+4.  Ask Jake which open item to tackle. The menu below was ordered by
+    risk against an under-review manuscript. The paper is now at R&R, so
+    the ordering still holds but the gate has changed: before starting
+    anything under “Possible numerical change,” ask whether he has
+    reproduced and recorded the submitted numbers yet.
     - **Safe (no numerical change):**
       - **2C** – rename `method_berger_boos` to e.g.
         `method_bonferroni_two_sided` (the function does Bonferroni
@@ -533,7 +652,8 @@ docstring fixes. See `PLAN.md` for detail.
         `com_block_conf_quant_larger_trt` from all-units to treated-only
         `k`. Functionally equivalent; mechanically removes the asymmetry
         with `pval_comb_block`.
-    - **Possible numerical change (preferable to wait for R&R):**
+    - **Possible numerical change (gate: submitted numbers reproduced
+      and recorded first):**
       - **1B** – column range `0:nb[i]` in `comb_matrix_block_stratum`
         (`R/CMRSS_SRE.R:704`) vs paper `eq:comb_per_stratum`. Possible
         over-enumeration. If wrong, `comb.method = 2` outputs shift.
@@ -546,9 +666,11 @@ docstring fixes. See `PLAN.md` for detail.
       - **3C, 3D** – alpha-semantics docs and default harmonization that
         touch user-facing behavior.
     - **Scenario-(a) step 5** (paper-script audit at
-      `combined_stephenson_tests/code/`) – deferred; low priority since
-      the scripts call the wrapper, not `pval_comb_block` directly, and
-      the wrapper is now verified.
+      `combined_stephenson_tests/code/`) – done 2026-09-07. Verified
+      that all four run scripts call `com_block_conf_quant_larger` or
+      `com_conf_quant_larger_cre` and never `pval_comb_block`, so the
+      `k` guard is unreachable from the paper’s code path. See the
+      2026-09-07 section at the top of this file.
 5.  Do not start coding before Jake picks an item and confirms scope.
-    For any item that might change numerical outputs, raise the
-    manuscript-review tradeoff first.
+    For any item that might change numerical outputs, ask first whether
+    the submitted numbers have been reproduced and recorded.

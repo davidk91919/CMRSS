@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,23 @@
       <small>Source: <a href="https://github.com/bowers-illinois-edu/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.9" id="cmrss-029">CMRSS 0.2.9<a class="anchor" aria-label="anchor" href="#cmrss-029"></a></h2>
+<div class="section level3">
+<h3 id="plan-itemb-settled-the-wider-column-range-was-redundant-not-wrong-0-2-9">PLAN item 1B settled: the wider column range was redundant, not wrong<a class="anchor" aria-label="anchor" href="#plan-itemb-settled-the-wider-column-range-was-redundant-not-wrong-0-2-9"></a></h3>
+<ul><li><p><code><a href="../reference/comb_matrix_block_stratum.html">comb_matrix_block_stratum()</a></code> enumerated exempt counts <code>0:n_b</code> where the index counts treated units whose effect exceeds the threshold and so cannot exceed <code>m_b</code>. <code><a href="../reference/min_stat.html">min_stat()</a></code> exempts <code>min(m, n - k)</code> units, so every column past <code>m_b</code> repeated the <code>m_b</code> column’s value while carrying a larger index into the stratum solver’s budget constraint. Such a column uses more of that budget for the same objective, so no optimal solution used one.</p></li>
+<li><p><strong>No number changes.</strong> The range is now <code>0:m_b</code>. <code>comb.method = 2</code> p-values are identical. The tests rebuild the wider matrix and confirm the solver returns the same objective at every budget from 0 to <code>sum(m_b)</code>.</p></li>
+<li><p><code><a href="../reference/comb_matrix_block_stratum.html">comb_matrix_block_stratum()</a></code> also uses <code><a href="../reference/min_stat_path.html">min_stat_path()</a></code> now, and <code><a href="../reference/max_comb_matrix_block_stratum.html">max_comb_matrix_block_stratum()</a></code> forwards the caller’s precomputed scores and block summary instead of passing <code>NULL</code> and making them be rebuilt at every threshold.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.8" id="cmrss-028">CMRSS 0.2.8<a class="anchor" aria-label="anchor" href="#cmrss-028"></a></h2>
+<div class="section level3">
+<h3 id="one-ranking-per-block-instead-of-m_b--0-2-8">One ranking per block instead of m_b + 1<a class="anchor" aria-label="anchor" href="#one-ranking-per-block-instead-of-m_b--0-2-8"></a></h3>
+<ul><li><p><code><a href="../reference/comb_matrix_block.html">comb_matrix_block()</a></code> obtains the whole sequence of exempt counts from a single call to <code><a href="https://rdrr.io/r/base/rank.html" class="external-link">rank()</a></code> through the new internal <code><a href="../reference/min_stat_path.html">min_stat_path()</a></code>, in place of <code>m_b + 1</code> separate <code><a href="../reference/min_stat.html">min_stat()</a></code> calls that each re-ran <code><a href="../reference/sort_treat.html">sort_treat()</a></code> and <code><a href="https://rdrr.io/r/base/rank.html" class="external-link">rank()</a></code> over the same block.</p></li>
+<li><p><strong>No number changes.</strong> The identity is exact, not an approximation: the exempted units are the treated units with the largest ranks, so every remaining rank is its original shifted up by the exempt count, and the exempted units occupy the lowest ranks and are all treated, so they contribute a fixed partial sum of the scores. Checked against <code><a href="../reference/min_stat.html">min_stat()</a></code> on 1,200 random designs with ties and at exact breakpoints, agreeing to 1e-10, and <code><a href="../reference/comb_matrix_block.html">comb_matrix_block()</a></code> is pinned against stored values.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.7" id="cmrss-027">CMRSS 0.2.7<a class="anchor" aria-label="anchor" href="#cmrss-027"></a></h2>
 <div class="section level3">

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,7 +94,11 @@
 <li><p>CHECKPOINT 1A.i (after implementation): Jake reviews diff and <code>devtools::check()</code> output before merge.</p></li>
 </ul><hr></div>
 <div class="section level3">
-<h3 id="id_--1b-verify-column-range-0nbi-in-comb_matrix_block_stratum-against-paper-eqcomb_per_stratum">[ ] 1B. Verify column range <code>0:nb[i]</code> in <code>comb_matrix_block_stratum</code> against paper eq:comb_per_stratum<a class="anchor" aria-label="anchor" href="#id_--1b-verify-column-range-0nbi-in-comb_matrix_block_stratum-against-paper-eqcomb_per_stratum"></a></h3>
+<h3 id="x-1b-verify-column-range-0nbi-in-comb_matrix_block_stratum-against-paper-eqcomb_per_stratum">[x] 1B. Verify column range <code>0:nb[i]</code> in <code>comb_matrix_block_stratum</code> against paper eq:comb_per_stratum<a class="anchor" aria-label="anchor" href="#x-1b-verify-column-range-0nbi-in-comb_matrix_block_stratum-against-paper-eqcomb_per_stratum"></a></h3>
+<p><strong>Closed 2026-09-07 (CMRSS 0.2.9). No bug; redundant enumeration removed, no numerical change.</strong></p>
+<p>The index counts treated units in the block whose effect exceeds <code>c</code>, so it cannot exceed <code>m_b</code>. <code>min_stat</code> exempts <code>min(m, n - k)</code> units (<code>R/CMRSS_CRE.R:275</code>), so every column past <code>m_b</code> repeated the <code>m_b</code> column’s statistic. The stratum solver selects one column per block and charges its index against a shared budget (<code>sum index * x &lt;= p</code>, <code>HiGHS_sol_stratum_com</code>), so a repeated column with a larger index is dominated: it can never improve a minimum. Narrowing the range to <code>0:m_b</code> therefore changes no answer, which <code>tests/testthat/test-comb-matrix-block-stratum-range.R</code> confirms by rebuilding the wider matrix and comparing the solver’s objective at every budget from 0 to <code>sum(m_b)</code>, and by pinning a <code>comb.method = 2</code> p-value end to end.</p>
+<p>The paper’s <code>eq:comb_per_stratum</code> (<code>main.tex:1345</code>) defines the per-stratum statistic and does not fix the enumeration range, so it neither supports nor contradicts the old code; the argument above comes from the solver’s budget constraint instead.</p>
+<p>Original investigation notes follow.</p>
 <ul><li>
 <ol style="list-style-type: lower-alpha"><li>Investigate</li>
 </ol><ul><li><label><input type="checkbox">Compare <code>comb_matrix_block</code> (<code>R/CMRSS_SRE.R:487-535</code>, line 520 uses <code>0:mb[i]</code>) to <code>comb_matrix_block_stratum</code> (<code>R/CMRSS_SRE.R:661-719</code>, line 704 uses <code>0:nb[i]</code>). They use different ranges for what looks like the same enumeration over “number of treated units in this block whose effect exceeds c.”</label></li>
@@ -321,6 +325,31 @@
 </ol><ul class="task-list"><li><label><input type="checkbox">If any of those three invariants are not yet covered, add the missing tests in a single file <code>tests/testthat/test-paper-invariants.R</code>. Otherwise, mark this item closed and reference the tests written in 1A, 1B, 2B, 3C.</label></li>
 </ul></li>
 <li>CHECKPOINT 3F: review.</li>
+</ul><hr></div>
+</div>
+<div class="section level2">
+<h2 id="priority-4--statistical-correctness-of-the-monte-carlo-p-value">PRIORITY 4 – Statistical correctness of the Monte Carlo p-value<a class="anchor" aria-label="anchor" href="#priority-4--statistical-correctness-of-the-monte-carlo-p-value"></a></h2>
+<div class="section level3">
+<h3 id="id_--4a-apply-the-phipson-and-smyth-correction-in-pval_comb_block">[ ] 4A. Apply the Phipson and Smyth correction in <code>pval_comb_block</code>
+<a class="anchor" aria-label="anchor" href="#id_--4a-apply-the-phipson-and-smyth-correction-in-pval_comb_block"></a></h3>
+<p><code>pval_comb_block</code> computes <code>pval &lt;- mean(stat.null &gt;= stat.min)</code> at <code>R/CMRSS_SRE.R:54</code> and <code>:71</code>. This is the proportion of <code>null.max</code> draws at least as extreme as the observed statistic, and it returns exactly 0 whenever no draw reaches <code>stat.min</code>, reporting a p-value smaller than the simulation can resolve.</p>
+<p>Phipson and Smyth (2010), “Permutation P-values Should Never Be Zero: Calculating Exact P-values When Permutations Are Randomly Drawn,” <em>Statistical Applications in Genetics and Molecular Biology</em> 9(1), <a href="doi:10.2202/1544-6115.1585" class="uri">doi:10.2202/1544-6115.1585</a>, show that substituting an unbiased estimator for the exact p-value inflates the type I error rate, and that adding one to the numerator and the denominator does not. A copy of the paper is at <code>references/Phipson_Smyth_2010_permutation_pvalues.pdf</code>.</p>
+<p>The corrected form is</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">sum</span>(stat.null <span class="sc">&gt;=</span> stat.min)) <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> null.max)</span></code></pre></div>
+<p>Why it is valid here rather than merely conventional: under <code>H_{k,c}^treat</code> the quantity <code>tilde_t(Z, Y - Z*xi)</code> has exactly the reference distribution, since that distribution is distribution-free (<code>main.tex</code> Theorem at line 900). <code>stat.min</code> is a minimum over the null set and so is no larger than that quantity, which makes the observed value stochastically no larger than a draw. Counting it among the draws therefore gives a p-value that is valid and, where the minimum bites, conservative.</p>
+<p>Tests are already written at <code>tests/testthat/test-perm-pvalue-correction.R</code>. Four of the five skip until <code>perm_pvalue()</code> exists; the fifth is a tripwire asserting that <code>pval_comb_block</code> still contains the uncorrected expression, so this change cannot be made without deleting it deliberately.</p>
+<p><strong>Gated.</strong> The correction shifts every p-value by roughly <code>1/null.max</code> (about 1e-4 at the default <code>null.max = 10^4</code>, about 1e-3 at the <code>null.max = 1000</code> used in the profiling memo), so it is a numerical-output change. Under the R&amp;R constraint recorded in <code>HANDOFF.md</code>, the submitted results must be reproduced and recorded before it lands.</p>
+<ul><li><ol style="list-style-type: lower-alpha"><li>Tests-first: done. See the file above.</li>
+</ol></li>
+<li>
+<ol start="2" style="list-style-type: lower-alpha"><li>Implementation, after the replication run:</li>
+</ol><ul class="task-list"><li><label><input type="checkbox">Add <code>perm_pvalue(stat.null, stat.obs)</code> as an internal helper in a new <code>R/pvalue.R</code> rather than appending to <code>R/CMRSS_SRE.R</code>, which is already past 1500 lines.</label></li>
+<li><label><input type="checkbox">Call it from both sites in <code>pval_comb_block</code>.</label></li>
+<li><label><input type="checkbox">Check whether <code>comb_p_val_cre</code> in <code>R/CMRSS_CRE.R</code> has the same pattern and needs the same change.</label></li>
+<li><label><input type="checkbox">Delete the tripwire test.</label></li>
+<li><label><input type="checkbox">Bump <code>DESCRIPTION</code> patch and add a <code>NEWS.md</code> entry recording that p-values move by about <code>1/null.max</code>.</label></li>
+<li><label><input type="checkbox">CHECKPOINT: pause for Jake before running <code>devtools::check()</code>.</label></li>
+</ul></li>
 </ul><hr></div>
 </div>
 <div class="section level2">

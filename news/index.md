@@ -1,5 +1,56 @@
 # Changelog
 
+## CMRSS 0.2.9
+
+### PLAN item 1B settled: the wider column range was redundant, not wrong
+
+- [`comb_matrix_block_stratum()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_matrix_block_stratum.md)
+  enumerated exempt counts `0:n_b` where the index counts treated units
+  whose effect exceeds the threshold and so cannot exceed `m_b`.
+  [`min_stat()`](https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat.md)
+  exempts `min(m, n - k)` units, so every column past `m_b` repeated the
+  `m_b` column’s value while carrying a larger index into the stratum
+  solver’s budget constraint. Such a column uses more of that budget for
+  the same objective, so no optimal solution used one.
+
+- **No number changes.** The range is now `0:m_b`. `comb.method = 2`
+  p-values are identical. The tests rebuild the wider matrix and confirm
+  the solver returns the same objective at every budget from 0 to
+  `sum(m_b)`.
+
+- [`comb_matrix_block_stratum()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_matrix_block_stratum.md)
+  also uses
+  [`min_stat_path()`](https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat_path.md)
+  now, and
+  [`max_comb_matrix_block_stratum()`](https://bowers-illinois-edu.github.io/CMRSS/reference/max_comb_matrix_block_stratum.md)
+  forwards the caller’s precomputed scores and block summary instead of
+  passing `NULL` and making them be rebuilt at every threshold.
+
+## CMRSS 0.2.8
+
+### One ranking per block instead of m_b + 1
+
+- [`comb_matrix_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_matrix_block.md)
+  obtains the whole sequence of exempt counts from a single call to
+  [`rank()`](https://rdrr.io/r/base/rank.html) through the new internal
+  [`min_stat_path()`](https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat_path.md),
+  in place of `m_b + 1` separate
+  [`min_stat()`](https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat.md)
+  calls that each re-ran
+  [`sort_treat()`](https://bowers-illinois-edu.github.io/CMRSS/reference/sort_treat.md)
+  and [`rank()`](https://rdrr.io/r/base/rank.html) over the same block.
+
+- **No number changes.** The identity is exact, not an approximation:
+  the exempted units are the treated units with the largest ranks, so
+  every remaining rank is its original shifted up by the exempt count,
+  and the exempted units occupy the lowest ranks and are all treated, so
+  they contribute a fixed partial sum of the scores. Checked against
+  [`min_stat()`](https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat.md)
+  on 1,200 random designs with ties and at exact breakpoints, agreeing
+  to 1e-10, and
+  [`comb_matrix_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_matrix_block.md)
+  is pinned against stored values.
+
 ## CMRSS 0.2.7
 
 ### Documentation

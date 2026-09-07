@@ -179,7 +179,30 @@ CHECKPOINT 1A.i (after implementation): Jake reviews diff and
 
 ------------------------------------------------------------------------
 
-### \[ \] 1B. Verify column range `0:nb[i]` in `comb_matrix_block_stratum` against paper eq:comb_per_stratum
+### \[x\] 1B. Verify column range `0:nb[i]` in `comb_matrix_block_stratum` against paper eq:comb_per_stratum
+
+**Closed 2026-09-07 (CMRSS 0.2.9). No bug; redundant enumeration
+removed, no numerical change.**
+
+The index counts treated units in the block whose effect exceeds `c`, so
+it cannot exceed `m_b`. `min_stat` exempts `min(m, n - k)` units
+(`R/CMRSS_CRE.R:275`), so every column past `m_b` repeated the `m_b`
+column’s statistic. The stratum solver selects one column per block and
+charges its index against a shared budget (`sum index * x <= p`,
+`HiGHS_sol_stratum_com`), so a repeated column with a larger index is
+dominated: it can never improve a minimum. Narrowing the range to
+`0:m_b` therefore changes no answer, which
+`tests/testthat/test-comb-matrix-block-stratum-range.R` confirms by
+rebuilding the wider matrix and comparing the solver’s objective at
+every budget from 0 to `sum(m_b)`, and by pinning a `comb.method = 2`
+p-value end to end.
+
+The paper’s `eq:comb_per_stratum` (`main.tex:1345`) defines the
+per-stratum statistic and does not fix the enumeration range, so it
+neither supports nor contradicts the old code; the argument above comes
+from the solver’s budget constraint instead.
+
+Original investigation notes follow.
 
 1.  Investigate
 
@@ -580,6 +603,76 @@ Otherwise, mark this item closed and reference the tests written in 1A,
 1B, 2B, 3C.
 
 CHECKPOINT 3F: review.
+
+------------------------------------------------------------------------
+
+## PRIORITY 4 – Statistical correctness of the Monte Carlo p-value
+
+### \[ \] 4A. Apply the Phipson and Smyth correction in `pval_comb_block`
+
+`pval_comb_block` computes `pval <- mean(stat.null >= stat.min)` at
+`R/CMRSS_SRE.R:54` and `:71`. This is the proportion of `null.max` draws
+at least as extreme as the observed statistic, and it returns exactly 0
+whenever no draw reaches `stat.min`, reporting a p-value smaller than
+the simulation can resolve.
+
+Phipson and Smyth (2010), “Permutation P-values Should Never Be Zero:
+Calculating Exact P-values When Permutations Are Randomly Drawn,”
+*Statistical Applications in Genetics and Molecular Biology* 9(1),
+<doi:10.2202/1544-6115.1585>, show that substituting an unbiased
+estimator for the exact p-value inflates the type I error rate, and that
+adding one to the numerator and the denominator does not. A copy of the
+paper is at `references/Phipson_Smyth_2010_permutation_pvalues.pdf`.
+
+The corrected form is
+
+``` R
+(1 + sum(stat.null >= stat.min)) / (1 + null.max)
+```
+
+Why it is valid here rather than merely conventional: under
+`H_{k,c}^treat` the quantity `tilde_t(Z, Y - Z*xi)` has exactly the
+reference distribution, since that distribution is distribution-free
+(`main.tex` Theorem at line 900). `stat.min` is a minimum over the null
+set and so is no larger than that quantity, which makes the observed
+value stochastically no larger than a draw. Counting it among the draws
+therefore gives a p-value that is valid and, where the minimum bites,
+conservative.
+
+Tests are already written at
+`tests/testthat/test-perm-pvalue-correction.R`. Four of the five skip
+until `perm_pvalue()` exists; the fifth is a tripwire asserting that
+`pval_comb_block` still contains the uncorrected expression, so this
+change cannot be made without deleting it deliberately.
+
+**Gated.** The correction shifts every p-value by roughly `1/null.max`
+(about 1e-4 at the default `null.max = 10^4`, about 1e-3 at the
+`null.max = 1000` used in the profiling memo), so it is a
+numerical-output change. Under the R&R constraint recorded in
+`HANDOFF.md`, the submitted results must be reproduced and recorded
+before it lands.
+
+1.  Tests-first: done. See the file above.
+
+&nbsp;
+
+2.  Implementation, after the replication run:
+
+Add `perm_pvalue(stat.null, stat.obs)` as an internal helper in a new
+`R/pvalue.R` rather than appending to `R/CMRSS_SRE.R`, which is already
+past 1500 lines.
+
+Call it from both sites in `pval_comb_block`.
+
+Check whether `comb_p_val_cre` in `R/CMRSS_CRE.R` has the same pattern
+and needs the same change.
+
+Delete the tripwire test.
+
+Bump `DESCRIPTION` patch and add a `NEWS.md` entry recording that
+p-values move by about `1/null.max`.
+
+CHECKPOINT: pause for Jake before running `devtools::check()`.
 
 ------------------------------------------------------------------------
 

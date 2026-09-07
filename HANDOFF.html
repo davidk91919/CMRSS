@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,12 +34,48 @@
 
 <div id="handoff-cmrss-paper-vs-code-audit" class="section level1">
 
-<p>Originally written 2026-04-26 after a paper-vs-code audit. Updated 2026-04-28 to reflect a repo move, David Kim’s reply on item 1A, and a follow-on finding that complicates David’s reply. Updated 2026-05-12 to record CI infrastructure fixes and explicit skip markers for the 10 tests that needed to be revisited when David replied. Updated 2026-05-19 to record the closure of item 1A (treated-only convention adopted; tests re-enabled in CMRSS 0.2.7) and scenario-(a) step 3 (<code>com_block_conf_quant_larger</code> wrapper audit; no bug; function documentation added). Read top to bottom.</p>
+<p>Originally written 2026-04-26 after a paper-vs-code audit. Updated 2026-04-28 to reflect a repo move, David Kim’s reply on item 1A, and a follow-on finding that complicates David’s reply. Updated 2026-05-12 to record CI infrastructure fixes and explicit skip markers for the 10 tests that needed to be revisited when David replied. Updated 2026-05-19 to record the closure of item 1A (treated-only convention adopted; tests re-enabled in CMRSS 0.2.7) and scenario-(a) step 3 (<code>com_block_conf_quant_larger</code> wrapper audit; no bug; function documentation added). Updated 2026-09-07 to record the merge with <code>upstream/main</code>, the arrival of the revise-and-resubmit decision on the paper, David Kim’s step back from the project, and a verification that the paper still reproduces from its pinned CMRSS commit. Read top to bottom.</p>
+<div class="section level2">
+<h2 id="tldr-for-the-next-session-2026-09-07-onward">TL;DR for the next session (2026-09-07 onward)<a class="anchor" aria-label="anchor" href="#tldr-for-the-next-session-2026-09-07-onward"></a></h2>
+<p>Read this section first. The 2026-05-20 TL;DR below it is still accurate about item 1A, but its <code>main</code> SHA and its paper-status paragraph have both been overtaken; both are corrected in place.</p>
+<div class="section level3">
+<h3 id="where-the-repositories-stand">Where the repositories stand<a class="anchor" aria-label="anchor" href="#where-the-repositories-stand"></a></h3>
+<p><code>main</code> is <code>b198562</code> and is identical on the local clone, on <code>origin</code> (<code>bowers-illinois-edu/CMRSS</code>), and on <code>upstream</code> (<code>davidk91919/CMRSS</code>). The divergence that existed at the start of the session is gone: 13 ahead, 0 behind became 0 and 0.</p>
+<p><code>b198562</code> is a merge commit. Its second parent is David’s <code>b67c935</code> (2026-05-25), which changed one line of <code>tests/testthat/test-pval-cre.R</code> from <code>k &lt;- floor(0.8 * n)</code> to <code>k &lt;- floor(0.8 * m)</code>. The conflict was resolved in favor of our version of that file, and the merge changed no files: <code>git diff aa67001 b198562</code> is empty. The merge commit message carries the derivation of why our version is the correct one; read it before reopening the question.</p>
+<p>Why David’s edit was not taken: it fixes the CMRSS side of that test but leaves the RIQITE side alone, and RIQITE implements the all-units null <code>H_{k,c}</code> of <code>main.tex</code> eq:H_kc (line 510, <code>k in 1..n</code>) while CMRSS implements the treated-only null <code>H_{k,c}^treat</code> of eq:H_kc_t (line 459, <code>k in 1..n_treat</code>). Passing one <code>k</code> to both compares different hypotheses. At <code>n = 50</code>, <code>m = 25</code>, <code>k = 20</code>, RIQITE’s constraint on the treated units is vacuous (<code>20 - 25 = -5</code>) and it returns exactly 1.00000, against CMRSS’s 0.77923 (Wilcoxon) and 0.71548 (Stephenson); the test asserts agreement at <code>tolerance = 0.01</code>, so David’s version fails by 0.22 and 0.28.</p>
+<p>Jake has <code>push: true</code> on <code>davidk91919/CMRSS</code> and pushed <code>main</code> there directly on 2026-09-07, so the canonical repo went from 0.2.5 to 0.2.7 in one step. He drafted a Slack note to David explaining the one place they differ. He declined a dual push URL on <code>origin</code>, preferring to push to the canonical repo deliberately, so <code>main</code> can drift again. Check <code>git rev-list --count upstream/main..main</code> before assuming the two agree.</p>
+<p><code>gh-pages</code> differs between the two repos and always will, since each repo’s pkgdown workflow builds its own site. Leave it alone.</p>
+</div>
+<div class="section level3">
+<h3 id="the-paper-is-at-revise-and-resubmit">The paper is at revise-and-resubmit<a class="anchor" aria-label="anchor" href="#the-paper-is-at-revise-and-resubmit"></a></h3>
+<p>This supersedes the “manuscript under review” risk posture stated in the 2026-05-20 TL;DR and in the next-session menu at the bottom of this file. The wait for the R&amp;R signal is over.</p>
+<p>The constraint that replaces it, in Jake’s words: he needs to reproduce the results as submitted, exactly, before making any revision. So the gating question for an item is no longer “does this change numerical outputs before the R&amp;R,” it is “has Jake reproduced and recorded the submitted numbers yet.” Ask him before starting any item under “Possible numerical change” in the menu below.</p>
+<p>One operational rule follows, and it belongs to the paper repo rather than this one: do not run <code><a href="https://rstudio.github.io/renv/reference/snapshot.html" class="external-link">renv::snapshot()</a></code> or <code><a href="https://rstudio.github.io/renv/reference/update.html" class="external-link">renv::update()</a></code> in <code>~/repos/combined_stephenson_tests</code> until the submitted numbers are reproduced and saved. Either command would move the CMRSS pin off <code>1371f315</code> and destroy the reference point.</p>
+</div>
+<div class="section level3">
+<h3 id="replication-is-safe-and-was-verified-rather-than-assumed">Replication is safe, and was verified rather than assumed<a class="anchor" aria-label="anchor" href="#replication-is-safe-and-was-verified-rather-than-assumed"></a></h3>
+<p><code>~/repos/combined_stephenson_tests/renv.lock</code> pins CMRSS 0.2.5 at commit <code>1371f315</code> from <code>bowers-illinois-edu/CMRSS</code> (2025-12-24). Confirmed 2026-09-07 via the GitHub API that the commit is still fetchable, so the April archive-and-recreate of that repo did not break the pin.</p>
+<p>More than that, the pin barely matters. Between <code>1371f315</code> and <code>b198562</code> the only executable change anywhere in <code>R/</code> is the six-line range check on <code>k</code> inside <code>pval_comb_block</code>; everything else is roxygen text plus the <code>DESCRIPTION</code> bump. The paper’s four run scripts call <code>com_block_conf_quant_larger</code> and <code>com_conf_quant_larger_cre</code>, which reach the solver through <code>com_block_conf_quant_larger_trt</code> and never route through <code>pval_comb_block</code>. So the guard cannot fire on the paper’s code path, and current <code>main</code> reproduces the submitted numbers as well as the pin does. This closes scenario-(a) step 5 (the paper-script audit) as verified rather than deferred.</p>
+<p><code>code/sre_simulation_run.R</code> calls <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(gurobi)</a></code>, so reproducing the SRE simulation needs a live Gurobi license. The electric-teachers scripts and the CRE simulation do not load it.</p>
+</div>
+<div class="section level3">
+<h3 id="david-kim-is-stepping-back">David Kim is stepping back<a class="anchor" aria-label="anchor" href="#david-kim-is-stepping-back"></a></h3>
+<p>He has taken an industry job, and the active authors are now Jake and Xinran Li. Jake’s decision on 2026-09-07: <code>davidk91919/CMRSS</code> stays the canonical home for now, so the repo-layout section further down this file is still correct. Do not propose archiving or renaming without asking.</p>
+</div>
+<div class="section level3">
+<h3 id="state-of-the-tree">State of the tree<a class="anchor" aria-label="anchor" href="#state-of-the-tree"></a></h3>
+<p><code>devtools::test()</code> on <code>b198562</code> reports 0 failures, 0 warnings, 150 tests passing, and 4 skipped, all four being the Gurobi-gated comparisons in <code>test-solvers.R</code> that skip because Gurobi is not installed on this machine. <code>devtools::check()</code> was not re-run this session because the merge changed no files and <code>aa67001</code> was already check-clean at 0 errors, 0 warnings, and 2 repo-hygiene NOTEs.</p>
+</div>
+<div class="section level3">
+<h3 id="what-was-not-done">What was not done<a class="anchor" aria-label="anchor" href="#what-was-not-done"></a></h3>
+<p>Nothing in <code>R/</code> or <code>tests/</code> changed this session. The open PLAN items are exactly as the menu at the bottom of this file lists them, with the R&amp;R gating rewritten. Scenario-(a) step 4 (refactoring <code>com_block_conf_quant_larger_trt</code> from all-units <code>k</code> to treated-only <code>k</code>) is still deferred and still Jake’s call.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="tldr-for-the-next-session-2026-05-20-onward">TL;DR for the next session (2026-05-20 onward)<a class="anchor" aria-label="anchor" href="#tldr-for-the-next-session-2026-05-20-onward"></a></h2>
-<p><strong>Item 1A is closed.</strong> Treated-only convention adopted; 10 previously skipped tests are unskipped and passing; the cross-validation against RIQITE uses the <code>k_R = k_C + (n - m)</code> translation under a shared <code>Z.perm</code>. <code>com_block_conf_quant_larger</code>’s <code>set = "all"</code> and <code>set = "control"</code> paths were audited against <code>main.tex</code> and found correct; tests and function documentation are in place. <code>devtools::check()</code> is clean (0 errors, 0 warnings, 2 pre-existing repo-hygiene NOTEs). <code>main</code> is at <code>99af2eb</code> (pushed). Working tree should be clean.</p>
+<p><strong>Item 1A is closed.</strong> Treated-only convention adopted; 10 previously skipped tests are unskipped and passing; the cross-validation against RIQITE uses the <code>k_R = k_C + (n - m)</code> translation under a shared <code>Z.perm</code>. <code>com_block_conf_quant_larger</code>’s <code>set = "all"</code> and <code>set = "control"</code> paths were audited against <code>main.tex</code> and found correct; tests and function documentation are in place. <code>devtools::check()</code> is clean (0 errors, 0 warnings, 2 pre-existing repo-hygiene NOTEs). <code>main</code> was at <code>99af2eb</code> when this paragraph was written; as of 2026-09-07 it is <code>b198562</code>. Working tree should be clean.</p>
 <p><strong>Status of the older “paused indefinitely” framing below: stale.</strong> The 2026-04-28 section and several below it describe a state of waiting for David Kim’s reply on item 1A. That wait is over and the resolution is recorded in the 2026-05-19 update. Read those older sections only for forensic context, not for next-step guidance.</p>
-<p><strong>Paper status:</strong> the manuscript is under review. Risk posture for the package: ideally no numerical-output changes between now and the revise-and-resubmit (R&amp;R) signal. If a fix demonstrably requires a numerical-output change, it can still land – that change would be folded into the R&amp;R revision. Tomorrow-Claude should mention this tradeoff before any user-visible default change (2A, 2B, possibly 1B).</p>
+<p>Paper status, as written on 2026-05-19 and now superseded: the manuscript was under review, and the risk posture was to avoid numerical-output changes until the R&amp;R signal arrived. It has arrived. See “The paper is at revise-and-resubmit” in the 2026-09-07 section above for the constraint that replaces it.</p>
 <p><strong>The “Suggested next session opening” section at the bottom of this file is up to date</strong> (rewritten 2026-05-19). Start there.</p>
 </div>
 <div class="section level2">
@@ -246,7 +282,7 @@ coverage constraint p = m - k at R/CMRSS_SRE.R:1034.</code></pre>
 <ol style="list-style-type: decimal"><li>Read the <strong>TL;DR at the top of this file</strong>. Skim the 2026-05-19 update. The older sections (2026-04-28 “Current state”, “The open question for David”, “Restarting after David replies”, etc.) are historical only – do not act on them.</li>
 <li>Confirm the working tree is clean and <code>main</code> is at the latest pushed commit (<code>git status</code>, <code>git log --oneline -3</code>).</li>
 <li>Re-read workflow memory at <code>/Users/jwbowers/.claude/projects/-Users-jwbowers-repos-CMRSS-jake/memory/feedback_coding_workflow.md</code> before any code work. Re-read the terminology memory at <code>feedback_terminology_function_documentation.md</code> (write “function documentation,” not “docstring”).</li>
-<li>Ask Jake which open item to tackle. The live menu, ordered by risk against the under-review manuscript:
+<li>Ask Jake which open item to tackle. The menu below was ordered by risk against an under-review manuscript. The paper is now at R&amp;R, so the ordering still holds but the gate has changed: before starting anything under “Possible numerical change,” ask whether he has reproduced and recorded the submitted numbers yet.
 <ul><li>
 <strong>Safe (no numerical change):</strong>
 <ul><li>
@@ -259,7 +295,7 @@ coverage constraint p = m - k at R/CMRSS_SRE.R:1034.</code></pre>
 <strong>Scenario-(a) step 4</strong> – optional refactor of <code>com_block_conf_quant_larger_trt</code> from all-units to treated-only <code>k</code>. Functionally equivalent; mechanically removes the asymmetry with <code>pval_comb_block</code>.</li>
 </ul></li>
 <li>
-<strong>Possible numerical change (preferable to wait for R&amp;R):</strong>
+<strong>Possible numerical change (gate: submitted numbers reproduced and recorded first):</strong>
 <ul><li>
 <strong>1B</strong> – column range <code>0:nb[i]</code> in <code>comb_matrix_block_stratum</code> (<code>R/CMRSS_SRE.R:704</code>) vs paper <code>eq:comb_per_stratum</code>. Possible over-enumeration. If wrong, <code>comb.method = 2</code> outputs shift.</li>
 <li>
@@ -270,9 +306,9 @@ coverage constraint p = m - k at R/CMRSS_SRE.R:1034.</code></pre>
 <strong>3C, 3D</strong> – alpha-semantics docs and default harmonization that touch user-facing behavior.</li>
 </ul></li>
 <li>
-<strong>Scenario-(a) step 5</strong> (paper-script audit at <code>combined_stephenson_tests/code/</code>) – deferred; low priority since the scripts call the wrapper, not <code>pval_comb_block</code> directly, and the wrapper is now verified.</li>
+<strong>Scenario-(a) step 5</strong> (paper-script audit at <code>combined_stephenson_tests/code/</code>) – done 2026-09-07. Verified that all four run scripts call <code>com_block_conf_quant_larger</code> or <code>com_conf_quant_larger_cre</code> and never <code>pval_comb_block</code>, so the <code>k</code> guard is unreachable from the paper’s code path. See the 2026-09-07 section at the top of this file.</li>
 </ul></li>
-<li>Do not start coding before Jake picks an item and confirms scope. For any item that might change numerical outputs, raise the manuscript-review tradeoff first.</li>
+<li>Do not start coding before Jake picks an item and confirms scope. For any item that might change numerical outputs, ask first whether the submitted numbers have been reproduced and recorded.</li>
 </ol></div>
 </div>
 
