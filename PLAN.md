@@ -36,7 +36,54 @@ numerical results (1A, 1B, 2A, 2B).
 
 ## PRIORITY 1 – Possible bugs (investigate; pin with tests; fix if confirmed)
 
-### \[ \] 1A. Reconcile the `p` convention in `pval_comb_block` vs `com_block_conf_quant_larger_trt`
+### \[x\] 1A. Reconcile the `p` convention in `pval_comb_block` vs `com_block_conf_quant_larger_trt`
+
+**Closed 2026-05-19 (treated-only convention; tests re-enabled in CMRSS
+0.2.7).** Resolution: `R/CMRSS_SRE.R:1034` (`p <- m - k`) is correct.
+`pval_comb_block` tests the treated-only hypothesis `H_{k,c}^treat` with
+`k in 1..sum(Z)`. The docstring and example have been updated (commit
+forthcoming; see NEWS.md 0.2.7). The 10 tests previously skipped pending
+this resolution have been re-enabled with `k` formulas converted from
+the all-units convention to the treated-only convention. Four additional
+gurobi-gated sites in `test-solvers.R` had the same latent bug and were
+fixed in the same pass. The two cross-validation tests against
+[`RIQITE::pval_quantile`](https://rdrr.io/pkg/RIQITE/man/pval_quantile.html)
+now pass a shared `Z.perm` to both packages and apply the LP-equivalence
+translation `k_R = k_C + (n - m)`; under that setup the p-values agree
+exactly. The input-validation guard added at `R/CMRSS_SRE.R:1040` in
+0.2.6 stays in place. `devtools::check()` is clean (0 errors, 0
+warnings, 2 pre-existing repo-hygiene NOTEs unrelated to this item).
+
+Still open from the larger scenario-(a) audit:
+
+- `com_block_conf_quant_larger` `set = "all"` and `set = "control"`
+  paths (`R/CMRSS_SRE.R:1430-1499`): **Closed 2026-05-19, no functional
+  bug.** Verified against paper eq:H_kc_t / eq:H_kc_c (main.tex lines
+  459-466, 479, 502, 940, 948-950). The swap `Z <- 1 - Z, Y <- -Y`
+  preserves individual effects via the relabeling
+  `tilde_tau_treat(k) = tau_control(k)` (paper line 479), so the
+  swap-space lower CIs are directly lower CIs on `tau_control(k)` in the
+  original problem; no sign flip or index reversal is needed.
+  `set = "all"` correctly applies the Bonferroni split (alpha/2 per
+  branch) per paper line 502. New tests in
+  `tests/testthat/test-com_block_conf_quant_larger-sets.R` pin the
+  wrapper’s structural behavior at `tolerance = 1e-6` via paired
+  `set.seed` calls. `com_block_conf_quant_larger_trt`’s function
+  documentation expanded to record the all-units convention and the
+  LP-equivalence with `pval_comb_block`.
+- `com_block_conf_quant_larger_trt` (`R/CMRSS_SRE.R:1171, 1234`) still
+  uses `p <- n - k` (all-units). David did not touch these in
+  `762c4d08`. Now correctly *documented* as the all-units convention;
+  remaining question is whether to refactor `_trt` to take treated-only
+  `k` internally (functionally equivalent, removes the asymmetry with
+  `pval_comb_block`, but risks breaking any downstream caller of
+  `_trt`). Deferred.
+- Paper experiment scripts in
+  `/Users/jwbowers/repos/combined_stephenson_tests/code/`: with the
+  wrapper now confirmed correct, paper-side numbers are unaffected. Low
+  priority; deferred.
+
+Item 2B (default `comb.method` flip) is now unblocked.
 
 Status update from initial reproducer:
 `pval_comb_block(Z, Y, k=19, c=0, ...)` with the existing test inputs

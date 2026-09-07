@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,8 +51,16 @@
 <hr><div class="section level2">
 <h2 id="priority-1--possible-bugs-investigate-pin-with-tests-fix-if-confirmed">PRIORITY 1 – Possible bugs (investigate; pin with tests; fix if confirmed)<a class="anchor" aria-label="anchor" href="#priority-1--possible-bugs-investigate-pin-with-tests-fix-if-confirmed"></a></h2>
 <div class="section level3">
-<h3 id="id_--1a-reconcile-the-p-convention-in-pval_comb_block-vs-com_block_conf_quant_larger_trt">[ ] 1A. Reconcile the <code>p</code> convention in <code>pval_comb_block</code> vs <code>com_block_conf_quant_larger_trt</code>
-<a class="anchor" aria-label="anchor" href="#id_--1a-reconcile-the-p-convention-in-pval_comb_block-vs-com_block_conf_quant_larger_trt"></a></h3>
+<h3 id="x-1a-reconcile-the-p-convention-in-pval_comb_block-vs-com_block_conf_quant_larger_trt">[x] 1A. Reconcile the <code>p</code> convention in <code>pval_comb_block</code> vs <code>com_block_conf_quant_larger_trt</code>
+<a class="anchor" aria-label="anchor" href="#x-1a-reconcile-the-p-convention-in-pval_comb_block-vs-com_block_conf_quant_larger_trt"></a></h3>
+<p><strong>Closed 2026-05-19 (treated-only convention; tests re-enabled in CMRSS 0.2.7).</strong> Resolution: <code>R/CMRSS_SRE.R:1034</code> (<code>p &lt;- m - k</code>) is correct. <code>pval_comb_block</code> tests the treated-only hypothesis <code>H_{k,c}^treat</code> with <code>k in 1..sum(Z)</code>. The docstring and example have been updated (commit forthcoming; see NEWS.md 0.2.7). The 10 tests previously skipped pending this resolution have been re-enabled with <code>k</code> formulas converted from the all-units convention to the treated-only convention. Four additional gurobi-gated sites in <code>test-solvers.R</code> had the same latent bug and were fixed in the same pass. The two cross-validation tests against <code><a href="https://rdrr.io/pkg/RIQITE/man/pval_quantile.html" class="external-link">RIQITE::pval_quantile</a></code> now pass a shared <code>Z.perm</code> to both packages and apply the LP-equivalence translation <code>k_R = k_C + (n - m)</code>; under that setup the p-values agree exactly. The input-validation guard added at <code>R/CMRSS_SRE.R:1040</code> in 0.2.6 stays in place. <code>devtools::check()</code> is clean (0 errors, 0 warnings, 2 pre-existing repo-hygiene NOTEs unrelated to this item).</p>
+<p>Still open from the larger scenario-(a) audit:</p>
+<ul><li>
+<code>com_block_conf_quant_larger</code> <code>set = "all"</code> and <code>set = "control"</code> paths (<code>R/CMRSS_SRE.R:1430-1499</code>): <strong>Closed 2026-05-19, no functional bug.</strong> Verified against paper eq:H_kc_t / eq:H_kc_c (main.tex lines 459-466, 479, 502, 940, 948-950). The swap <code>Z &lt;- 1 - Z, Y &lt;- -Y</code> preserves individual effects via the relabeling <code>tilde_tau_treat(k) = tau_control(k)</code> (paper line 479), so the swap-space lower CIs are directly lower CIs on <code>tau_control(k)</code> in the original problem; no sign flip or index reversal is needed. <code>set = "all"</code> correctly applies the Bonferroni split (alpha/2 per branch) per paper line 502. New tests in <code>tests/testthat/test-com_block_conf_quant_larger-sets.R</code> pin the wrapper’s structural behavior at <code>tolerance = 1e-6</code> via paired <code>set.seed</code> calls. <code>com_block_conf_quant_larger_trt</code>’s function documentation expanded to record the all-units convention and the LP-equivalence with <code>pval_comb_block</code>.</li>
+<li>
+<code>com_block_conf_quant_larger_trt</code> (<code>R/CMRSS_SRE.R:1171, 1234</code>) still uses <code>p &lt;- n - k</code> (all-units). David did not touch these in <code>762c4d08</code>. Now correctly <em>documented</em> as the all-units convention; remaining question is whether to refactor <code>_trt</code> to take treated-only <code>k</code> internally (functionally equivalent, removes the asymmetry with <code>pval_comb_block</code>, but risks breaking any downstream caller of <code>_trt</code>). Deferred.</li>
+<li>Paper experiment scripts in <code>/Users/jwbowers/repos/combined_stephenson_tests/code/</code>: with the wrapper now confirmed correct, paper-side numbers are unaffected. Low priority; deferred.</li>
+</ul><p>Item 2B (default <code>comb.method</code> flip) is now unblocked.</p>
 <p>Status update from initial reproducer: <code>pval_comb_block(Z, Y, k=19, c=0, ...)</code> with the existing test inputs (s=3, n=8, m=4 per stratum, total m=12) yields <code>p = m - k = -7</code>, the LP returns “Infeasible,” the test statistic is <code>Inf</code>, and <code>mean(stat.null &gt;= Inf) = 0</code>. So the function silently returns <code>p.value = 0</code> whenever k &gt; m_total. This is a real, consequential bug.</p>
 <ul><li>
 <ol style="list-style-type: lower-alpha"><li>Investigate</li>
@@ -342,7 +350,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

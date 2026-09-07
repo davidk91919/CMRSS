@@ -1,9 +1,13 @@
-# Combined test statistic and combined p-value for randomization test for quantiles of individual treatment effects
+# Combined test statistic and combined p-value for randomization test for quantiles of individual treatment effects (treated-only)
 
 Obtain the combined stratified rank sum statistic and combined p-value
-for testing the given null hypothesis H0: \\\tau\_{(k)} \leq c\\, or
-\\H0: \tau\_{(k)} \geq c\\, or \\H0: \tau\_{(k)} = c\\, where
-\\\tau\_{(k)}\\ denotes individual treatment effect at rank k.
+for testing the treated-only null hypothesis
+\\H\_{k,c}^{\mathrm{treat}}\\: at least \\k\\ of the \\m = \sum_i Z_i\\
+treated units have individual treatment effect at least \\c\\ (greater
+alternative), or the analogous less / two-sided variants. The quantile
+index \\k\\ ranges over \\1, \ldots, m\\; values outside that range make
+the underlying LP coverage constraint \\p = m - k\\ infeasible and raise
+an error.
 
 ## Usage
 
@@ -36,8 +40,9 @@ pval_comb_block(
 
 - k:
 
-  An integer between 1 and n specifying which quantile of individual
-  effect is of interest.
+  An integer between 1 and \\\sum_i Z_i\\ (the number of treated units)
+  specifying which quantile of the individual treatment effects among
+  the treated is of interest.
 
 - c:
 
@@ -133,8 +138,8 @@ for (j in seq_along(r.vec)) {
   })
 }
 
-# Test if the 90th percentile effect is <= 0
-k <- floor(0.9 * n)
+# Test if the 90th percentile treated-only effect is <= 0
+k <- floor(0.9 * sum(Z))
 result <- pval_comb_block(Z, Y, k, c = 0, block, methods.list.all,
                           opt.method = "ILP", null.max = 10000)
 print(result)

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,27 @@
       <small>Source: <a href="https://github.com/bowers-illinois-edu/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.7" id="cmrss-027">CMRSS 0.2.7<a class="anchor" aria-label="anchor" href="#cmrss-027"></a></h2>
+<div class="section level3">
+<h3 id="documentation-0-2-7">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-2-7"></a></h3>
+<ul><li>Clarified the treated-only convention of <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code> in the function’s docstring and example: <code>k</code> is in <code>1..sum(Z)</code> (number of treated units), and the function tests the treated-only hypothesis <code>H_{k,c}^treat</code>. The example now uses <code>k &lt;- floor(0.9 * sum(Z))</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-0-2-7">Tests<a class="anchor" aria-label="anchor" href="#tests-0-2-7"></a></h3>
+<ul><li>Re-enabled 10 tests previously skipped pending the k-convention resolution (<code>tests/testthat/test-CMRSS_SRE.R</code>, <code>test-pval_scre.R</code>, <code>test-pval-cre.R</code>, <code>test-solvers.R</code>). Each <code>k</code> formula was updated from the all-units convention to the treated-only convention.</li>
+<li>The two cross-validation tests against <code><a href="https://rdrr.io/pkg/RIQITE/man/pval_quantile.html" class="external-link">RIQITE::pval_quantile</a></code> (<code>test-pval-cre.R</code>, <code>test-pval_scre.R</code>) now pass a shared <code>Z.perm</code> permutation matrix to both packages and apply the translation <code>k_R = k_C + (n - m)</code> between RIQITE’s all-units <code>k</code> and CMRSS’s treated-only <code>k</code>. Under this setup the two packages’ p-values agree exactly.</li>
+<li>The four gurobi-gated solver-equivalence tests in <code>test-solvers.R</code> had the same latent k-convention bug; their <code>k</code> formulas are now treated-only.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.6" id="cmrss-026">CMRSS 0.2.6<a class="anchor" aria-label="anchor" href="#cmrss-026"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-6">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-6"></a></h3>
+<ul><li>
+<code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code> now validates that <code>k</code> lies in <code>1..sum(Z)</code> and errors with a clear message otherwise. Previously, <code>k &gt; sum(Z)</code> made the LP infeasible and the function silently returned <code>p.value = 0</code> with <code>test.stat = Inf</code> (a false rejection). The function tests the treated-only hypothesis <code>H_{k,c}^treat</code>, so <code>k</code> must not exceed the number of treated units.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.5" id="cmrss-025">CMRSS 0.2.5<a class="anchor" aria-label="anchor" href="#cmrss-025"></a></h2>
 <div class="section level3">
@@ -76,7 +97,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

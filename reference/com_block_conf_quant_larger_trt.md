@@ -1,7 +1,8 @@
 # Helper function for Simultaneous Inference for multiple quantiles on SRE
 
 Output is a lower limit of prediction intervals for prespecified
-quantiles.
+quantiles under the all-units convention. Used internally by
+[`com_block_conf_quant_larger`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger.md).
 
 ## Usage
 
@@ -104,4 +105,40 @@ com_block_conf_quant_larger_trt(
 
 ## Value
 
-Vector of lower confidence limits for the specified quantiles.
+Vector of length `n` giving lower confidence limits for the all-units
+quantiles \\\tau\_{(1)}, \ldots, \tau\_{(n)}\\. Only entries indexed by
+\\k = n - m, \ldots, n\\ (where \\m = \mathrm{sum}(Z)\\) are computed by
+the LP; lower entries are padded.
+
+## Details
+
+The hypothesis tested at each `k` is the all-units null \\H\_{k, c}:
+\tau\_{(k)} \le c\\, where \\\tau\_{(1)} \le \tau\_{(2)} \le \ldots \le
+\tau\_{(n)}\\ are the sorted individual treatment effects across all
+\\n\\ units. The LP coverage constraint sets `p <- n - k` (lines 1185
+and 1248 of `R/CMRSS_SRE.R`); `k` ranges over \\1, \ldots, n\\ and the
+loop fills `quantiles[k]` for \\k = n - m, \ldots, n\\, where \\m =
+\mathrm{sum}(Z)\\, padding the remaining lower entries with
+`quantiles[n - m]`.
+
+By the validity result extending ZL24quantile (cf. main.tex eq:H_kc_t
+and the discussion at lines 479 and 519-520), the inverted \\1 -
+\alpha\\ lower bound for \\\tau\_{(k)}\\ is simultaneously a valid \\1 -
+\alpha\\ lower prediction bound for \\\tau\_{\mathrm{treat}(k -
+n\_{\mathrm{control}})}\\, where \\n\_{\mathrm{control}} = n - m\\.
+Equivalently, the LP minimum at all-units index \\k_R\\ matches the LP
+minimum that
+[`pval_comb_block`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
+(treated-only convention, `p <- m - k`) would compute at \\k_C = k_R -
+n\_{\mathrm{control}}\\. The two functions therefore produce the same
+numerical confidence bounds despite indexing their `k` differently.
+
+[`com_block_conf_quant_larger`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger.md)
+calls this function in three modes: directly with `(Z, Y)` for
+`set = "treat"`, and with `(1 - Z, -Y)` for `set = "control"` and the
+control half of `set = "all"`. Under the swap, individual effects are
+preserved via the relabeling \\\tilde{\tau}\_{\mathrm{treat}(k)} =
+\tau\_{\mathrm{control}(k)}\\ (cf. main.tex line 479), so the swap-space
+lower CIs returned by this function are directly lower CIs on
+\\\tau\_{\mathrm{control}(k)}\\ in the original problem – no sign flip
+or index reversal is needed.

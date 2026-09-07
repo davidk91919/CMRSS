@@ -227,7 +227,7 @@ MIT License
   : Parse optimization method string
 - [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
   : Combined test statistic and combined p-value for randomization test
-  for quantiles of individual treatment effects
+  for quantiles of individual treatment effects (treated-only)
 - [`solve_optimization()`](https://bowers-illinois-edu.github.io/CMRSS/reference/solve_optimization.md)
   : Unified solver wrapper
 - [`solver_available()`](https://bowers-illinois-edu.github.io/CMRSS/reference/solver_available.md)
