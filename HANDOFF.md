@@ -11,121 +11,167 @@ re-enabled in CMRSS 0.2.7) and scenario-(a) step 3
 documentation added). Updated 2026-09-07 to record the merge with
 `upstream/main`, the arrival of the revise-and-resubmit decision on the
 paper, David Kim’s step back from the project, and a verification that
-the paper still reproduces from its pinned CMRSS commit. Read top to
-bottom.
+the paper still reproduces from its pinned CMRSS commit. Rewritten at
+the end of 2026-09-07 to cover a full day of work: three code changes,
+two of them on `main` and one held on a branch. Read top to bottom.
 
-## TL;DR for the next session (2026-09-07 onward)
+## TL;DR for the next session (2026-09-08 onward)
 
-Read this section first. The 2026-05-20 TL;DR below it is still accurate
-about item 1A, but its `main` SHA and its paper-status paragraph have
-both been overtaken; both are corrected in place.
+Read this section first. It replaces the morning-of-2026-09-07 version.
+Everything below it is older and is kept for forensic context only.
 
-### Where the repositories stand
+### The one constraint that governs everything
 
-`main` is `b198562` and is identical on the local clone, on `origin`
-(`bowers-illinois-edu/CMRSS`), and on `upstream` (`davidk91919/CMRSS`).
-The divergence that existed at the start of the session is gone: 13
-ahead, 0 behind became 0 and 0.
+The paper is at revise-and-resubmit. Jake’s requirement, in his words,
+is to reproduce the results as submitted, exactly, before making any
+revision. So the question to ask about any proposed change is not “is it
+correct?” but “has the replication run happened yet?”
 
-`b198562` is a merge commit. Its second parent is David’s `b67c935`
-(2026-05-25), which changed one line of `tests/testthat/test-pval-cre.R`
-from `k <- floor(0.8 * n)` to `k <- floor(0.8 * m)`. The conflict was
-resolved in favor of our version of that file, and the merge changed no
-files: `git diff aa67001 b198562` is empty. The merge commit message
-carries the derivation of why our version is the correct one; read it
-before reopening the question.
-
-Why David’s edit was not taken: it fixes the CMRSS side of that test but
-leaves the RIQITE side alone, and RIQITE implements the all-units null
-`H_{k,c}` of `main.tex` eq:H_kc (line 510, `k in 1..n`) while CMRSS
-implements the treated-only null `H_{k,c}^treat` of eq:H_kc_t (line 459,
-`k in 1..n_treat`). Passing one `k` to both compares different
-hypotheses. At `n = 50`, `m = 25`, `k = 20`, RIQITE’s constraint on the
-treated units is vacuous (`20 - 25 = -5`) and it returns exactly
-1.00000, against CMRSS’s 0.77923 (Wilcoxon) and 0.71548 (Stephenson);
-the test asserts agreement at `tolerance = 0.01`, so David’s version
-fails by 0.22 and 0.28.
-
-Jake has `push: true` on `davidk91919/CMRSS` and pushed `main` there
-directly on 2026-09-07, so the canonical repo went from 0.2.5 to 0.2.7
-in one step. He drafted a Slack note to David explaining the one place
-they differ. He declined a dual push URL on `origin`, preferring to push
-to the canonical repo deliberately, so `main` can drift again. Check
-`git rev-list --count upstream/main..main` before assuming the two
-agree.
-
-`gh-pages` differs between the two repos and always will, since each
-repo’s pkgdown workflow builds its own site. Leave it alone.
-
-### The paper is at revise-and-resubmit
-
-This supersedes the “manuscript under review” risk posture stated in the
-2026-05-20 TL;DR and in the next-session menu at the bottom of this
-file. The wait for the R&R signal is over.
-
-The constraint that replaces it, in Jake’s words: he needs to reproduce
-the results as submitted, exactly, before making any revision. So the
-gating question for an item is no longer “does this change numerical
-outputs before the R&R,” it is “has Jake reproduced and recorded the
-submitted numbers yet.” Ask him before starting any item under “Possible
-numerical change” in the menu below.
-
-One operational rule follows, and it belongs to the paper repo rather
-than this one: do not run
+Nothing has been reproduced yet. Until it has, do not merge the
+`min-stat-breakpoints` branch, and do not run
 [`renv::snapshot()`](https://rstudio.github.io/renv/reference/snapshot.html)
 or
 [`renv::update()`](https://rstudio.github.io/renv/reference/update.html)
-in `~/repos/combined_stephenson_tests` until the submitted numbers are
-reproduced and saved. Either command would move the CMRSS pin off
-`1371f315` and destroy the reference point.
+in `~/repos/combined_stephenson_tests`, either of which would move the
+CMRSS pin off `1371f315` and destroy the reference point.
 
-### Replication is safe, and was verified rather than assumed
+### Where the repositories stand
+
+`main` is at CMRSS 0.2.9 and is identical on the local clone, on
+`origin` (`bowers-illinois-edu/CMRSS`), and on `upstream`
+(`davidk91919/CMRSS`). David Kim’s repo remains the canonical home by
+Jake’s decision, even though David has taken an industry job and stepped
+back; the active authors are Jake and Xinran Li. Jake has `push: true`
+on David’s repo and no branch protection exists there, so he can push
+directly or merge his own pull request without David acting.
+
+The branch `min-stat-breakpoints` is on `origin` and deliberately not on
+the canonical repo. It sits two commits above `main` and holds the one
+change that moves published numbers.
+
+### What happened on 2026-09-07
+
+The day started with the fork 13 commits ahead of David’s repo and 1
+behind. The merge is `b198562`, whose second parent is David’s
+`b67c935`. That commit changed one line of
+`tests/testthat/test-pval-cre.R` from `k <- floor(0.8 * n)` to
+`k <- floor(0.8 * m)`. Our version of that file was kept, because David
+fixed the CMRSS side of the comparison and left the RIQITE side alone.
+RIQITE tests the all-units null `H_{k,c}` of `main.tex` eq:H_kc (line
+510, `k` in `1..n`) while CMRSS tests the treated-only `H_{k,c}^treat`
+of eq:H_kc_t (line 459, `k` in `1..n_treat`), and the translation is
+`k_C = k_R - n_control`. At `n = 50`, `m = 25`, passing `k = 20` to both
+leaves RIQITE’s constraint on the treated units vacuous, so RIQITE
+returns exactly 1.00000 against CMRSS’s 0.77923 and 0.71548, failing the
+test’s 0.01 tolerance by 0.22 and 0.28. The derivation is in `b198562`’s
+commit message.
+
+Three code changes followed, all growing out of one observation about
+`min_stat` (`R/CMRSS_CRE.R:253-281`): it chooses which treated units the
+null exempts by outcome rank, through `sort_treat`, which never reads
+the threshold `c`.
+
+Two of the three are on `main` and change no number.
+
+- 0.2.8,
+  [`min_stat_path()`](https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat_path.md).
+  `comb_matrix_block` needed `min_stat` at every exempt count from 0 to
+  `m_b` and made `m_b + 1` separate calls, each re-running a full `rank`
+  over the same block. All those values come from one ranking, because
+  the exempted units are the treated units with the largest ranks:
+  nothing remaining has an exempted unit below it, so every remaining
+  rank is its original shifted up by the exempt count, and the exempted
+  units occupy the lowest ranks and are all treated, so they contribute
+  a fixed partial sum of the scores.
+- 0.2.9, PLAN item 1B, closed as redundancy rather than a bug.
+  `comb_matrix_block_stratum` enumerated `0:n_b` where the index counts
+  treated units and so stops at `m_b`. The columns past `m_b` repeated
+  the `m_b` column’s statistic while carrying a larger index into the
+  stratum solver’s budget constraint, so no optimal solution used one.
+
+Together these took one confidence interval on the 200-unit design of
+`memos/memo_cmrss_reuse_2026-09-07.qmd` from 21.8 seconds to 9.5, with
+identical answers.
+
+The third change is on the branch and does move numbers.
+
+- 0.2.10, exact confidence limits. `com_block_conf_quant_larger_trt`
+  located each limit with `uniroot` and then a walk in steps of `tol`,
+  so a limit was accurate only to `tol`. The combined statistic is a
+  step function of `c` whose jumps lie only at the within-block
+  differences `Y_i - Y_j` between a treated `i` and a control `j`, so
+  the limit is found exactly by a binary search over those.
+
+Two things about that change a future session needs. First, the search
+must never evaluate exactly at a breakpoint. There `Y_i - c` equals
+`Y_j` and `ties.method = "first"` at `R/CMRSS_CRE.R:278` resolves the
+tie by position in the input vector, so the statistic there follows unit
+ordering rather than the data; on the 12-unit test block the value at a
+breakpoint matches the interval below it 18 times and the interval above
+it 18 times. `interval_probes()` therefore supplies a point strictly
+inside each interval. Second, every limit moved down, by 0.016 to 0.044
+at `tol = 0.05`. Down means the old intervals were slightly too narrow,
+excluding thresholds the test does not reject. This is a correctness
+fix, not a speed one, and it is the reason the branch is held back.
+
+### Replication was checked, not assumed
 
 `~/repos/combined_stephenson_tests/renv.lock` pins CMRSS 0.2.5 at commit
-`1371f315` from `bowers-illinois-edu/CMRSS` (2025-12-24). Confirmed
-2026-09-07 via the GitHub API that the commit is still fetchable, so the
-April archive-and-recreate of that repo did not break the pin.
-
-More than that, the pin barely matters. Between `1371f315` and `b198562`
-the only executable change anywhere in `R/` is the six-line range check
-on `k` inside `pval_comb_block`; everything else is roxygen text plus
-the `DESCRIPTION` bump. The paper’s four run scripts call
-`com_block_conf_quant_larger` and `com_conf_quant_larger_cre`, which
-reach the solver through `com_block_conf_quant_larger_trt` and never
-route through `pval_comb_block`. So the guard cannot fire on the paper’s
-code path, and current `main` reproduces the submitted numbers as well
-as the pin does. This closes scenario-(a) step 5 (the paper-script
-audit) as verified rather than deferred.
+`1371f315` from `bowers-illinois-edu/CMRSS`, and that commit is still
+fetchable, so the April archive-and-recreate of that repo did not break
+the pin. Between `1371f315` and `main` as of 0.2.7 the only executable
+change anywhere in `R/` was the six-line range check on `k` inside
+`pval_comb_block`, and the paper’s four run scripts call
+`com_block_conf_quant_larger` and `com_conf_quant_larger_cre` and never
+`pval_comb_block`, so that guard is unreachable from the paper’s code
+path. This closes scenario-(a) step 5 as verified rather than deferred.
 
 `code/sre_simulation_run.R` calls
 [`library(gurobi)`](https://rdrr.io/r/base/library.html), so reproducing
-the SRE simulation needs a live Gurobi license. The electric-teachers
-scripts and the CRE simulation do not load it.
+the SRE simulation needs a live Gurobi license.
 
-### David Kim is stepping back
+### Gurobi is now installed on Jake’s machine
 
-He has taken an industry job, and the active authors are now Jake and
-Xinran Li. Jake’s decision on 2026-09-07: `davidk91919/CMRSS` stays the
-canonical home for now, so the repo-layout section further down this
-file is still correct. Do not propose archiving or renaming without
-asking.
+It cannot come from CRAN, so `renv` will not restore it and the tests
+still gate on `solver_available("gurobi")`. With it present the suite
+runs 257 tests instead of 245, and the twelve that come back include the
+HiGHS-against-Gurobi equivalence checks in `test-solvers.R`. Those pass
+on every code path changed on 2026-09-07.
 
-### State of the tree
+### Open items
 
-`devtools::test()` on `b198562` reports 0 failures, 0 warnings, 150
-tests passing, and 4 skipped, all four being the Gurobi-gated
-comparisons in `test-solvers.R` that skip because Gurobi is not
-installed on this machine. `devtools::check()` was not re-run this
-session because the merge changed no files and `aa67001` was already
-check-clean at 0 errors, 0 warnings, and 2 repo-hygiene NOTEs.
+- PLAN item 4A, the Phipson and Smyth correction. `pval_comb_block`
+  computes `mean(stat.null >= stat.min)`, which returns exactly 0 when
+  no draw reaches the observed statistic. The corrected form is
+  `(1 + sum(stat.null >= stat.min)) / (1 + null.max)`. Tests are written
+  and four of them skip until `perm_pvalue()` exists; the fifth is a
+  tripwire asserting the uncorrected expression is still there, so the
+  change cannot be made silently. Gated: it moves every p-value by about
+  `1/null.max`. The paper is at
+  `references/Phipson_Smyth_2010_permutation_pvalues.pdf`.
+- The `min-stat-breakpoints` branch, waiting on the replication run.
+  When it goes, a pull request against David’s repo is the better route
+  than a direct push, because it gives the numerical change a page with
+  the before-and-after on it. Jake can merge it himself.
+- `com_block_conf_quant_larger_trt` still indexes by the all-units `k`
+  (`p <- n - k`) while `pval_comb_block` uses the treated-only `k`.
+  Numerically equivalent by the translation above. Refactoring it is
+  scenario-(a) step 4 and remains deferred, at Jake’s discretion.
+- The remaining PLAN items are in the menu at the bottom of this file,
+  with the gating rewritten for the R&R.
+- Reading the reviews themselves has not started.
+  `~/repos/combined_stephenson_tests/Reviews/` holds a
+  `response_to_reviewers.tex`.
 
-### What was not done
+### On writing for Jake
 
-Nothing in `R/` or `tests/` changed this session. The open PLAN items
-are exactly as the menu at the bottom of this file lists them, with the
-R&R gating rewritten. Scenario-(a) step 4 (refactoring
-`com_block_conf_quant_larger_trt` from all-units `k` to treated-only
-`k`) is still deferred and still Jake’s call.
+Two corrections he made on 2026-09-07 that a next session should carry.
+He stopped at a closing sentence whose point depended on him unpacking
+it and asked whether the style-audit judgment pass was being run at all,
+not just the scanner; the scanner is a word list and cannot catch an
+aphorism. And he said the writing became hard to follow at the point
+where git operations started being reported at the same weight as
+findings. Report what was found; keep the mechanics brief.
 
 ## TL;DR for the next session (2026-05-20 onward)
 
@@ -137,7 +183,8 @@ RIQITE uses the `k_R = k_C + (n - m)` translation under a shared
 correct; tests and function documentation are in place.
 `devtools::check()` is clean (0 errors, 0 warnings, 2 pre-existing
 repo-hygiene NOTEs). `main` was at `99af2eb` when this paragraph was
-written; as of 2026-09-07 it is `b198562`. Working tree should be clean.
+written and has moved several times since; the 2026-09-08 section at the
+top of this file has the current state. Working tree should be clean.
 
 **Status of the older “paused indefinitely” framing below: stale.** The
 2026-04-28 section and several below it describe a state of waiting for
