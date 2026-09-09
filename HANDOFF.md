@@ -53,6 +53,13 @@ main                   887c0b3   0.2.10
 min-stat-breakpoints   280cd6d   0.3.0
 ```
 
+`887c0b3` is the last commit that changed code on `main`. The head of
+`main` sits above it, holding the commit that rewrote this file, and it
+will drift further as later sessions write documentation. The paper
+installs `887c0b3` by name, so documentation commits on `main` do not
+change what the paper runs. When you need to know what the paper runs,
+read `RemoteSha` in the lockfile rather than the head of `main`.
+
 `min-stat-breakpoints` is now on David’s repo as well as the fork. Until
 2026-09-09 it was on the fork only. Once it was published there, two
 trees returning the same version number were visible to Xinran Li and to
@@ -203,13 +210,28 @@ None of this was touched, and all of it is Jake’s to judge:
   unignored in `data/` and the repository root. The staged `.gitignore`
   change covers `data/applications/*/raw/` and `OtherData/` instead.
 
-### What is unchanged
+### When the held-back changes may be used
 
-The constraint below still governs. `min-stat-breakpoints`, now 0.3.0,
-stays off `main` until the submitted numbers have been reproduced and
-recorded, because it moves every published confidence limit downward.
-`main` is untouched at `887c0b3`, so the paper installs exactly what it
-installed before this session.
+Jake decided on 2026-09-09 that `min-stat-breakpoints` will not be used
+until the current paper is published. That is a longer hold than the
+2026-09-07 wording below, which released the branch once the submitted
+numbers had been reproduced and recorded. Reproducing those numbers is
+still the near-term task. Publication is what reopens the question of
+merging.
+
+The same hold covers PLAN item 4A, the Phipson and Smyth correction, for
+the same reason: it moves every p-value by about `1/null.max`.
+
+One consequence for the paper. Because `main` will not receive either
+change before publication, reinstalling CMRSS from `main` cannot move a
+published number in the meantime. `renv::install("davidk91919/CMRSS")`
+followed by
+[`renv::snapshot()`](https://rstudio.github.io/renv/reference/snapshot.html)
+is therefore safe while the hold lasts, and stops being safe the day
+either change merges.
+
+`main` is CMRSS 0.2.10 and its R code is unchanged from `887c0b3`, so
+the paper installs exactly what it installed before this session.
 
 Nothing in the CMRSS repository is uncommitted or unpushed. Both
 branches are clean and identical on both remotes.
