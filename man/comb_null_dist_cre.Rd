@@ -27,10 +27,21 @@ comb_null_dist_cre(
 \item{stat.null.mult}{Optional pre-computed null distribution matrix.}
 }
 \value{
-A numeric vector of minimum p-values under the null.
+A numeric vector of minimum p-values under the null. Its length is
+the number of draws actually available: \code{ncol(Z.perm)} when a
+permutation matrix is supplied, \code{ncol(stat.null.mult)} when a null
+distribution is, and \code{nperm} otherwise.
 }
 \description{
 Computes the distribution of the minimum p-value, particularly Monte Carlo
 samples from the combined null distribution F in Theorem 1 of the paper.
 }
-\keyword{internal}
+\examples{
+set.seed(1)
+methods.list <- list(list(name = "Wilcoxon", scale = FALSE),
+                     list(name = "Stephenson", s = 3, scale = FALSE))
+cnd <- comb_null_dist_cre(n = 20, m = 12, methods.list = methods.list,
+                          nperm = 500)
+quantile(cnd, c(0.05, 0.10))
+
+}

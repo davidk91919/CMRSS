@@ -8,7 +8,12 @@
 #'
 #' @return Integer vector of indices of treated units, sorted by increasing outcome.
 #'
-#' @keywords internal
+#' @examples
+#' Z <- c(0, 0, 0, 1, 1, 1)
+#' Y <- c(1, 2, 3, 30, 10, 20)
+#' sort_treat(Y, Z)   # 5, 6, 4: the treated units ordered by outcome
+#'
+#' @export
 sort_treat <- function(Y, Z){
   r <- rank(Y, ties.method = "first")
   ind.sort <- sort.int(r, index.return = TRUE)$ix
@@ -80,7 +85,12 @@ assign_CRE <- function(n, m, nperm){
 #' Stephenson scores use binomial coefficients.
 #' Wilcoxon scores are simply the ranks 1 to n.
 #'
-#' @keywords internal
+#' @examples
+#' rank_score(5, list(name = "Wilcoxon", scale = FALSE))
+#' rank_score(5, list(name = "Stephenson", s = 3, scale = FALSE))
+#' rank_score(5, list(name = "Polynomial", r = 2, std = TRUE, scale = FALSE))
+#'
+#' @export
 rank_score <- function(n, method.list = list(name = "Polynomial", r, std = TRUE, scale = FALSE) ){
   if(method.list$name == "Polynomial"){
     r = method.list$r
@@ -127,7 +137,13 @@ rank_score <- function(n, method.list = list(name = "Polynomial", r, std = TRUE,
 #'
 #' @return A numeric vector of length nperm containing the null distribution.
 #'
-#' @keywords internal
+#' @examples
+#' set.seed(1)
+#' score <- rank_score(20, list(name = "Wilcoxon", scale = FALSE))
+#' nd <- null_dist(n = 20, m = 12, score = score, nperm = 500)
+#' quantile(nd, c(0.5, 0.95))
+#'
+#' @export
 null_dist <- function(n, m, method.list = NULL, score = NULL,
                       nperm = 10^5, Z.perm = NULL, chunk_size = 1000){
   if(is.null(score)){
@@ -177,7 +193,14 @@ null_dist <- function(n, m, method.list = NULL, score = NULL,
 #'
 #' @return An H x nperm matrix where H is the number of statistics.
 #'
-#' @keywords internal
+#' @examples
+#' set.seed(1)
+#' methods.list <- list(list(name = "Wilcoxon", scale = FALSE),
+#'                      list(name = "Stephenson", s = 3, scale = FALSE))
+#' dim(null_dist_multiple(n = 20, m = 12, methods.list = methods.list,
+#'                        nperm = 500))
+#'
+#' @export
 null_dist_multiple <- function(n, m, methods.list = NULL, nperm = 10^5, Z.perm = NULL, chunk_size = 1000){
   H = length(methods.list)
 
@@ -249,7 +272,14 @@ null_dist_multiple <- function(n, m, methods.list = NULL, nperm = 10^5, Z.perm =
 #' @references
 #' Caughey, D., Dafoe, A., Li, X., & Miratrix, L. (2023).
 #'
-#' @keywords internal
+#' @examples
+#' Z <- c(0, 0, 0, 1, 1, 1)
+#' Y <- c(1, 2, 3, 10, 20, 30)
+#' score <- rank_score(6, list(name = "Wilcoxon", scale = FALSE))
+#' # k = 6 exempts no treated unit, so this is the treated rank sum: 4 + 5 + 6
+#' min_stat(Z, Y, k = 6, c = 0, score = score)
+#'
+#' @export
 min_stat <- function(Z, Y, k, c, method.list = NULL,
                      score = NULL,
                      ind.sort.treat = NULL){
@@ -343,9 +373,20 @@ pval_cre <- function(Z, Y, k, c,
 #' @param nperm Number of permutations for null distribution.
 #' @param stat.null.mult Optional pre-computed null distribution matrix.
 #'
-#' @return A numeric vector of minimum p-values under the null.
+#' @return A numeric vector of minimum p-values under the null. Its length is
+#'   the number of draws actually available: \code{ncol(Z.perm)} when a
+#'   permutation matrix is supplied, \code{ncol(stat.null.mult)} when a null
+#'   distribution is, and \code{nperm} otherwise.
 #'
-#' @keywords internal
+#' @examples
+#' set.seed(1)
+#' methods.list <- list(list(name = "Wilcoxon", scale = FALSE),
+#'                      list(name = "Stephenson", s = 3, scale = FALSE))
+#' cnd <- comb_null_dist_cre(n = 20, m = 12, methods.list = methods.list,
+#'                           nperm = 500)
+#' quantile(cnd, c(0.05, 0.10))
+#'
+#' @export
 comb_null_dist_cre = function(n, m, methods.list, Z.perm = NULL, nperm = 10^4, stat.null.mult = NULL){
 
   H = length(methods.list)
@@ -353,6 +394,15 @@ comb_null_dist_cre = function(n, m, methods.list, Z.perm = NULL, nperm = 10^4, s
   if(is.null(stat.null.mult)){
     stat.null.mult = null_dist_multiple(n, m, methods.list, nperm, Z.perm)
   }
+
+  # How many draws there are is a property of the null distribution we now
+  # hold, not of the nperm argument.  null_dist_multiple() already takes
+  # nperm from ncol(Z.perm) when a permutation matrix is supplied, so reading
+  # the width here keeps the two in step.  Before 0.2.10 a caller who passed
+  # Z.perm together with a larger nperm got a tail.prob matrix of the wrong
+  # width and R recycled the values into it, which made comb_p_val_cre return
+  # p = 0 on data where the same permutations gave p = 0.8.
+  nperm = ncol(stat.null.mult)
 
   tail.prob = matrix(NA, nrow = H, ncol = nperm)
   for(j in 1 : H){

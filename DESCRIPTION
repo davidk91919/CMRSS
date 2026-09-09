@@ -1,7 +1,7 @@
 Package: CMRSS
 Type: Package
 Title: Combining Multiple Rank Sum Statistics
-Version: 0.2.9
+Version: 0.2.10
 Description: Randomization inference for quantiles of individual treatment
     effects using combined rank sum statistics. Supports both completely
     randomized experiments (CRE) and stratified randomized experiments (SRE).
@@ -29,7 +29,6 @@ Suggests:
 Remotes:
     li-xinran/RIQITE
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown, highs
 Authors@R: c(
@@ -37,3 +36,4 @@ Authors@R: c(
     person("Xinran", "Li", , "xinranli@uchicago.edu", role = "aut"),
     person("Jake", "Bowers", , "jwbowers@uchicago.edu", role = "ctb")
   )
+Config/roxygen2/version: 8.1.0

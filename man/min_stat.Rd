@@ -29,7 +29,14 @@ Calculates the minimum value of the rank sum statistic under the
 null hypothesis, assuming at most n-k treated units can have effects
 greater than c.
 }
+\examples{
+Z <- c(0, 0, 0, 1, 1, 1)
+Y <- c(1, 2, 3, 10, 20, 30)
+score <- rank_score(6, list(name = "Wilcoxon", scale = FALSE))
+# k = 6 exempts no treated unit, so this is the treated rank sum: 4 + 5 + 6
+min_stat(Z, Y, k = 6, c = 0, score = score)
+
+}
 \references{
 Caughey, D., Dafoe, A., Li, X., & Miratrix, L. (2023).
 }
-\keyword{internal}

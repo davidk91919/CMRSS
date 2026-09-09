@@ -33,4 +33,9 @@ Polynomial scores optionally use Puri(1965) normalization.
 Stephenson scores use binomial coefficients.
 Wilcoxon scores are simply the ranks 1 to n.
 }
-\keyword{internal}
+\examples{
+rank_score(5, list(name = "Wilcoxon", scale = FALSE))
+rank_score(5, list(name = "Stephenson", s = 3, scale = FALSE))
+rank_score(5, list(name = "Polynomial", r = 2, std = TRUE, scale = FALSE))
+
+}
