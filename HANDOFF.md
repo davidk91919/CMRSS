@@ -89,7 +89,7 @@ identical answers.
 
 The third change is on the branch and does move numbers.
 
-  - 0.2.10, exact confidence limits. `com_block_conf_quant_larger_trt`
+  - 0.3.0, exact confidence limits. `com_block_conf_quant_larger_trt`
     located each limit with `uniroot` and then a walk in steps of `tol`,
     so a limit was accurate only to `tol`. The combined statistic is a
     step function of `c` whose jumps lie only at the within-block

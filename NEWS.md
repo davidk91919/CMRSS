@@ -1,4 +1,4 @@
-# CMRSS 0.2.10
+# CMRSS 0.3.0
 
 ## Confidence limits are now exact
 

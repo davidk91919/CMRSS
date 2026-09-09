@@ -1,7 +1,7 @@
 Package: CMRSS
 Type: Package
 Title: Combining Multiple Rank Sum Statistics
-Version: 0.2.10
+Version: 0.3.0
 Description: Randomization inference for quantiles of individual treatment
     effects using combined rank sum statistics. Supports both completely
     randomized experiments (CRE) and stratified randomized experiments (SRE).
