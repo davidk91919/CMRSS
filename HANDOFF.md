@@ -193,13 +193,26 @@ None of this was touched, and all of it is Jake's to judge:
     unignored in `data/` and the repository root. The staged `.gitignore`
     change covers `data/applications/*/raw/` and `OtherData/` instead.
 
-### What is unchanged
+### When the held-back changes may be used
 
-The constraint below still governs. `min-stat-breakpoints`, now 0.3.0,
-stays off `main` until the submitted numbers have been reproduced and
-recorded, because it moves every published confidence limit downward.
-`main` is untouched at `887c0b3`, so the paper installs exactly what it
-installed before this session.
+Jake decided on 2026-09-09 that `min-stat-breakpoints` will not be used
+until the current paper is published. That is a longer hold than the
+2026-09-07 wording below, which released the branch once the submitted
+numbers had been reproduced and recorded. Reproducing those numbers is
+still the near-term task. Publication is what reopens the question of
+merging.
+
+The same hold covers PLAN item 4A, the Phipson and Smyth correction,
+for the same reason: it moves every p-value by about `1/null.max`.
+
+One consequence for the paper. Because `main` will not receive either
+change before publication, reinstalling CMRSS from `main` cannot move a
+published number in the meantime. `renv::install("davidk91919/CMRSS")`
+followed by `renv::snapshot()` is therefore safe while the hold lasts,
+and stops being safe the day either change merges.
+
+`main` is CMRSS 0.2.10 and its R code is unchanged from `887c0b3`, so
+the paper installs exactly what it installed before this session.
 
 Nothing in the CMRSS repository is uncommitted or unpushed. Both
 branches are clean and identical on both remotes.
