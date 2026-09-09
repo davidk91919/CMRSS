@@ -51,6 +51,13 @@ Both branches are identical on the local clone, on `origin`
     main                   887c0b3   0.2.10
     min-stat-breakpoints   280cd6d   0.3.0
 
+`887c0b3` is the last commit that changed code on `main`. The head of
+`main` sits above it, holding the commit that rewrote this file, and it
+will drift further as later sessions write documentation. The paper
+installs `887c0b3` by name, so documentation commits on `main` do not
+change what the paper runs. When you need to know what the paper runs,
+read `RemoteSha` in the lockfile rather than the head of `main`.
+
 `min-stat-breakpoints` is now on David's repo as well as the fork. Until
 2026-09-09 it was on the fork only. Once it was published there, two
 trees returning the same version number were visible to Xinran Li and to
