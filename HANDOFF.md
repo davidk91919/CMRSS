@@ -13,7 +13,189 @@ documentation added). Updated 2026-09-07 to record the merge with
 paper, David Kim's step back from the project, and a verification that
 the paper still reproduces from its pinned CMRSS commit. Rewritten at the
 end of 2026-09-07 to cover a full day of work: three code changes, two of
-them on `main` and one held on a branch. Read top to bottom.
+them on `main` and one held on a branch. Updated 2026-09-09 to record
+CMRSS 0.2.10 on `main`, the renumbering of the branch to 0.3.0 after both
+had claimed 0.2.10, the merge of `main` into the branch, the `both` remote
+that pushes to the fork and to David's repo in one command, and the fact
+that the paper now installs CMRSS from David's account rather than from
+the fork. Read top to bottom.
+
+## TL;DR for the next session (2026-09-10 onward)
+
+Read this section first. It replaces the 2026-09-08 version below. That
+older section still describes the 2026-09-07 work correctly, but three
+version numbers and one statement about the paper went stale on
+2026-09-09. Each is corrected where it appears, with the correction
+marked, so the older text can still be read without misleading anyone.
+
+### Two version numbers that are easy to confuse
+
+Both `main` and the branch bumped 0.2.9 to 0.2.10 on separate days,
+without either knowing about the other. The branch has since been
+renumbered, and the two numbers now mean different things:
+
+  - CMRSS 0.2.10 is `main` at `887c0b3`. It means the six newly exported
+    building blocks and the recycling fix in `comb_null_dist_cre`.
+  - CMRSS 0.3.0 is `min-stat-breakpoints` at `280cd6d`. It means the
+    exact confidence limits found by binary search over breakpoints.
+
+Anywhere in this file below this section that calls the exact confidence
+limits "0.2.10", read 0.3.0.
+
+### Where the repositories stand
+
+Both branches are identical on the local clone, on `origin`
+(`bowers-illinois-edu/CMRSS`), and on `upstream` (`davidk91919/CMRSS`):
+
+    branch                 commit    version
+    main                   887c0b3   0.2.10
+    min-stat-breakpoints   280cd6d   0.3.0
+
+`min-stat-breakpoints` is now on David's repo as well as the fork. Until
+2026-09-09 it was on the fork only. Once it was published there, two
+trees returning the same version number were visible to Xinran Li and to
+anyone replicating, which is why the collision was fixed the same day. It
+is also why that branch must not be rebased: rewriting its commits would need a
+force push to a repository Jake shares with Xinran Li.
+
+The branch is 4 commits ahead of `main` and 0 behind it.
+`git rev-list --left-right --count main...min-stat-breakpoints` reports
+`0	4`. Nothing on `main` is missing from the branch.
+
+### Pushing to both repositories at once
+
+A remote named `both` now exists. `git push both <branch>` sends to the
+fork and then to David's repo, and prints one result block per
+destination. `git push origin` is unchanged and still reaches the fork
+alone.
+
+The first attempt at this remote was configured wrongly, and a future
+session will repeat the mistake if it rebuilds the remote. Adding any push URL
+to a remote makes git ignore that remote's ordinary URL when pushing.
+Naming only David's repo therefore left `both` pushing to David's alone
+and silently skipping the fork. Both destinations have to be listed:
+
+    git remote add both git@github.com:bowers-illinois-edu/CMRSS.git
+    git remote set-url --add --push both git@github.com:bowers-illinois-edu/CMRSS.git
+    git remote set-url --add --push both git@github.com:davidk91919/CMRSS.git
+
+`git config --get-all remote.both.pushurl` must print two lines. The
+fork is listed first so that a push rejected there stops before
+reaching David's repo.
+
+### What happened on 2026-09-09
+
+`887c0b3` on `main` was authored at 14:21:12 and pushed to both remotes
+within 16 seconds, before this session began. It exports `sort_treat()`,
+`rank_score()`, `min_stat()`, `null_dist()`, `null_dist_multiple()` and
+`comb_null_dist_cre()`, each with a runnable example, and it fixes a
+recycling bug: `comb_null_dist_cre()` allocated its tail-probability
+matrix at `ncol = nperm` while filling it from a null distribution
+`ncol(Z.perm)` wide, and R recycled the values when those disagreed. The
+fix reads the width from the null distribution,
+`nperm = ncol(stat.null.mult)`.
+
+`cf869ea` renumbered the branch from 0.2.10 to 0.3.0. Before it, two
+trees differing by 260 insertions and 108 deletions across
+`R/CMRSS_CRE.R`, `R/CMRSS_SRE.R` and `R/breakpoints.R` both returned
+0.2.10 from `packageVersion("CMRSS")`. Three files carried the number
+and all three moved: `DESCRIPTION`, the top heading of `NEWS.md`, and
+the line in this file that introduces the exact-limits change. 0.3.0
+rather than 0.2.11 because the confidence limits change, which is more
+than a patch bump reports.
+
+`280cd6d` merged `main` into the branch so the two stop diverging. Jake
+asked for main's improvements to come across; merging rather than
+rebasing was chosen because the branch is published in both
+repositories. Two files conflicted, both bookkeeping rather than
+statistics. `DESCRIPTION` kept 0.3.0, the later number. `NEWS.md` kept
+both sections, 0.3.0 above 0.2.10, matching the descending order of the
+rest of the file. `R/CMRSS_CRE.R` was the only source file both sides
+had edited and git combined it without help.
+
+### Test and check status
+
+  - `main` at `887c0b3`: 270 passing, 0 failing, 4 skipped.
+  - The branch before the merge: 257 passing.
+  - The branch at `280cd6d`: 313 passing, 0 failing, 4 skipped. The 313
+    is the union of the other two, because the merged tree carries both
+    `test-exports.R` from `main` and `test-min_stat-breakpoints.R` from
+    the branch.
+  - All four skips in every case are `perm_pvalue()` from PLAN item 4A,
+    which nobody has written yet.
+  - `devtools::check()` on `280cd6d`: 0 errors, 0 warnings, 2 notes. One
+    note lists `.lintr` and `.claude` as hidden directories, and
+    `.claude` is not tracked in git at all, so check is reporting a
+    directory on the local disk rather than anything in the package. The
+    other lists `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md`, `Makefile`,
+    `PLAN.md` and `load.R` at the top level. Both notes are on `main`
+    too and predate this work. Adding those files to `.Rbuildignore`
+    would silence both. Jake did not ask for that and it was not done.
+
+### What the paper installs, and where it fetches it from
+
+This corrects the "Replication was checked, not assumed" section below,
+which is now wrong on every particular.
+
+`~/repos/combined_stephenson_tests/renv.lock` records CMRSS with
+`Version: 0.2.10`, `RemoteUsername: davidk91919`, `RemoteRef: main`, and
+`RemoteSha: 887c0b342900321c117b9325dada6a70d026fbfe`. Two of those name
+a source and they are different kinds of thing. `RemoteRef` names a
+branch, which moves whenever anyone pushes. `RemoteSha` names one
+commit, which never moves. `renv::restore()` installs the commit.
+
+Two consequences a future session must not forget. First, the paper
+fetches from David's account, so any commit the paper needs has to reach
+`davidk91919/CMRSS` and not the fork alone. Second, `renv::restore()`
+keeps giving 887c0b3 after `main` moves on, and moving the paper forward
+takes a deliberate `renv::snapshot()`.
+
+Checked on 2026-09-09: `renv::status()` reports the paper consistent,
+and the installed package matches the lockfile field for field, version,
+sha and account.
+
+Superseded by the above: the older claim that the lockfile pins CMRSS
+0.2.5 at `1371f315` from `bowers-illinois-edu`. Commits `c66b995` and
+`9933c12` in the paper repository moved the analysis onto the package
+and archived `code/codes_20251026.R` on 2026-09-09.
+
+### The recycling fix does not reach the paper's numbers
+
+The fix is in the same version of the package that the paper installs, so
+someone will ask this again. The bug needed a caller passing `Z.perm`
+whose column count disagreed with `nperm`.
+
+`code/cre_elec_teacher_run.R` is the only file in the paper that passes
+both. There `nperm <- 10^5` and `Z.perm.shared <- assign_CRE(n, m,
+nperm)`. Reading `assign_CRE`, its finite-`nperm` branch builds
+`matrix(0, nrow = n, ncol = nperm)` and returns it unchanged, so it
+returns exactly `nperm` columns every time. The two arguments therefore
+agree at 10^5 and the condition the bug needs never held.
+`code/cre_simulation_run.R` passes no `Z.perm` at all, so
+`comb_null_dist_cre()` generates its own and the widths agree by
+construction. Verified by reading the sources rather than by running
+them.
+
+### Left alone in the paper repository
+
+None of this was touched, and all of it is Jake's to judge:
+
+  - Uncommitted changes to `Reviews/revision_planning_memo.md` (1757
+    lines changed), `HANDOFF.md`, and `.gitignore`.
+  - Nine `.rds` result files and three PDFs sitting untracked and
+    unignored in `data/` and the repository root. The staged `.gitignore`
+    change covers `data/applications/*/raw/` and `OtherData/` instead.
+
+### What is unchanged
+
+The constraint below still governs. `min-stat-breakpoints`, now 0.3.0,
+stays off `main` until the submitted numbers have been reproduced and
+recorded, because it moves every published confidence limit downward.
+`main` is untouched at `887c0b3`, so the paper installs exactly what it
+installed before this session.
+
+Nothing in the CMRSS repository is uncommitted or unpushed. Both
+branches are clean and identical on both remotes.
 
 ## TL;DR for the next session (2026-09-08 onward)
 
@@ -30,11 +212,15 @@ revision. So the question to ask about any proposed change is not
 Nothing has been reproduced yet. Until it has, do not merge the
 `min-stat-breakpoints` branch, and do not run `renv::snapshot()` or
 `renv::update()` in `~/repos/combined_stephenson_tests`, either of which
-would move the CMRSS pin off `1371f315` and destroy the reference point.
+would move the recorded CMRSS commit off the one the submitted numbers came
+from and destroy the reference point. (Corrected 2026-09-09: that commit is
+no longer `1371f315`. The lockfile now records `887c0b3`, and it fetches from
+`davidk91919`. See the 2026-09-10 section above.)
 
 ### Where the repositories stand
 
-`main` is at CMRSS 0.2.9 and is identical on the local clone, on `origin`
+`main` is at CMRSS 0.2.9 (corrected 2026-09-09: now 0.2.10 at `887c0b3`)
+and is identical on the local clone, on `origin`
 (`bowers-illinois-edu/CMRSS`), and on `upstream` (`davidk91919/CMRSS`).
 David Kim's repo remains the canonical home by Jake's decision, even
 though David has taken an industry job and stepped back; the active
@@ -44,7 +230,9 @@ own pull request without David acting.
 
 The branch `min-stat-breakpoints` is on `origin` and deliberately not on
 the canonical repo. It sits two commits above `main` and holds the one
-change that moves published numbers.
+change that moves published numbers. (Corrected 2026-09-09: Jake had it
+pushed to the canonical repo as well, and after merging `main` into it the
+branch sits four commits above `main` at `280cd6d`.)
 
 ### What happened on 2026-09-07
 
@@ -89,7 +277,9 @@ identical answers.
 
 The third change is on the branch and does move numbers.
 
-  - 0.2.10, exact confidence limits. `com_block_conf_quant_larger_trt`
+  - 0.3.0, exact confidence limits (renumbered from 0.2.10 on 2026-09-09,
+    because `main` had taken 0.2.10 independently).
+    `com_block_conf_quant_larger_trt`
     located each limit with `uniroot` and then a walk in steps of `tol`,
     so a limit was accurate only to `tol`. The combined statistic is a
     step function of `c` whose jumps lie only at the within-block
@@ -109,6 +299,10 @@ excluding thresholds the test does not reject. This is a correctness fix,
 not a speed one, and it is the reason the branch is held back.
 
 ### Replication was checked, not assumed
+
+Superseded 2026-09-09. What follows was true on 2026-09-07 and is kept for
+the forensic record. The lockfile now records CMRSS 0.2.10 at `887c0b3` from
+`davidk91919`, as the 2026-09-10 section above sets out.
 
 `~/repos/combined_stephenson_tests/renv.lock` pins CMRSS 0.2.5 at commit
 `1371f315` from `bowers-illinois-edu/CMRSS`, and that commit is still
