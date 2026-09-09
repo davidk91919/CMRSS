@@ -46,3 +46,14 @@ null_dist_multiple(
 ## Value
 
 An H x nperm matrix where H is the number of statistics.
+
+## Examples
+
+``` r
+set.seed(1)
+methods.list <- list(list(name = "Wilcoxon", scale = FALSE),
+                     list(name = "Stephenson", s = 3, scale = FALSE))
+dim(null_dist_multiple(n = 20, m = 12, methods.list = methods.list,
+                       nperm = 500))
+#> [1]   2 500
+```

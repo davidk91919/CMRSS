@@ -51,3 +51,14 @@ null_dist(
 ## Value
 
 A numeric vector of length nperm containing the null distribution.
+
+## Examples
+
+``` r
+set.seed(1)
+score <- rank_score(20, list(name = "Wilcoxon", scale = FALSE))
+nd <- null_dist(n = 20, m = 12, score = score, nperm = 500)
+quantile(nd, c(0.5, 0.95))
+#>    50%    95% 
+#> 127.00 148.05 
+```

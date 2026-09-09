@@ -1,5 +1,63 @@
 # Changelog
 
+## CMRSS 0.2.10
+
+### New exported functions
+
+- Six building blocks that were internal are now part of the public
+  interface:
+  [`sort_treat()`](https://bowers-illinois-edu.github.io/CMRSS/reference/sort_treat.md),
+  [`rank_score()`](https://bowers-illinois-edu.github.io/CMRSS/reference/rank_score.md),
+  [`min_stat()`](https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat.md),
+  [`null_dist()`](https://bowers-illinois-edu.github.io/CMRSS/reference/null_dist.md),
+  [`null_dist_multiple()`](https://bowers-illinois-edu.github.io/CMRSS/reference/null_dist_multiple.md)
+  and
+  [`comb_null_dist_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_null_dist_cre.md).
+  The package already exported the functions that answer a whole
+  question, such as a p-value or a set of confidence bounds. Anyone
+  assembling a procedure of their own needed the pieces those are built
+  from, and the only route was `CMRSS:::`. The combined_stephenson_tests
+  paper repository had been carrying a 1,731-line copy of this package’s
+  code for exactly that reason. Each of the six now has a runnable
+  example; none of their behaviour changed.
+
+### Bug fixes
+
+- [`comb_null_dist_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_null_dist_cre.md)
+  took the number of draws from its `nperm` argument while filling its
+  tail-probability matrix from a null distribution that was
+  `ncol(Z.perm)` wide. When the two disagreed R recycled the values to
+  fit, and the result was a null distribution of the wrong length built
+  from repeated entries. The count now comes from the null distribution
+  in hand, which is what
+  [`null_dist_multiple()`](https://bowers-illinois-edu.github.io/CMRSS/reference/null_dist_multiple.md)
+  and
+  [`com_conf_quant_larger_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_conf_quant_larger_cre.md)
+  already did.
+
+  This was reachable from outside the package through
+  [`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md),
+  which passes `nperm` straight down. On a 20-unit example with a fixed
+  200-column `Z.perm`, `nperm = 200` gave `p = 0.8` and `nperm = 1000`
+  gave `p = 0.000000`: the same data and the same permutations, and a
+  rejection at any level, from an argument a caller could reasonably
+  think was redundant once `Z.perm` was supplied. Callers who passed a
+  matching `nperm`, including everything inside this package, are
+  unaffected;
+  [`com_conf_quant_larger_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_conf_quant_larger_cre.md)
+  has set `nperm <- ncol(Z.perm)` on entry all along.
+
+### Tests
+
+- `tests/testthat/test-exports.R` pins the public interface and checks
+  that the six newly exported functions compute what they did when
+  internal.
+- `tests/testthat/test-nperm-zperm-consistency.R` checks that a supplied
+  permutation matrix decides the number of draws, for both
+  [`comb_null_dist_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_null_dist_cre.md)
+  and
+  [`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md).
+
 ## CMRSS 0.2.9
 
 ### PLAN item 1B settled: the wider column range was redundant, not wrong

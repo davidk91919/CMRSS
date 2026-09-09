@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.9</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.10</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,27 @@
       <small>Source: <a href="https://github.com/bowers-illinois-edu/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.10" id="cmrss-0210">CMRSS 0.2.10<a class="anchor" aria-label="anchor" href="#cmrss-0210"></a></h2>
+<div class="section level3">
+<h3 id="new-exported-functions-0-2-10">New exported functions<a class="anchor" aria-label="anchor" href="#new-exported-functions-0-2-10"></a></h3>
+<ul><li>Six building blocks that were internal are now part of the public interface: <code><a href="../reference/sort_treat.html">sort_treat()</a></code>, <code><a href="../reference/rank_score.html">rank_score()</a></code>, <code><a href="../reference/min_stat.html">min_stat()</a></code>, <code><a href="../reference/null_dist.html">null_dist()</a></code>, <code><a href="../reference/null_dist_multiple.html">null_dist_multiple()</a></code> and <code><a href="../reference/comb_null_dist_cre.html">comb_null_dist_cre()</a></code>. The package already exported the functions that answer a whole question, such as a p-value or a set of confidence bounds. Anyone assembling a procedure of their own needed the pieces those are built from, and the only route was <code>CMRSS:::</code>. The combined_stephenson_tests paper repository had been carrying a 1,731-line copy of this package’s code for exactly that reason. Each of the six now has a runnable example; none of their behaviour changed.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-10">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-10"></a></h3>
+<ul><li>
+<p><code><a href="../reference/comb_null_dist_cre.html">comb_null_dist_cre()</a></code> took the number of draws from its <code>nperm</code> argument while filling its tail-probability matrix from a null distribution that was <code>ncol(Z.perm)</code> wide. When the two disagreed R recycled the values to fit, and the result was a null distribution of the wrong length built from repeated entries. The count now comes from the null distribution in hand, which is what <code><a href="../reference/null_dist_multiple.html">null_dist_multiple()</a></code> and <code><a href="../reference/com_conf_quant_larger_cre.html">com_conf_quant_larger_cre()</a></code> already did.</p>
+<p>This was reachable from outside the package through <code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code>, which passes <code>nperm</code> straight down. On a 20-unit example with a fixed 200-column <code>Z.perm</code>, <code>nperm = 200</code> gave <code>p = 0.8</code> and <code>nperm = 1000</code> gave <code>p = 0.000000</code>: the same data and the same permutations, and a rejection at any level, from an argument a caller could reasonably think was redundant once <code>Z.perm</code> was supplied. Callers who passed a matching <code>nperm</code>, including everything inside this package, are unaffected; <code><a href="../reference/com_conf_quant_larger_cre.html">com_conf_quant_larger_cre()</a></code> has set <code>nperm &lt;- ncol(Z.perm)</code> on entry all along.</p>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-0-2-10">Tests<a class="anchor" aria-label="anchor" href="#tests-0-2-10"></a></h3>
+<ul><li>
+<code>tests/testthat/test-exports.R</code> pins the public interface and checks that the six newly exported functions compute what they did when internal.</li>
+<li>
+<code>tests/testthat/test-nperm-zperm-consistency.R</code> checks that a supplied permutation matrix decides the number of draws, for both <code><a href="../reference/comb_null_dist_cre.html">comb_null_dist_cre()</a></code> and <code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.9" id="cmrss-029">CMRSS 0.2.9<a class="anchor" aria-label="anchor" href="#cmrss-029"></a></h2>
 <div class="section level3">

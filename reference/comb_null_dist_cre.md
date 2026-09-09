@@ -45,4 +45,20 @@ comb_null_dist_cre(
 
 ## Value
 
-A numeric vector of minimum p-values under the null.
+A numeric vector of minimum p-values under the null. Its length is the
+number of draws actually available: `ncol(Z.perm)` when a permutation
+matrix is supplied, `ncol(stat.null.mult)` when a null distribution is,
+and `nperm` otherwise.
+
+## Examples
+
+``` r
+set.seed(1)
+methods.list <- list(list(name = "Wilcoxon", scale = FALSE),
+                     list(name = "Stephenson", s = 3, scale = FALSE))
+cnd <- comb_null_dist_cre(n = 20, m = 12, methods.list = methods.list,
+                          nperm = 500)
+quantile(cnd, c(0.05, 0.10))
+#>     5%    10% 
+#> 0.0459 0.0874 
+```

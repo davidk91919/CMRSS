@@ -41,3 +41,14 @@ A numeric vector of length n containing the rank scores.
 Polynomial scores optionally use Puri(1965) normalization. Stephenson
 scores use binomial coefficients. Wilcoxon scores are simply the ranks 1
 to n.
+
+## Examples
+
+``` r
+rank_score(5, list(name = "Wilcoxon", scale = FALSE))
+#> [1] 1 2 3 4 5
+rank_score(5, list(name = "Stephenson", s = 3, scale = FALSE))
+#> [1] 0 0 1 3 6
+rank_score(5, list(name = "Polynomial", r = 2, std = TRUE, scale = FALSE))
+#> [1] 0.1666667 0.3333333 0.5000000 0.6666667 0.8333333
+```

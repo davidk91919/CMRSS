@@ -47,3 +47,14 @@ The minimum test statistic value.
 ## References
 
 Caughey, D., Dafoe, A., Li, X., & Miratrix, L. (2023).
+
+## Examples
+
+``` r
+Z <- c(0, 0, 0, 1, 1, 1)
+Y <- c(1, 2, 3, 10, 20, 30)
+score <- rank_score(6, list(name = "Wilcoxon", scale = FALSE))
+# k = 6 exempts no treated unit, so this is the treated rank sum: 4 + 5 + 6
+min_stat(Z, Y, k = 6, c = 0, score = score)
+#> [1] 15
+```

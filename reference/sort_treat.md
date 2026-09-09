@@ -23,3 +23,12 @@ sort_treat(Y, Z)
 
 Integer vector of indices of treated units, sorted by increasing
 outcome.
+
+## Examples
+
+``` r
+Z <- c(0, 0, 0, 1, 1, 1)
+Y <- c(1, 2, 3, 30, 10, 20)
+sort_treat(Y, Z)   # 5, 6, 4: the treated units ordered by outcome
+#> [1] 5 6 4
+```
