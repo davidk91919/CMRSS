@@ -18,4 +18,9 @@ Integer vector of indices of treated units, sorted by increasing outcome.
 Returns the indices of treated units sorted by their outcome values
 in increasing order.
 }
-\keyword{internal}
+\examples{
+Z <- c(0, 0, 0, 1, 1, 1)
+Y <- c(1, 2, 3, 30, 10, 20)
+sort_treat(Y, Z)   # 5, 6, 4: the treated units ordered by outcome
+
+}
