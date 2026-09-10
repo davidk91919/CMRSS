@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,17 @@
       <small>Source: <a href="https://github.com/bowers-illinois-edu/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.11" id="cmrss-0211">CMRSS 0.2.11<a class="anchor" aria-label="anchor" href="#cmrss-0211"></a></h2>
+<div class="section level3">
+<h3 id="new-0-2-11">New<a class="anchor" aria-label="anchor" href="#new-0-2-11"></a></h3>
+<ul><li>
+<p>The Gurobi solvers now honour <code>options(CMRSS.gurobi.threads = n)</code>. Gurobi’s default is to use every core on the machine for a single solve, which is right for a caller solving one problem at a time and wrong for one that is already running in parallel. Running the combined_stephenson_tests SRE simulation as a <code>foreach</code> loop over 14 workers, each solve took 14 threads, which put roughly 150 runnable threads on a 14-core machine: the load average reached 158 and the workers together drew 581 percent of CPU where 14 busy cores would be 1400 percent. They were queueing rather than solving.</p>
+<p>Only the caller knows whether it is already parallel, so the thread count is the caller’s to set. Forked workers inherit R options, so one <code>options(CMRSS.gurobi.threads = 1)</code> before a parallel loop reaches every worker. The option is unset by default and nothing changes for anyone who does not set it.</p>
+<p><code>Threads</code> is a resource setting rather than a modelling one, so capping it does not change the answer. <code>tests/testthat/test-gurobi-threads.R</code> checks that on a four-block problem, comparing the bounds from a capped solve against an uncapped one from the same seed.</p>
+</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.10" id="cmrss-0210">CMRSS 0.2.10<a class="anchor" aria-label="anchor" href="#cmrss-0210"></a></h2>
 <div class="section level3">
