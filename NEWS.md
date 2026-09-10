@@ -1,3 +1,27 @@
+# CMRSS 0.2.11
+
+## New
+
+- The Gurobi solvers now honour `options(CMRSS.gurobi.threads = n)`. Gurobi's
+  default is to use every core on the machine for a single solve, which is
+  right for a caller solving one problem at a time and wrong for one that is
+  already running in parallel. Running the combined_stephenson_tests SRE
+  simulation as a `foreach` loop over 14 workers, each solve took 14 threads,
+  which put roughly 150 runnable threads on a 14-core machine: the load average
+  reached 158 and the workers together drew 581 percent of CPU where 14 busy
+  cores would be 1400 percent. They were queueing rather than solving.
+
+  Only the caller knows whether it is already parallel, so the thread count is
+  the caller's to set. Forked workers inherit R options, so one
+  `options(CMRSS.gurobi.threads = 1)` before a parallel loop reaches every
+  worker. The option is unset by default and nothing changes for anyone who
+  does not set it.
+
+  `Threads` is a resource setting rather than a modelling one, so capping it
+  does not change the answer. `tests/testthat/test-gurobi-threads.R` checks
+  that on a four-block problem, comparing the bounds from a capped solve
+  against an uncapped one from the same seed.
+
 # CMRSS 0.2.10
 
 ## New exported functions

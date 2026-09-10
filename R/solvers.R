@@ -369,10 +369,48 @@ Gurobi_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE
   }
 
 
-  params <- list(OutputFlag = 0)
+  params <- add_thread_param(list(OutputFlag = 0))
   result <- gurobi::gurobi(model, params)
 
   return(list(sol = result$x, obj = result$objval))
+}
+
+
+#' Add a thread cap to a Gurobi parameter list
+#'
+#' Gurobi's default is to use every core on the machine for one solve. That is
+#' the right default for a caller solving one problem at a time, and the wrong
+#' one for a caller that is already running in parallel: a `foreach` loop over
+#' 14 workers, each solving with 14 threads, puts roughly 150 runnable threads
+#' on 14 cores and the workers queue behind each other instead of solving.
+#'
+#' Only the caller knows whether it is already parallel, so the thread count is
+#' the caller's to set, through `options(CMRSS.gurobi.threads = 1)`. Forked
+#' workers inherit R options, so setting it once before a parallel loop reaches
+#' every worker. Unset, which is the default, this returns `params` untouched
+#' and Gurobi chooses as it always has.
+#'
+#' Threads is a resource setting rather than a modelling one, so capping it
+#' does not change the solution; `tests/testthat/test-gurobi-threads.R` checks
+#' that on a four-block problem.
+#'
+#' @param params A list of Gurobi parameters.
+#'
+#' @return `params`, with `Threads` added when the option is set.
+#'
+#' @keywords internal
+add_thread_param <- function(params) {
+  threads <- getOption("CMRSS.gurobi.threads", NULL)
+  if (is.null(threads)) {
+    return(params)
+  }
+  if (!is.numeric(threads) || length(threads) != 1L || !is.finite(threads) ||
+      threads < 1) {
+    stop("option CMRSS.gurobi.threads must be a single positive integer, not ",
+         deparse(threads), call. = FALSE)
+  }
+  params$Threads <- as.integer(threads)
+  params
 }
 
 
@@ -554,7 +592,7 @@ Gurobi_sol_stratum_com <- function(coeflist, p, exact = TRUE) {
   if (exact) {
     model$vtype <- "B"
   }
-  params <- list(OutputFlag = 0)
+  params <- add_thread_param(list(OutputFlag = 0))
   result <- gurobi::gurobi(model, params)
   return(list(sol = result$x, obj = result$objval))
 }
