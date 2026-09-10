@@ -34,8 +34,9 @@ Both `main` and the branch bumped 0.2.9 to 0.2.10 on separate days,
 without either knowing about the other. The branch has since been
 renumbered, and the two numbers now mean different things:
 
-- CMRSS 0.2.10 is `main` at `887c0b3`. It means the six newly exported
-  building blocks and the recycling fix in `comb_null_dist_cre`.
+- CMRSS 0.2.11 is `main` at `c5a8422`. It means the six newly exported
+  building blocks and the recycling fix in `comb_null_dist_cre`, from
+  `887c0b3`, plus the Gurobi thread option added on 2026-09-10.
 - CMRSS 0.3.0 is `min-stat-breakpoints` at `280cd6d`. It means the exact
   confidence limits found by binary search over breakpoints.
 
@@ -49,16 +50,17 @@ Both branches are identical on the local clone, on `origin`
 
 ``` R
 branch                 commit    version
-main                   887c0b3   0.2.10
+main                   c5a8422   0.2.11
 min-stat-breakpoints   280cd6d   0.3.0
 ```
 
-`887c0b3` is the last commit that changed code on `main`. The head of
-`main` sits above it, holding the commit that rewrote this file, and it
-will drift further as later sessions write documentation. The paper
-installs `887c0b3` by name, so documentation commits on `main` do not
-change what the paper runs. When you need to know what the paper runs,
-read `RemoteSha` in the lockfile rather than the head of `main`.
+`c5a8422` is the last commit that changed code on `main`, as of
+2026-09-10. The head of `main` may sit above it, holding commits that
+only rewrite documentation, and it will drift further as later sessions
+write them. The paper installs a commit by name, so documentation
+commits on `main` do not change what the paper runs. When you need to
+know what the paper runs, read `RemoteSha` in the lockfile rather than
+the head of `main`.
 
 `min-stat-breakpoints` is now on David’s repo as well as the fork. Until
 2026-09-09 it was on the fork only. Once it was published there, two
@@ -133,6 +135,7 @@ had edited and git combined it without help.
 
 ### Test and check status
 
+- `main` at `c5a8422`: 281 passing, 0 failing, 4 skipped.
 - `main` at `887c0b3`: 270 passing, 0 failing, 4 skipped.
 - The branch before the merge: 257 passing.
 - The branch at `280cd6d`: 313 passing, 0 failing, 4 skipped. The 313 is
@@ -230,8 +233,21 @@ followed by
 is therefore safe while the hold lasts, and stops being safe the day
 either change merges.
 
-`main` is CMRSS 0.2.10 and its R code is unchanged from `887c0b3`, so
-the paper installs exactly what it installed before this session.
+`main` is CMRSS 0.2.11 at `c5a8422`. An earlier version of this
+paragraph said its R code was unchanged from `887c0b3`, and on
+2026-09-10 that stopped being true: `c5a8422` adds a Gurobi thread
+option, which the other session pushed with Jake’s approval. The
+conclusion above still holds, and for a stronger reason than “nothing
+changed”. The option is unset by default, so a caller who does not set
+it gets exactly the behaviour of `887c0b3`, and `Threads` is a resource
+setting rather than a modelling one:
+`tests/testthat/test-gurobi-threads.R` compares a capped solve against
+an uncapped one drawn from the same seed and finds them identical.
+
+Jake said on 2026-09-10 that the files behind the submitted numbers are
+frozen and that work which changes numbers can begin. Whether that also
+releases `min-stat-breakpoints` and the Phipson and Smyth correction is
+his to say, and he has not said it here.
 
 Nothing in the CMRSS repository is uncommitted or unpushed. Both
 branches are clean and identical on both remotes.

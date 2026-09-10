@@ -41,7 +41,7 @@
 <div class="section level3">
 <h3 id="two-version-numbers-that-are-easy-to-confuse">Two version numbers that are easy to confuse<a class="anchor" aria-label="anchor" href="#two-version-numbers-that-are-easy-to-confuse"></a></h3>
 <p>Both <code>main</code> and the branch bumped 0.2.9 to 0.2.10 on separate days, without either knowing about the other. The branch has since been renumbered, and the two numbers now mean different things:</p>
-<ul><li>CMRSS 0.2.10 is <code>main</code> at <code>887c0b3</code>. It means the six newly exported building blocks and the recycling fix in <code>comb_null_dist_cre</code>.</li>
+<ul><li>CMRSS 0.2.11 is <code>main</code> at <code>c5a8422</code>. It means the six newly exported building blocks and the recycling fix in <code>comb_null_dist_cre</code>, from <code>887c0b3</code>, plus the Gurobi thread option added on 2026-09-10.</li>
 <li>CMRSS 0.3.0 is <code>min-stat-breakpoints</code> at <code>280cd6d</code>. It means the exact confidence limits found by binary search over breakpoints.</li>
 </ul><p>Anywhere in this file below this section that calls the exact confidence limits “0.2.10”, read 0.3.0.</p>
 </div>
@@ -49,9 +49,9 @@
 <h3 id="where-the-repositories-stand">Where the repositories stand<a class="anchor" aria-label="anchor" href="#where-the-repositories-stand"></a></h3>
 <p>Both branches are identical on the local clone, on <code>origin</code> (<code>bowers-illinois-edu/CMRSS</code>), and on <code>upstream</code> (<code>davidk91919/CMRSS</code>):</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>branch                 commit    version</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>main                   <span class="dv">887</span>c0b3   <span class="dv">0</span>.<span class="fl">2.10</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>main                   c5a8422   <span class="dv">0</span>.<span class="fl">2.11</span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>min<span class="sc">-</span>stat<span class="sc">-</span>breakpoints   <span class="dv">280</span>cd6d   <span class="dv">0</span>.<span class="fl">3.0</span></span></code></pre></div>
-<p><code>887c0b3</code> is the last commit that changed code on <code>main</code>. The head of <code>main</code> sits above it, holding the commit that rewrote this file, and it will drift further as later sessions write documentation. The paper installs <code>887c0b3</code> by name, so documentation commits on <code>main</code> do not change what the paper runs. When you need to know what the paper runs, read <code>RemoteSha</code> in the lockfile rather than the head of <code>main</code>.</p>
+<p><code>c5a8422</code> is the last commit that changed code on <code>main</code>, as of 2026-09-10. The head of <code>main</code> may sit above it, holding commits that only rewrite documentation, and it will drift further as later sessions write them. The paper installs a commit by name, so documentation commits on <code>main</code> do not change what the paper runs. When you need to know what the paper runs, read <code>RemoteSha</code> in the lockfile rather than the head of <code>main</code>.</p>
 <p><code>min-stat-breakpoints</code> is now on David’s repo as well as the fork. Until 2026-09-09 it was on the fork only. Once it was published there, two trees returning the same version number were visible to Xinran Li and to anyone replicating, which is why the collision was fixed the same day. It is also why that branch must not be rebased: rewriting its commits would need a force push to a repository Jake shares with Xinran Li.</p>
 <p>The branch is 4 commits ahead of <code>main</code> and 0 behind it. <code>git rev-list --left-right --count main...min-stat-breakpoints</code> reports <code>0  4</code>. Nothing on <code>main</code> is missing from the branch.</p>
 </div>
@@ -73,6 +73,8 @@
 <div class="section level3">
 <h3 id="test-and-check-status">Test and check status<a class="anchor" aria-label="anchor" href="#test-and-check-status"></a></h3>
 <ul><li>
+<code>main</code> at <code>c5a8422</code>: 281 passing, 0 failing, 4 skipped.</li>
+<li>
 <code>main</code> at <code>887c0b3</code>: 270 passing, 0 failing, 4 skipped.</li>
 <li>The branch before the merge: 257 passing.</li>
 <li>The branch at <code>280cd6d</code>: 313 passing, 0 failing, 4 skipped. The 313 is the union of the other two, because the merged tree carries both <code>test-exports.R</code> from <code>main</code> and <code>test-min_stat-breakpoints.R</code> from the branch.</li>
@@ -104,7 +106,8 @@
 <p>Jake decided on 2026-09-09 that <code>min-stat-breakpoints</code> will not be used until the current paper is published. That is a longer hold than the 2026-09-07 wording below, which released the branch once the submitted numbers had been reproduced and recorded. Reproducing those numbers is still the near-term task. Publication is what reopens the question of merging.</p>
 <p>The same hold covers PLAN item 4A, the Phipson and Smyth correction, for the same reason: it moves every p-value by about <code>1/null.max</code>.</p>
 <p>One consequence for the paper. Because <code>main</code> will not receive either change before publication, reinstalling CMRSS from <code>main</code> cannot move a published number in the meantime. <code>renv::install("davidk91919/CMRSS")</code> followed by <code><a href="https://rstudio.github.io/renv/reference/snapshot.html" class="external-link">renv::snapshot()</a></code> is therefore safe while the hold lasts, and stops being safe the day either change merges.</p>
-<p><code>main</code> is CMRSS 0.2.10 and its R code is unchanged from <code>887c0b3</code>, so the paper installs exactly what it installed before this session.</p>
+<p><code>main</code> is CMRSS 0.2.11 at <code>c5a8422</code>. An earlier version of this paragraph said its R code was unchanged from <code>887c0b3</code>, and on 2026-09-10 that stopped being true: <code>c5a8422</code> adds a Gurobi thread option, which the other session pushed with Jake’s approval. The conclusion above still holds, and for a stronger reason than “nothing changed”. The option is unset by default, so a caller who does not set it gets exactly the behaviour of <code>887c0b3</code>, and <code>Threads</code> is a resource setting rather than a modelling one: <code>tests/testthat/test-gurobi-threads.R</code> compares a capped solve against an uncapped one drawn from the same seed and finds them identical.</p>
+<p>Jake said on 2026-09-10 that the files behind the submitted numbers are frozen and that work which changes numbers can begin. Whether that also releases <code>min-stat-breakpoints</code> and the Phipson and Smyth correction is his to say, and he has not said it here.</p>
 <p>Nothing in the CMRSS repository is uncommitted or unpushed. Both branches are clean and identical on both remotes.</p>
 </div>
 </div>
