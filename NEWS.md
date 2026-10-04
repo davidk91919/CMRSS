@@ -1,3 +1,27 @@
+# CMRSS 0.2.13
+
+## Bug fixes
+
+- The two stratified examples in `README.md`, the Quick Start and Example 1,
+  stopped with an error. They passed `k = floor(0.9 * N)`, counted over all
+  N units, to `pval_comb_block()`, which since 0.2.7 counts `k` over the
+  treated units only and so requires `1 <= k <= sum(Z)`. Both now use
+  `k = floor(0.9 * sum(Z))`. The "Comparing Solvers" example used `k` and
+  `c` without defining them; the Quick Start now defines both, and the
+  comparison sets the same seed before each solver so the two null
+  distributions match.
+- `pval_comb_block()`'s error for an out-of-range `k` now says that `k`
+  counts treated units, gives the range `1..sum(Z)`, and points to
+  `com_block_conf_quant_larger(set = "all")` for quantiles of all units. It
+  used to cite a source line, `R/CMRSS_SRE.R:1034`, that a user of the
+  installed package cannot see.
+- `pval_comb_block()` now refuses a `k` that is not a whole number. It used
+  to return a p-value for, say, `k = 2.5`.
+
+`tests/testthat/test-readme-examples.R` runs every R chunk of the README
+from a source checkout, so a stale example now fails `devtools::test()`.
+No returned number changes.
+
 # CMRSS 0.2.12
 
 ## Bug fixes
