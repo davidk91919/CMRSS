@@ -20,6 +20,191 @@ that pushes to the fork and to David's repo in one command, and the fact
 that the paper now installs CMRSS from David's account rather than from
 the fork. Read top to bottom.
 
+## TL;DR for the next session (2026-10-05 onward)
+
+This section covers the work of 2026-10-04 and 2026-10-05. Everything below
+it is older and still accurate except where this section says otherwise.
+
+### What Jake asked for
+
+Four items from Jake's to-do list, all now written:
+
+1. A formula and data frame interface that leaves the existing functions
+   alone. This is `cmrss()`.
+2. A vignette for people asking whether anyone could have been harmed by a
+   treatment. This is `vignettes/harm.Rmd`.
+3. A warning for binary outcomes, which Jake does not consider this package
+   useful for. It became a warning for binary and heavily tied outcomes.
+4. Suggestions from agents playing different kinds of users, filed as issues.
+
+### Four pull requests on David's repository, stacked
+
+All work went to `davidk91919/CMRSS` by pull request, because Jake wants
+David's repository to stay current on every source file. Each branch is built
+on the one before, so they must be merged in this order:
+
+    PR   branch                 version  content
+    #1   fix-sre-ci-user-null   0.2.12   Z.perm / stat.null defects in SRE intervals
+    #2   fix-readme-k           0.2.13   README examples, out-of-range k message
+    #13  cmrss-interface        0.2.14   cmrss(), tie warning, default scores
+    #14  vignette-harm          0.2.15   harm vignette, HiGHS warnings, site, this file
+
+None was merged when this was written. The permission classifier blocked the
+assistant's `gh pr merge`, so Jake merges. Until #1 and #2 are merged, #13 and
+#14 also show the commits beneath them on GitHub.
+
+After the merges, the fork has to catch up, because the public site is built
+from the fork's `main`:
+
+    git fetch upstream
+    git checkout main
+    git merge --ff-only upstream/main
+    git push origin main
+
+Then check that https://bowers-illinois-edu.github.io/CMRSS/articles/harm.html
+loads and that https://bowers-illinois-edu.github.io/CMRSS/HANDOFF.html no
+longer does.
+
+### Decisions Jake made
+
+- Defects go on their own branch and are merged quickly, with substantive
+  tests (#1 and #2).
+- Issues are filed on David's repository, not the fork.
+- The public pkgdown site is the fork's. David's repository has no Pages site,
+  and that divergence is accepted for now.
+- `cmrss()` design, decided one question at a time:
+  - Strata go after a bar in the formula: `gain ~ TxAny | Site`.
+  - The user gives a proportion of a group (`quantile = 0.9, set = "treat"`),
+    and `cmrss()` converts it to the `k` each existing function expects and
+    reports that `k`. `comb_p_val_cre()` counts `k` over all n units;
+    `pval_comb_block()` counts it over the treated units only.
+  - The user gives a vector `s` of score parameters. With Stephenson scores,
+    an s above a block's size is lowered to that size.
+  - `scores = c("polynomial", "stephenson")`, polynomial by default. Jake
+    switched the default from Stephenson on 2026-10-05: polynomial scores
+    are never 0, so they need no rule for small blocks, and the paper uses
+    them for stratified designs.
+  - Default s: three values, 2, round(sqrt(2 s_max)) and s_max, where
+    s_max = min(floor(4 m / q_min), floor(n / 2)) and q_min is the smallest q
+    with (m/n)((m - 1)/(n - 1))...((m - q + 1)/(n - q + 1)) <= alpha. The
+    reasoning and both simulation tables are in the section "Choosing s" of
+    `?cmrss`. Jake asked for that documentation to be detailed.
+- The tie warning fires when the outcome takes exactly two values, or when
+  one value is held by at least two units and by more than 5 percent of the
+  units. It comes from `cmrss()` and from `comb_p_val_cre()`,
+  `com_conf_quant_larger_cre()`, `pval_comb_block()` and
+  `com_block_conf_quant_larger()`, with class `"cmrss_ties_warning"`.
+  `cmrss()` gives it once per call.
+
+### Why a warning and not a fix for ties
+
+Every rank uses `rank(..., ties.method = "first")`, so a tie between a treated
+and a control unit is broken by row order, and reordering the rows changes
+results. Measured on 2026-10-04: a 0/1 outcome with 40 units gave p-values
+from 0.39 to 0.93 across 20 row orders; `electric_teachers$gain` (29 of 233
+teachers share one value) gave 0.66 to 0.80 across 10. Changing the rule is
+PLAN.md item 2A and issue #5, and it would move the paper's numbers, so it is
+held until the paper is published (see the 2026-09-10 section below).
+
+### The two defects fixed in #1
+
+`com_block_conf_quant_larger()` passed a caller's `Z.perm` unchanged to the
+control bounds, which come from the relabeled experiment `(1 - Z, -Y)`; every
+control bound on `electric_teachers` came back -Inf. It also took the critical
+value at position `floor(null.max * alpha) + 1` using the argument `null.max`
+rather than the number of simulated assignments it had, so a 2000-column
+`Z.perm` with the default `null.max = 10^4` tested at level 0.50. Both are
+fixed, and `set = "all"` now refuses `stat.null`. The paper's SRE scripts pass
+neither `Z.perm` nor `stat.null`, so the submitted numbers do not move.
+
+### Issues filed on David's repository
+
+    #3   Z.perm / stat.null defect (closed by #1)
+    #4   README defect (closed by #2)
+    #5   row-order dependence with ties; held until publication
+    #6   invalid inputs that return a number (CRE k = 0, NA in Y, set typo)
+    #7   error messages that do not name the mistake; "dist.free" documented
+         but the code accepts only "dis.free"
+    #8   documentation promises "less / two-sided variants"; harm recipe
+    #9   bare return vectors; bounds between attainable values
+    #10  argument names, defaults and the meaning of k differ CRE vs SRE
+    #11  examples inside \dontrun{}
+    #12  R-CMD-check fails on Linux and Windows at test-pval-cre.R:82
+    #15  HiGHS and Gurobi differ by tol on 2 of 233 Stephenson bounds
+
+#12 matters before anyone trusts CI. On `main` since at least 2026-09-10 the
+check fails on every platform but macOS, at one test comparing
+`pval_comb_block` with RIQITE: 0.772 against 0.770 from the same 1000
+permutations. The unconfirmed guess is that `pval_comb_block` compares
+standardized statistics with `>=`, and rounding puts null draws that tie the
+observed value on either side, differently by platform. A fix changes
+reported p-values, so it is held with item 2A and 4A. The PR checks on #1,
+#2, #13 and #14 show this failure; it is not theirs.
+
+### Open questions
+
+- Where the top of the s grid should stop in a completely randomized design.
+  The rule s_max = 4 m / q_min rests on one diagnostic simulation: one
+  outcome distribution, all-or-nothing effects, the null of no effect, not
+  the quantile hypotheses. A proper simulation study was proposed and not
+  run.
+- Whether the best s depends on n. In two comparisons at fixed p and effect
+  size it did not. If that holds generally, one set of s values serves blocks
+  of different sizes.
+- The cause of #15.
+- Jake was reading the rendered vignette line by line and stopping where it
+  failed him. He had reached the section on counting harmed units with a
+  minus sign. The sentences written while merging the first-reader report
+  have had no cold read except his.
+
+### Things a future session will get wrong
+
+- `devtools::document()` here runs roxygen 7.3.3 while the package was built
+  with 8.1.0. It rewrites NAMESPACE's `importFrom(stats, ...)` block, adds
+  `RoxygenNote` to DESCRIPTION, and drops David Kim from
+  `man/CMRSS-package.Rd`. After documenting, revert those three files and add
+  any new `export()` or `S3method()` lines to NAMESPACE by hand.
+- CMRSS is not installed in this project's renv library, so building the
+  vignette or the site locally needs `devtools::load_all()` first, or an
+  install into a temporary library.
+- pkgdown 2.2.0 publishes every top-level `.md` file as a page whatever
+  `.Rbuildignore` says. The site workflow therefore deletes AGENTS.md,
+  CLAUDE.md, HANDOFF.md and PLAN.md from its checkout before building, and
+  deploys with `clean: true` so the copies already online are removed.
+- Version numbers: 0.2.12 to 0.2.15 belong to the four pull requests above.
+  The held branch `min-stat-breakpoints` is 0.3.0. Do not reuse a number.
+- Jake's writing rules apply to every reply. He asked on 2026-10-04 for
+  decisions one at a time, each self-contained with one example, for short
+  replies, and for an HTML page in a browser when the material is long. Run
+  `style_gate.py` on replies and `both-passes` on documents.
+
+### Files changed, by pull request
+
+- #1: `R/CMRSS_SRE.R` (wrapper and critical value), its Rd, NEWS, DESCRIPTION,
+  `tests/testthat/test-sre-ci-user-null.R`.
+- #2: `README.md`, `R/CMRSS_SRE.R` (k message, whole-number check), NEWS,
+  DESCRIPTION, `tests/testthat/test-readme-examples.R` (runs every README
+  chunk from a source checkout).
+- #13: new `R/cmrss.R`, `R/cmrss_scores.R`, `R/cmrss_print.R`,
+  `R/outcome_checks.R`; one `check_outcome_ties(Y)` line in each of the four
+  user-facing functions; NAMESPACE (`export(cmrss)`,
+  `S3method(print, cmrss)`); new Rd files; `tests/testthat/test-cmrss.R` and
+  `tests/testthat/test-outcome-ties-warning.R`.
+- #14: `vignettes/harm.Rmd`; DESCRIPTION (`VignetteBuilder: knitr`, knitr and
+  rmarkdown in Suggests); `R/solvers.R` (`drop_tiny_entries()` removes
+  constraint-matrix entries at or below 1e-9 before HiGHS, which ignored them
+  and warned on every solve; bounds on `electric_teachers` are identical
+  before and after); `tests/testthat/test-highs-tiny-coefficients.R`;
+  `.Rbuildignore`; `.github/workflows/pkgdown.yaml`; this file.
+
+### Test and check status at the top of #14
+
+`devtools::test()`: 353 pass, 0 fail, 4 skip (the four skips are the
+unwritten `perm_pvalue()`, PLAN.md item 4A). `devtools::check()` with the
+vignette built: 0 errors, 0 warnings, 0 notes. The two notes that every
+earlier section of this file reports are gone, because of the new
+`.Rbuildignore` lines.
+
 ## TL;DR for the next session (2026-09-10 onward)
 
 Read this section first. It replaces the 2026-09-08 version below. That
