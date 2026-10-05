@@ -65,15 +65,23 @@ produce equivalent results.}
 
 \item{stat.null}{An vector whose empirical distribution
 approximates the randomization distribution of the combined
-stratified rank sum statistic.}
+stratified rank sum statistic. With \code{set = "control"} it must be
+the null distribution for the relabeled experiment, in which the
+control units are treated. It cannot be used with \code{set = "all"},
+because the two halves need different null distributions; supply
+\code{Z.perm} instead.}
 
 \item{null.max}{A positive integer representing the number of
 permutations for approximating the randomization distribution of
-the rank sum statistic.}
+the rank sum statistic. Ignored when \code{Z.perm} or
+\code{stat.null} is supplied: the number of columns of \code{Z.perm},
+or the length of \code{stat.null}, is used instead.}
 
 \item{Z.perm}{Optional pre-computed n x null.max matrix of permuted
-treatment assignments. If provided, this matrix will be used instead
-of generating new permutations. Can be generated using
+treatment assignments, in the original labeling (1 = treated). If
+provided, this matrix will be used instead of generating new
+permutations; for the control bounds the function uses
+\code{1 - Z.perm}. Can be generated using
 \code{assign_block(summary_block(Z, block), null.max)}.}
 
 \item{tol}{A numerical object specifying the precision of the

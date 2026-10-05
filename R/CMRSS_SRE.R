@@ -1208,6 +1208,11 @@ com_block_conf_quant_larger_trt <- function(Z, Y,
     }
   }
 
+  # The critical value's position must count the simulated assignments
+  # actually used. A caller-supplied Z.perm or stat.null can differ in length
+  # from null.max; using null.max then picks the wrong order statistic (with
+  # 2000 draws and null.max = 10^4, alpha = 0.10 became alpha = 0.50).
+  null.max <- length(stat.null)
   thres <- sort(stat.null, decreasing = TRUE)[floor(null.max * alpha) + 1]
 
   Y1.max <- max(Y[Z == 1])
@@ -1389,13 +1394,21 @@ com_block_conf_quant_larger_trt <- function(Z, Y,
 #'   }
 #' @param stat.null An vector whose empirical distribution
 #'   approximates the randomization distribution of the combined
-#'   stratified rank sum statistic.
+#'   stratified rank sum statistic. With \code{set = "control"} it must be
+#'   the null distribution for the relabeled experiment, in which the
+#'   control units are treated. It cannot be used with \code{set = "all"},
+#'   because the two halves need different null distributions; supply
+#'   \code{Z.perm} instead.
 #' @param null.max A positive integer representing the number of
 #'   permutations for approximating the randomization distribution of
-#'   the rank sum statistic.
+#'   the rank sum statistic. Ignored when \code{Z.perm} or
+#'   \code{stat.null} is supplied: the number of columns of \code{Z.perm},
+#'   or the length of \code{stat.null}, is used instead.
 #' @param Z.perm Optional pre-computed n x null.max matrix of permuted
-#'   treatment assignments. If provided, this matrix will be used instead
-#'   of generating new permutations. Can be generated using
+#'   treatment assignments, in the original labeling (1 = treated). If
+#'   provided, this matrix will be used instead of generating new
+#'   permutations; for the control bounds the function uses
+#'   \code{1 - Z.perm}. Can be generated using
 #'   \code{assign_block(summary_block(Z, block), null.max)}.
 #' @param tol A numerical object specifying the precision of the
 #'   obtained confidence intervals. For example, if tol = 10^(-3),
@@ -1487,6 +1500,20 @@ com_block_conf_quant_larger <- function(Z, Y,
 
   n <- length(Z)
 
+  # The control bounds come from the relabeled experiment (Z <- 1 - Z,
+  # Y <- -Y). Simulated assignments must be relabeled the same way, as
+  # com_conf_quant_larger_cre does; otherwise every column scores the wrong
+  # units.
+  Z.perm.control <- if (is.null(Z.perm)) NULL else 1 - Z.perm
+
+  # One null distribution cannot serve both halves: the relabeled experiment
+  # has nb - mb treated units per stratum rather than mb.
+  if (set == "all" && !is.null(stat.null)) {
+    stop("stat.null cannot be used with set = \"all\": the treated and ",
+         "control halves need different null distributions. Supply Z.perm ",
+         "instead, or call set = \"treat\" and set = \"control\" separately.")
+  }
+
   if (set == "treat") {
     ci.treat <- com_block_conf_quant_larger_trt(Z, Y, block,
                                                 k.vec = NULL,
@@ -1508,7 +1535,7 @@ com_block_conf_quant_larger <- function(Z, Y,
                                                   weight.name,
                                                   opt.method,
                                                   comb.method,
-                                                  stat.null, null.max, Z.perm, tol,
+                                                  stat.null, null.max, Z.perm.control, tol,
                                                   alpha)
     ci.control <- ci.control[(n - sum(Z) + 1):n]
     return(ci.control)
@@ -1534,7 +1561,7 @@ com_block_conf_quant_larger <- function(Z, Y,
                                                   weight.name,
                                                   opt.method,
                                                   comb.method,
-                                                  stat.null, null.max, Z.perm, tol,
+                                                  stat.null, null.max, Z.perm.control, tol,
                                                   alpha = alpha / 2)
     ci.control <- ci.control[(n - sum(Z) + 1):n]
 
