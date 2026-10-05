@@ -1033,6 +1033,8 @@ pval_comb_block <- function(Z, Y, k, c,
                             opt.method = "ILP_auto",
                             comb.method = 1) {
 
+  check_outcome_ties(Y)
+
   # Parse optimization method to get solver and exactness
   opt_params <- parse_opt_method(opt.method)
   exact <- opt_params$exact
@@ -1510,6 +1512,7 @@ com_block_conf_quant_larger <- function(Z, Y,
                                         tol = 0.01,
                                         alpha = 0.1) {
 
+  check_outcome_ties(Y)
   n <- length(Z)
 
   # The control bounds come from the relabeled experiment (Z <- 1 - Z,
