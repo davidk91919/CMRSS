@@ -1,0 +1,196 @@
+---
+title: "Could anyone have been harmed?"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Could anyone have been harmed?}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(CMRSS)
+# Few simulated assignments and a coarse precision keep the vignette quick to
+# build; use nperm = 10^4 or more and the default tol in a real analysis.
+nperm <- 1000
+tol <- 0.05
+```
+
+A program evaluation reports that a job-training program raised average
+earnings. A city council member asks a different question: did the program
+make anyone worse off? The average cannot answer that. An average gain of
+\$500 is what we would see if every participant gained \$500, and it is also
+what we would see if most participants gained \$1500 while some lost \$1500.
+
+This vignette shows how to use `cmrss()` to answer the council member's
+question with data from a randomized experiment. The answer takes the form
+"with 95 percent confidence, at least L units were harmed", and, alongside
+it, "at most U units could have been harmed".
+
+## What we can and cannot learn
+
+Each unit i has two potential outcomes: $Y_i(1)$, the outcome it would have
+if treated, and $Y_i(0)$, the outcome it would have if not. Its individual
+effect is $\tau_i = Y_i(1) - Y_i(0)$. A unit was harmed if $\tau_i < 0$. We
+never see both potential outcomes for the same unit, so we never see any
+$\tau_i$, and we cannot say which units were harmed.
+
+We can still learn how many. Sort the n individual effects from smallest to
+largest, $\tau_{(1)} \le \tau_{(2)} \le \dots \le \tau_{(n)}$. Randomization
+lets us test hypotheses such as "$\tau_{(k)} \le c$": the k-th smallest
+effect is at most c. These tests are one-sided: a large c is never
+rejected, and a small c is rejected when the data show $\tau_{(k)}$ must be
+larger. The smallest c that the test does not reject is a lower confidence
+bound for $\tau_{(k)}$. If the lower
+bound for $\tau_{(k)}$ is above 0, then $\tau_{(k)}$ and every larger effect,
+$\tau_{(k)}, \dots, \tau_{(n)}$, are above 0, so at least $n - k + 1$ units
+have positive effects. `cmrss()` computes these bounds for every k and does
+the counting.
+
+## Turning lower bounds into a count of harmed units
+
+The package computes lower bounds only. A unit was harmed if its effect is
+below 0, and a lower bound cannot show that an effect is below anything.
+The harm question needs upper bounds, and we get them by analyzing minus
+the outcome. Each unit's effect on $-Y$ is
+$(-Y_i(1)) - (-Y_i(0)) = -\tau_i$. A unit harmed on Y, with $\tau_i < 0$,
+has a positive effect on $-Y$. So a count of units with effects on $-Y$
+above 0 is a count of units harmed on Y. In `cmrss()` this is a minus sign
+in the formula: `cmrss(-y ~ z, data = d)`.
+
+If larger outcomes are worse, as with blood pressure or days absent, harm
+means $\tau_i > 0$, and the analysis of y itself counts the harmed units.
+
+## An example in which some units are harmed
+
+We simulate an experiment in which we know the truth. Of 200 units, 100 gain
+2 points, 40 lose 3 points, and 60 are unaffected. Half the units are
+assigned to treatment at random.
+
+```{r simulate}
+set.seed(20261004)
+n <- 200
+y0 <- rnorm(n)
+tau <- rep(0, n)
+who <- sample(n)
+tau[who[1:40]] <- -3     # harmed
+tau[who[41:140]] <- 2    # helped
+z <- sample(rep(c(1, 0), each = n / 2))
+sim <- data.frame(z = z, y = ifelse(z == 1, y0 + tau, y0))
+c(true_average_effect = mean(tau),
+  difference_in_means = mean(sim$y[sim$z == 1]) - mean(sim$y[sim$z == 0]))
+```
+
+The average effect is $(100 \times 2 - 40 \times 3) / 200 = 0.4$, and the
+difference in means estimates it. Nothing in that number hints that 40 units
+were harmed.
+
+We ask two questions of the same data: how many units were helped, and how
+many were harmed. Reporting both answers as one statement at 95 percent
+confidence requires each analysis to run at 97.5 percent, `alpha = 0.025`,
+because the chance that at least one of two statements fails is at most the
+sum of their separate chances, $0.025 + 0.025 = 0.05$.
+
+```{r sim-fit}
+helped <- cmrss(y ~ z, data = sim, set = "all", alpha = 0.025,
+                nperm = nperm, tol = tol)
+harmed <- cmrss(-y ~ z, data = sim, set = "all", alpha = 0.025,
+                nperm = nperm, tol = tol)
+helped
+harmed
+```
+
+`set = "all"` bounds the effects of all 200 units, treated and control. The
+analysis of `-y` finds at least `r sum(harmed$bounds$lower > 0)` units with
+effects on $-y$ above 0, that is, at least
+`r sum(harmed$bounds$lower > 0)` harmed units. The analysis of `y` finds at
+least `r sum(helped$bounds$lower > 0)` helped units. A helped unit was not
+harmed, so at most
+$200 - `r sum(helped$bounds$lower > 0)` =
+`r 200 - sum(helped$bounds$lower > 0)`$ units could have been harmed. This
+upper count includes the units with no effect, which the data cannot
+separate from the harmed ones.
+Together, with 95 percent confidence, the number harmed is between
+`r sum(harmed$bounds$lower > 0)` and `r 200 - sum(helped$bounds$lower > 0)`.
+The truth, 40, lies inside that range.
+
+The range runs over most of the 200 units. Data from one experiment cannot
+fix how many units were harmed, because the treated and control outcomes of each unit are never
+seen together. The lower end is still informative: it shows that some units
+were made worse off, which the average effect concealed.
+
+The bounds behind the counts are in `harmed$bounds`, one row per sorted
+effect. The first row with a lower bound above 0 marks where the counting
+starts:
+
+```{r sim-bounds}
+b <- harmed$bounds
+b[b$lower > 0, ][1, ]
+```
+
+## The teacher-training experiment
+
+`electric_teachers` holds an experiment in which 164 of 233 teachers, in 7
+sites, were assigned to a training program, and the outcome `gain` is the
+change in a test score. We first ignore the sites and treat the experiment
+as completely randomized.
+
+```{r teachers-cre}
+data(electric_teachers)
+t_helped <- cmrss(gain ~ TxAny, data = electric_teachers, set = "all",
+                  alpha = 0.025, nperm = nperm, tol = tol)
+t_harmed <- cmrss(-gain ~ TxAny, data = electric_teachers, set = "all",
+                  alpha = 0.025, nperm = nperm, tol = tol)
+t_helped
+t_harmed
+```
+
+Both calls warn that 29 of the 233 teachers share one value of `gain`. The
+package breaks ties between outcomes by the order of the rows in the data,
+so with this many ties, reordering the rows can move the bounds.
+
+With 95 percent confidence, at least `r sum(t_helped$bounds$lower > 0)`
+teachers gained from the program, and no teacher is shown to have been
+harmed. That is not evidence that nobody was harmed. The same analysis
+allows up to $233 - `r sum(t_helped$bounds$lower > 0)` =
+`r 233 - sum(t_helped$bounds$lower > 0)`$ teachers to have been harmed. The
+data say the program helped many teachers and cannot rule out that it hurt
+some.
+
+The experiment randomized teachers within sites. An analysis that uses the
+sites compares teachers only with others in their own site, as the
+randomization did. That requires an optimization solver, such as the
+`highs` package.
+
+```{r teachers-sre, eval = requireNamespace("highs", quietly = TRUE)}
+s_harmed <- cmrss(-gain ~ TxAny | Site, data = electric_teachers,
+                  set = "treat", alpha = 0.05, nperm = nperm,
+                  opt.method = "ILP_highs")
+s_harmed
+```
+
+`set = "treat"` bounds only the effects of the 164 treated teachers. It
+answers "how many of the teachers who received the program were harmed by
+it", which is often the question a council member means.
+
+## Choices that change the answer
+
+`set` decides whose effects are counted. `"treat"` and `"control"` give
+bounds for one group at the full `alpha`. `"all"` covers every unit and
+splits `alpha` between the treated and control groups.
+
+`alpha` decides the confidence level. When the helped and harmed analyses
+are reported together, run each at `alpha / 2`.
+
+`s` and `scores` decide which rank statistics are combined. A small s
+detects effects shared by most units and a large s detects large effects in
+a few units. The default combines three values from 2 to a maximum set by
+the number of treated units; the section "Choosing s" of `?cmrss` gives
+the rule and the evidence for it.
+
+The outcome must take many values. With a binary outcome, every individual
+effect is $-1$, $0$, or $1$, the tie problem above is at its worst, and
+`cmrss()` warns. For a binary outcome, use a method that works with the
+2 x 2 table of potential outcomes directly, such as those of Rigdon and
+Hudgens (2015, *Statistics in Medicine* 34, doi:10.1002/sim.6384) or Li and
+Ding (2016, *Statistics in Medicine* 35, doi:10.1002/sim.6924).
