@@ -510,6 +510,7 @@ comb_p_val_cre = function(Z, Y, k, c, methods.list,
                           Z.perm = NULL, nperm,
                           stat.null.mult = NULL
                           ){
+  check_outcome_ties(Y)
   H = length(methods.list)
   pval.vec = rep(NA, H)
   n = length(Z)
@@ -780,6 +781,7 @@ com_conf_quant_larger_cre <- function( Z, Y, methods.list,
                                        tol = 10^(-3)
 ){
 
+  check_outcome_ties(Y)
   H = length(methods.list)
   n = length(Z)
 
