@@ -368,6 +368,55 @@ t_no_harm$test
 
 `r if (has_highs) paste0("The p-value is ", signif(t_no_harm$test$p.value, 2), ". We do not reject the hypothesis that no teacher was harmed. That agrees with the plot, where no upper bound fell below 0. As before, a large p-value is not evidence that no teacher was harmed: from the analysis of gain, as many as ", 233 - t_n_helped, " teachers could have been.") else ""`
 
+### The same test with the package's p-value functions
+
+`cmrss()` calls the package's p-value functions, and we can call them
+directly. They need the treatment and outcome as vectors, a list of rank
+statistics, and the position k of the effect being tested.
+`comb_p_val_cre()` counts k over all n units, and the hypothesis it tests
+concerns the treated units: at most n - k of them have an effect above c.
+With k = n and c = 0 on $-y$, that is the hypothesis that no treated unit
+was harmed. If no unit was harmed then no treated unit was harmed, so a
+small p-value here also rejects the hypothesis that no unit was harmed.
+
+```{r sim-noharm-direct}
+zeta <- no_harm$s    # the default polynomial parameters cmrss() used
+ml <- lapply(zeta, function(s) {
+  list(name = "Polynomial", r = s, std = TRUE, scale = FALSE)
+})
+set.seed(5)
+p_direct <- comb_p_val_cre(sim$z, -sim$y, k = n, c = 0, ml, nperm = nperm)
+set.seed(5)
+p_cmrss <- cmrss(-y ~ z, data = sim, quantile = 1, c = 0, set = "treat",
+                 nperm = nperm, tol = tol)$test$p.value
+c(comb_p_val_cre = p_direct, cmrss = p_cmrss)
+```
+
+The two p-values are equal because, with the same random seed, both
+compute the same test. `cmrss()` with `set = "treat"` calls
+`comb_p_val_cre()` with exactly these arguments.
+
+For a block-randomized experiment the function is `pval_comb_block()`. It
+counts k over the treated units only, so the largest treated effect is
+`k = sum(Z)`, and it needs one list of score specifications per block for
+each statistic.
+
+```{r teachers-noharm-direct, eval = has_highs}
+d <- electric_teachers
+n_sites <- length(unique(d$Site))
+ml_sites <- lapply(t_no_harm$s, function(s) {
+  lapply(seq_len(n_sites), function(b) {
+    list(name = "Polynomial", r = s, std = TRUE, scale = FALSE)
+  })
+})
+pval_comb_block(d$TxAny, -d$gain, k = sum(d$TxAny), c = 0,
+                block = factor(d$Site), methods.list.all = ml_sites,
+                null.max = nperm, opt.method = "ILP_highs")
+```
+
+The result gives the p-value and the observed test statistic. The p-value
+of 1 agrees with the result from `cmrss()` above.
+
 `set = "treat"` in place of `set = "all"` tests the narrower hypothesis that
 no treated unit was harmed. A test at a single `alpha` stands on its own;
 the halving of `alpha` used for the counts applies only when two statements
