@@ -1,3 +1,15 @@
+# CMRSS 0.2.17
+
+## Documentation
+
+- The harm vignette now plots the lower and upper bounds for every sorted
+  effect, in the layout of the figures in the paper: position k on the
+  vertical axis, the bound on the horizontal axis. The upper bound for the
+  k-th smallest effect is minus the lower bound from the analysis of `-y`
+  at position n - k + 1. The simulated example also plots the true sorted
+  effects, which lie between the bounds. The plotting function is written
+  out in the vignette so readers can reuse it.
+
 # CMRSS 0.2.16
 
 ## Documentation
