@@ -12,7 +12,7 @@
 #' @param formula `outcome ~ treatment` for a completely randomized
 #'   experiment, or `outcome ~ treatment | block` for a block-randomized one.
 #'   The treatment must be coded 0/1 or `TRUE`/`FALSE`. Writing `-outcome`
-#'   on the left asks about effects on minus the outcome, which turns the
+#'   on the left multiplies every outcome by -1, which turns the
 #'   lower bounds into upper bounds on the original effects: the way to ask
 #'   whether anyone could have been harmed.
 #' @param data A data frame holding the variables in `formula`.
