@@ -8,3 +8,11 @@
 ^\.github$
 ^memos$
 ^references$
+^AGENTS\.md$
+^CLAUDE\.md$
+^HANDOFF\.md$
+^PLAN\.md$
+^Makefile$
+^load\.R$
+^\.lintr$
+^\.claude$
