@@ -13,14 +13,16 @@
   reports the `k` used. Writing `-gain` on the left bounds effects on minus
   the outcome, which is how to ask whether anyone could have been harmed.
   `print()` reports how many units have bounds above `c`.
-- The rank statistics come from a vector `s` of Stephenson parameters, or of
-  polynomial parameters with `scores = "polynomial"`. The default is three
+- The rank statistics are polynomial scores, (r/(n + 1))^(s - 1), with
+  parameters `s` (the paper's zeta); `scores = "stephenson"` uses Stephenson
+  scores choose(r - 1, s - 1) instead. The default is three
   values, 2, s_max and round(sqrt(2 s_max)), where s_max = 4 m / q_min (at
   most n / 2) and q_min is the fewest treated units whose holding the top
   ranks would give a p-value at or below `alpha`. The section "Choosing s" of
-  `?cmrss` gives the reasoning and a simulation comparing grids. With
-  Stephenson scores, an s above a block's size is lowered to that size so
-  the block is not dropped.
+  `?cmrss` gives the reasoning and a simulation comparing grids. Polynomial
+  scores are never 0, so they work in blocks of any size; with Stephenson
+  scores, an s above a block's size is lowered to that size so the block is
+  not dropped.
 - `comb_p_val_cre()`, `com_conf_quant_larger_cre()`, `pval_comb_block()`,
   `com_block_conf_quant_larger()` and `cmrss()` now warn, with class
   `"cmrss_ties_warning"`, when the outcome takes two values or when one value

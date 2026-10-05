@@ -19,7 +19,7 @@ min_detectable_treated <- function(n, m, alpha = 0.05) {
   if (length(q) == 0) NA_integer_ else q[1]
 }
 
-#' Default score parameters for cmrss()
+#' Default score parameters for cmrss(), polynomial zeta or Stephenson s
 #'
 #' Three values: 2, s_max = min(floor(4 m / q_min), floor(n / 2)), and their
 #' geometric middle round(sqrt(2 s_max)).
@@ -27,7 +27,7 @@ min_detectable_treated <- function(n, m, alpha = 0.05) {
 #' @inheritParams min_detectable_treated
 #' @return A sorted integer vector of distinct values.
 #' @keywords internal
-default_stephenson_s <- function(n, m, alpha = 0.05) {
+default_score_parameters <- function(n, m, alpha = 0.05) {
   q_min <- min_detectable_treated(n, m, alpha)
   if (is.na(q_min)) {
     stop(sprintf(paste0(

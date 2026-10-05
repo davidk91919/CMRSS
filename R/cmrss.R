@@ -25,18 +25,20 @@
 #'   which `print()` counts bounds.
 #' @param set Which units' effects to bound: `"treat"`, `"control"`, or
 #'   `"all"`.
-#' @param scores `"stephenson"` (the default) or `"polynomial"`. A
-#'   Stephenson score with parameter s gives the unit at rank r the score
-#'   choose(r - 1, s - 1). A polynomial score with parameter zeta gives it
-#'   (r/(n + 1))^(zeta - 1), computed within each block on that block's n.
-#'   With zeta = s the two are close whenever r is much larger than s; see
-#'   the section "Choosing s".
+#' @param scores `"polynomial"` (the default) or `"stephenson"`. A
+#'   polynomial score with parameter s gives the unit at rank r, counting
+#'   from the smallest outcome, the score (r/(n + 1))^(s - 1). The paper
+#'   behind this package writes this parameter zeta. A Stephenson score with
+#'   parameter s gives the unit the score choose(r - 1, s - 1). In a
+#'   block-randomized experiment both are computed within each block, with
+#'   that block's size as n. With the same s the two scores are close
+#'   whenever r is much larger than s; see the section "Choosing s".
 #' @param s Score parameters, one rank statistic per value; the test
-#'   combines them. They are the Stephenson s or, with
-#'   `scores = "polynomial"`, the polynomial zeta. The default depends on the
-#'   design and is described in the section "Choosing s" below. With
-#'   Stephenson scores, an s above a block's size is lowered to that size;
-#'   polynomial scores are never 0 and need no change.
+#'   combines them. They are zeta for polynomial scores and s for Stephenson
+#'   scores. The default depends on the design and is described in the
+#'   section "Choosing s" below. With Stephenson scores, an s above a
+#'   block's size is lowered to that size; polynomial scores are never 0 and
+#'   need no change.
 #' @param alpha One minus the confidence level. Also enters the default `s`.
 #' @param nperm Number of simulated random assignments used to approximate
 #'   the randomization distribution.
@@ -46,15 +48,18 @@
 #'
 #' @section Choosing s:
 #'
-#' A Stephenson rank statistic with parameter s gives the unit at rank r,
-#' counting from the smallest outcome, the score choose(r - 1, s - 1), and
-#' sums the scores of the treated units. Divided by the top unit's score, the
-#' score is the product of (r - j)/(n - j) over j = 1, ..., s - 1, which is
-#' close to (r/n)^(s - 1) when r is much larger than s. The top 1/s of the
-#' ranks then carry the fraction 1 - (1 - 1/s)^s of the total score: 0.75 at
-#' s = 2, and no less than 1 - 1/e = 0.63 for any s. So s = 2, which is the
-#' Wilcoxon statistic shifted by a constant, detects effects shared by most
-#' units, and a large s detects large effects confined to a few units.
+#' A polynomial rank statistic with parameter s gives the unit at rank r,
+#' counting from the smallest outcome, the score (r/(n + 1))^(s - 1), and
+#' sums the scores of the treated units. Write u = r/(n + 1). The top 1/s of
+#' the ranks carry about the fraction 1 - (1 - 1/s)^s of the total score:
+#' 0.75 at s = 2, and no less than 1 - 1/e = 0.63 for any s. So s = 2, whose
+#' score is proportional to the rank and gives the Wilcoxon statistic,
+#' detects effects shared by most units, and a large s detects large effects
+#' confined to a few units. A Stephenson score with the same s,
+#' choose(r - 1, s - 1), divided by the top unit's score, is the product of
+#' (r - j)/(n - j) over j = 1, ..., s - 1, which is close to (r/n)^(s - 1)
+#' when r is much larger than s. So the two families put nearly the same
+#' relative weight on each rank in large samples.
 #'
 #' The default uses three values: 2, s_max, and their geometric middle,
 #' sqrt(2 x s_max) rounded to an integer. s_max depends on the number of
@@ -63,8 +68,9 @@
 #' First, q_min is the fewest treated units whose effects could be detected
 #' at level `alpha`. Suppose only q treated units respond, their effects give
 #' them the q largest outcomes, and no other unit has an effect. The data
-#' most unlike the null are then those in which the q largest outcomes all
-#' belong to treated units. Under no effect that happens with probability
+#' most unlike the null hypothesis of no effect are then those in which the
+#' q largest outcomes all belong to treated units. Under no effect that
+#' happens with probability
 #' (m/n)((m - 1)/(n - 1)) ... ((m - q + 1)/(n - q + 1)). q_min is the
 #' smallest q for which this probability is at most `alpha`. With n = 200,
 #' m = 100 and alpha = 0.05, q = 4 gives 0.061 and q = 5 gives 0.030, so
@@ -73,11 +79,11 @@
 #' Second, s_max = 4 m / q_min, rounded down and never above n / 2. In a
 #' simulation of a completely randomized experiment with n = 200 and
 #' m = 100, in which a fraction p of the units responded with a large effect
-#' and the rest had none, the most powerful single statistic had s between
-#' about 2/p and 4/p. With q treated responders, p is about q / m, so 4/p is
-#' 4 m / q. In the scenario with about 5 treated responders, power peaked at
-#' s = 80 = 4 x 100 / 5. Above about s = n / 2 the scores put nearly all
-#' their weight on the few top ranks, and power stopped changing.
+#' and the rest had none, the most powerful single Stephenson statistic had
+#' s between about 2/p and 4/p. With q treated responders, p is about q / m,
+#' so 4/p is 4 m / q. In the scenario with about 5 treated responders, power
+#' peaked at s = 80 = 4 x 100 / 5. Above about s = n / 2 the scores put
+#' nearly all their weight on the few top ranks, and power stopped changing.
 #'
 #' | Design | q_min | s_max | Default s |
 #' |---|---|---|---|
@@ -87,12 +93,16 @@
 #' | n = 100, m = 20 | 2 | 40 | 2, 9, 40 |
 #'
 #' In a block-randomized experiment q_min and s_max are computed from the
-#' total n and the total m. Within a block of n_b units, any s above n_b is
-#' lowered to n_b. The score choose(r - 1, n_b - 1) is 0 for every rank below
-#' n_b and 1 for the top rank, so the block counts toward the statistic
-#' exactly when its highest outcome belongs to a treated unit. Without the
-#' change every unit in the block would score 0, and the block would drop
-#' out of that statistic.
+#' total n and the total m, and the same values of s are used in every
+#' block. A polynomial score is never 0, so a block smaller than s keeps
+#' every unit in the statistic. With a large s almost all of the block's
+#' weight sits on its top unit: in a block of 5 with s = 80, the top unit
+#' scores (5/6)^79 = 6 x 10^-7 and the next unit (4/6)^79 = 1 x 10^-14. A
+#' Stephenson score with s above the block's size would be 0 for every unit
+#' in the block, so with `scores = "stephenson"` such an s is lowered to the
+#' block's size n_b. The score choose(r - 1, n_b - 1) is then 1 for the top
+#' rank and 0 below it, so the block counts toward the statistic exactly
+#' when its highest outcome belongs to a treated unit.
 #'
 #' Why three values. The combined test rejects when the smallest of the
 #' separate p-values is at or below a cutoff, the 5th percentile (for
@@ -103,40 +113,32 @@
 #' information never makes the smallest p-value larger. The cutoff falls
 #' most when the added statistic differs from those already present.
 #' Statistics with nearby s values reach small p-values on the same
-#' assignments; under no effect, the statistics with s = 6 and s = 10 have
-#' correlation 0.96. So the range of s, not the number of values, sets the
-#' cutoff.
+#' assignments; under no effect, the polynomial statistics with s = 6 and
+#' s = 10 have correlation 0.96. So the range of s, not the number of
+#' values, sets the cutoff.
 #'
-#' The table gives simulated power at level 0.05 for n = 200, m = 100, with
-#' standard normal control outcomes and a fraction of units responding with
-#' the stated effect, from 2000 replications (Monte Carlo standard error at
-#' most 0.011). The last row gives each set's cutoff.
+#' The table gives simulated power at level 0.05 for polynomial scores with
+#' n = 200 and m = 100, standard normal control outcomes, and a fraction of
+#' units responding with the stated effect, from 2000 replications (Monte
+#' Carlo standard error at most 0.011). The last row gives each set's cutoff.
 #'
 #' | Units responding, effect | s = 2 | 2, 80 | 2, 13, 80 | 2, 4, 8, 16, 32, 64, 80 |
 #' |---|---|---|---|---|
-#' | 200, 0.35 | 0.79 | 0.73 | 0.73 | 0.72 |
-#' | 100, 0.8 | 0.87 | 0.83 | 0.85 | 0.85 |
-#' | 40, 1.6 | 0.60 | 0.70 | 0.79 | 0.80 |
-#' | 20, 2.5 | 0.32 | 0.72 | 0.77 | 0.78 |
-#' | 10, 4 | 0.15 | 0.64 | 0.61 | 0.60 |
-#' | 5, 6 | 0.10 | 0.25 | 0.23 | 0.22 |
-#' | cutoff | 0.050 | 0.027 | 0.021 | 0.018 |
+#' | 200, 0.35 | 0.79 | 0.73 | 0.72 | 0.72 |
+#' | 100, 0.8 | 0.87 | 0.84 | 0.85 | 0.86 |
+#' | 40, 1.6 | 0.60 | 0.71 | 0.79 | 0.80 |
+#' | 20, 2.5 | 0.32 | 0.73 | 0.77 | 0.78 |
+#' | 10, 4 | 0.15 | 0.64 | 0.60 | 0.59 |
+#' | 5, 6 | 0.10 | 0.24 | 0.22 | 0.21 |
+#' | cutoff | 0.050 | 0.027 | 0.022 | 0.019 |
 #'
 #' Three values came within 0.02 of the seven-value grid in every scenario.
-#' Two values lost 0.79 - 0.70 = 0.09 when 40 units responded, because no
+#' Two values lost 0.79 - 0.71 = 0.08 when 40 units responded, because no
 #' value near the best s for that scenario, about 10, was present. Relative
-#' to s = 2 alone, the three-value default gave up 0.79 - 0.73 = 0.06 when
-#' every unit responded and gained 0.61 - 0.15 = 0.46 when 10 responded.
-#'
-#' Polynomial scores. The same default values serve as zeta. On the same
-#' simulated data, zeta = 2, 13, 80 had power within 0.01 of s = 2, 13, 80 in
-#' all six scenarios, with cutoff 0.022 against 0.021. The two differ in
-#' small blocks: a polynomial score is never 0, so a block smaller than zeta
-#' keeps every unit in the statistic, although with a large zeta almost all
-#' of the block's weight sits on its top unit. In a block of 5 with
-#' zeta = 80, the top unit scores (5/6)^79 = 6 x 10^-7 and the next unit
-#' (4/6)^79 = 1 x 10^-14. The paper behind this package uses polynomial
-#' scores for its stratified examples.
+#' to s = 2 alone, the three-value default gave up 0.79 - 0.72 = 0.07 when
+#' every unit responded and gained 0.60 - 0.15 = 0.45 when 10 responded.
+#' Stephenson scores with the same s values, on the same simulated data,
+#' had power within 0.01 of these in every cell.
 #'
 #' These numbers come from one outcome distribution, effects that are
 #' either large or zero, and the null of no effect rather than the quantile
@@ -175,7 +177,7 @@
 #' @seealso [com_conf_quant_larger_cre()], [com_block_conf_quant_larger()]
 #' @export
 cmrss <- function(formula, data, quantile = NULL, c = 0, set = "all",
-                  scores = c("stephenson", "polynomial"), s = NULL,
+                  scores = c("polynomial", "stephenson"), s = NULL,
                   alpha = 0.05, nperm = 10^4, tol = 0.01,
                   opt.method = "ILP_auto") {
   set <- match.arg(set, c("all", "treat", "control"))
@@ -199,10 +201,10 @@ cmrss <- function(formula, data, quantile = NULL, c = 0, set = "all",
     })
   }
 
-  if (is.null(s)) s <- default_stephenson_s(n, m, alpha)
+  if (is.null(s)) s <- default_score_parameters(n, m, alpha)
   nb <- if (is.null(block)) n else as.vector(table(block))
-  ml_all <- if (scores == "stephenson") stephenson_methods(s, nb) else
-    polynomial_methods(s, nb)
+  ml_all <- if (scores == "polynomial") polynomial_methods(s, nb) else
+    stephenson_methods(s, nb)
   # The completely randomized functions take one specification per statistic.
   ml <- if (is.null(block)) lapply(ml_all, `[[`, 1) else ml_all
 

@@ -43,6 +43,8 @@ s_default <- c(2, 5, 15)
 # s_max = min(floor(64 / 5), 15) = 12, default 2, 5, 12.
 s_sre_default <- c(2, 5, 12)
 steph <- function(s) lapply(s, function(x) list(name = "Stephenson", s = x, scale = FALSE))
+# The default scores are polynomial, (r / (n + 1))^(s - 1); see ?cmrss.
+poly <- function(s) lapply(s, function(x) list(name = "Polynomial", r = x, std = TRUE, scale = FALSE))
 
 ## The default s ----------------------------------------------------------------
 
@@ -54,7 +56,7 @@ test_that("q_min is the fewest treated units that could reach alpha", {
 })
 
 test_that("the default s matches the table in ?cmrss", {
-  ds <- function(n, m) CMRSS:::default_stephenson_s(n, m, alpha = 0.05)
+  ds <- function(n, m) CMRSS:::default_score_parameters(n, m, alpha = 0.05)
   expect_equal(ds(200, 100), c(2, 13, 80))
   expect_equal(ds(233, 164), c(2, 12, 72))  # electric_teachers
   expect_equal(ds(30, 15), c(2, 5, 15))
@@ -64,14 +66,14 @@ test_that("the default s matches the table in ?cmrss", {
 test_that("the default s never exceeds n / 2", {
   # n = 1000, m = 500: q_min = 5 and 4 m / q_min = 400 is below n / 2 = 500,
   # so 400 stays. n = 40, m = 36: whatever q_min is, s_max must be <= 20.
-  expect_lte(max(CMRSS:::default_stephenson_s(40, 36, alpha = 0.05)), 20)
-  expect_equal(max(CMRSS:::default_stephenson_s(1000, 500, alpha = 0.05)), 400)
+  expect_lte(max(CMRSS:::default_score_parameters(40, 36, alpha = 0.05)), 20)
+  expect_equal(max(CMRSS:::default_score_parameters(1000, 500, alpha = 0.05)), 400)
 })
 
 test_that("a design too small to reach alpha is refused", {
   # n = 4, m = 2: even both treated units holding the top two ranks has
   # probability (2/4)(1/3) = 0.167 > 0.05, and q cannot exceed m.
-  expect_error(CMRSS:::default_stephenson_s(4, 2, alpha = 0.05), "alpha")
+  expect_error(CMRSS:::default_score_parameters(4, 2, alpha = 0.05), "alpha")
 })
 
 ## Building the score lists ---------------------------------------------------
@@ -109,7 +111,7 @@ test_that("CRE bounds equal com_conf_quant_larger_cre with the same seed", {
   set.seed(1)
   fit <- cmrss(y ~ z, data = d, set = "treat", nperm = 500, alpha = 0.1)
   set.seed(1)
-  by_hand <- com_conf_quant_larger_cre(d$z, d$y, steph(s_default), nperm = 500,
+  by_hand <- com_conf_quant_larger_cre(d$z, d$y, poly(s_default), nperm = 500,
                                        set = "treat", alpha = 0.1, tol = 0.01)
   expect_equal(fit$bounds$lower, by_hand)
   expect_equal(fit$bounds$k, 1:15)
@@ -124,7 +126,7 @@ test_that("CRE test: quantile 0.9 of the treated becomes k = n - m + floor(0.9 m
   set.seed(2)
   # comb_p_val_cre counts k over all n units: the floor(0.9 * 15) = 13th
   # smallest treated effect is the (30 - 15 + 13) = 28th in its numbering.
-  p_by_hand <- comb_p_val_cre(d$z, d$y, k = 28, c = 1, steph(s_default),
+  p_by_hand <- comb_p_val_cre(d$z, d$y, k = 28, c = 1, poly(s_default),
                               nperm = 500)
   expect_equal(fit$test$k, 13)
   expect_equal(fit$test$p.value, p_by_hand)
@@ -136,7 +138,7 @@ test_that("a minus sign on the outcome tests effects on -y", {
   set.seed(3)
   fit <- cmrss(-y ~ z, data = d, set = "treat", nperm = 500)
   set.seed(3)
-  by_hand <- com_conf_quant_larger_cre(d$z, -d$y, steph(s_default),
+  by_hand <- com_conf_quant_larger_cre(d$z, -d$y, poly(s_default),
                                        nperm = 500, set = "treat",
                                        alpha = 0.05, tol = 0.01)
   expect_equal(fit$bounds$lower, by_hand)
@@ -144,14 +146,14 @@ test_that("a minus sign on the outcome tests effects on -y", {
 
 ## Stratified experiments -------------------------------------------------------
 
-test_that("SRE bounds equal com_block_conf_quant_larger with capped s", {
+test_that("SRE bounds equal com_block_conf_quant_larger with the default polynomial scores", {
   skip_if_not(solver_available("highs"), "HiGHS not available")
   d <- make_sre()
   set.seed(4)
   fit <- cmrss(y ~ z | site, data = d, set = "treat", nperm = 300,
                tol = 0.05, opt.method = "ILP_highs")
   set.seed(4)
-  ml <- CMRSS:::stephenson_methods(s_sre_default, nb = c(5, 12, 13))
+  ml <- CMRSS:::polynomial_methods(s_sre_default, nb = c(5, 12, 13))
   by_hand <- com_block_conf_quant_larger(d$z, d$y, d$site, set = "treat",
                                          methods.list.all = ml,
                                          opt.method = "ILP_highs",
@@ -168,7 +170,7 @@ test_that("SRE test: quantile 0.9 of the treated becomes k = floor(0.9 m)", {
   fit <- cmrss(y ~ z | site, data = d, quantile = 0.9, c = 1, set = "treat",
                nperm = 300, opt.method = "ILP_highs")
   set.seed(5)
-  ml <- CMRSS:::stephenson_methods(s_sre_default, nb = c(5, 12, 13))
+  ml <- CMRSS:::polynomial_methods(s_sre_default, nb = c(5, 12, 13))
   # pval_comb_block counts k over the treated units only.
   p_by_hand <- pval_comb_block(d$z, d$y, k = floor(0.9 * m), c = 1, d$site,
                                ml, null.max = 300, opt.method = "ILP_highs",
@@ -177,14 +179,14 @@ test_that("SRE test: quantile 0.9 of the treated becomes k = floor(0.9 m)", {
   expect_equal(fit$test$p.value, p_by_hand)
 })
 
-test_that("scores = 'polynomial' uses the default values as zeta", {
+test_that("scores = 'stephenson' uses the default values as s, lowered in small blocks", {
   skip_if_not(solver_available("highs"), "HiGHS not available")
   d <- make_sre()
   set.seed(7)
-  fit <- cmrss(y ~ z | site, data = d, set = "treat", scores = "polynomial",
+  fit <- cmrss(y ~ z | site, data = d, set = "treat", scores = "stephenson",
                nperm = 300, tol = 0.05, opt.method = "ILP_highs")
   set.seed(7)
-  ml <- CMRSS:::polynomial_methods(s_sre_default, nb = c(5, 12, 13))
+  ml <- CMRSS:::stephenson_methods(s_sre_default, nb = c(5, 12, 13))
   by_hand <- com_block_conf_quant_larger(d$z, d$y, d$site, set = "treat",
                                          methods.list.all = ml,
                                          opt.method = "ILP_highs",
