@@ -84,3 +84,14 @@ test_that("a k that is not a whole number is refused", {
     "whole number"
   )
 })
+
+test_that("README installs from the canonical repository, not the archived one", {
+  # jwbowers/CMRSS now redirects to the archived
+  # bowers-illinois-edu/CMRSS_archive, so installing from it gives an old
+  # version of the package.
+  readme <- test_path("..", "..", "README.md")
+  skip_if_not(file.exists(readme), "README.md not available (installed package)")
+  text <- paste(readLines(readme, warn = FALSE), collapse = "\n")
+  expect_match(text, 'install_github\\("davidk91919/CMRSS"\\)')
+  expect_no_match(text, "jwbowers/CMRSS")
+})

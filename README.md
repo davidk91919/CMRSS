@@ -1,7 +1,7 @@
 # Combining Multiple Rank Sum Statistics
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/jwbowers/CMRSS/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jwbowers/CMRSS/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/davidk91919/CMRSS/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/davidk91919/CMRSS/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 > R package for conducting randomization inference for quantiles of individual treatment effects, using combined rank sum statistics, both for completely randomized and stratified randomized experiments
@@ -9,7 +9,7 @@
 ## Installation
 
 ```r
-devtools::install_github("jwbowers/CMRSS")
+devtools::install_github("davidk91919/CMRSS")
 ```
 
 ### Solver Dependencies
@@ -29,6 +29,9 @@ HiGHS is a high-performance open-source solver that requires no license.
 ```
 
 Both solvers produce equivalent results. HiGHS is recommended for users without a Gurobi license.
+
+Documentation, including the vignette "Could anyone have been harmed?", is
+at <https://bowers-illinois-edu.github.io/CMRSS/>.
 
 ## Load the Package
 

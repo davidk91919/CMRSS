@@ -1,15 +1,15 @@
 Package: CMRSS
 Type: Package
 Title: Combining Multiple Rank Sum Statistics
-Version: 0.2.15
+Version: 0.2.16
 Description: Randomization inference for quantiles of individual treatment
     effects using combined rank sum statistics. Supports both completely
     randomized experiments (CRE) and stratified randomized experiments (SRE).
     The optimization can be performed using either the open-source HiGHS solver
     or the commercial Gurobi solver.
 License: MIT + file LICENSE
-URL: https://bowers-illinois-edu.github.io/CMRSS/, https://github.com/bowers-illinois-edu/CMRSS
-BugReports: https://github.com/bowers-illinois-edu/CMRSS/issues
+URL: https://bowers-illinois-edu.github.io/CMRSS/, https://github.com/davidk91919/CMRSS
+BugReports: https://github.com/davidk91919/CMRSS/issues
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 2.10)

@@ -1,3 +1,15 @@
+# CMRSS 0.2.16
+
+## Documentation
+
+- `README.md` installed the package from `jwbowers/CMRSS` and showed that
+  repository's check badge. GitHub now redirects `jwbowers/CMRSS` to the
+  archived `bowers-illinois-edu/CMRSS_archive`, so the instructions
+  installed an old version. The README now installs from
+  `davidk91919/CMRSS`, shows that repository's badge, and links the pkgdown
+  site. `DESCRIPTION` points `URL` and `BugReports` at `davidk91919/CMRSS`,
+  where the issues are filed.
+
 # CMRSS 0.2.15
 
 ## Documentation
