@@ -14,12 +14,12 @@ Source:
 [`DESCRIPTION`](https://github.com/davidk91919/CMRSS/blob/main/DESCRIPTION)
 
 Kim D, Li X (2026). *CMRSS: Combining Multiple Rank Sum Statistics*. R
-package version 0.2.17, <https://bowers-illinois-edu.github.io/CMRSS/>.
+package version 0.2.18, <https://bowers-illinois-edu.github.io/CMRSS/>.
 
     @Manual{,
       title = {CMRSS: Combining Multiple Rank Sum Statistics},
       author = {David Kim and Xinran Li},
       year = {2026},
-      note = {R package version 0.2.17},
+      note = {R package version 0.2.18},
       url = {https://bowers-illinois-edu.github.io/CMRSS/},
     }

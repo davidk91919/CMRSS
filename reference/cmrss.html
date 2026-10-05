@@ -21,7 +21,7 @@ pval_comb_block() for a block-randomized one."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.17</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,11 +97,13 @@ whether anyone could have been harmed.</p></dd>
 
 
 <dt id="arg-quantile">quantile<a class="anchor" aria-label="anchor" href="#arg-quantile"></a></dt>
-<dd><p>Optional proportion strictly between 0 and 1. When given,
+<dd><p>Optional proportion above 0 and at most 1. When given,
 <code>cmrss()</code> tests whether the effect at that proportion of the units in
 <code>set</code> is at most <code>c</code>. For example, <code>quantile = 0.9, set = "treat"</code> with
 164 treated units tests the floor(0.9 x 164) = 147th smallest of their
-effects. The <code>k</code> used is reported in the result.</p></dd>
+effects. The <code>k</code> used is reported in the result. <code>quantile = 1</code> tests
+the largest effect; with <code>-outcome</code> on the left and <code>c = 0</code> it tests the
+null hypothesis that no unit in <code>set</code> was harmed.</p></dd>
 
 
 <dt id="arg-c">c<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>

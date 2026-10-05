@@ -50,11 +50,13 @@ cmrss(
 
 - quantile:
 
-  Optional proportion strictly between 0 and 1. When given, `cmrss()`
-  tests whether the effect at that proportion of the units in `set` is
-  at most `c`. For example, `quantile = 0.9, set = "treat"` with 164
-  treated units tests the floor(0.9 x 164) = 147th smallest of their
-  effects. The `k` used is reported in the result.
+  Optional proportion above 0 and at most 1. When given, `cmrss()` tests
+  whether the effect at that proportion of the units in `set` is at most
+  `c`. For example, `quantile = 0.9, set = "treat"` with 164 treated
+  units tests the floor(0.9 x 164) = 147th smallest of their effects.
+  The `k` used is reported in the result. `quantile = 1` tests the
+  largest effect; with `-outcome` on the left and `c = 0` it tests the
+  null hypothesis that no unit in `set` was harmed.
 
 - c:
 

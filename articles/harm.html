@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.17</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -428,6 +428,130 @@ effect is at least 10 points. The effects at positions 200 through 233
 are each at least as large as the 200th, so at least 233 - 200 + 1 = 34
 teachers gained at least that much. No upper bound is below 0, so there
 is no filled circle: we cannot place any teacher’s effect below 0.</p>
+</div>
+<div class="section level2">
+<h2 id="a-p-value-for-the-hypothesis-that-no-one-was-harmed">A p-value for the hypothesis that no one was harmed<a class="anchor" aria-label="anchor" href="#a-p-value-for-the-hypothesis-that-no-one-was-harmed"></a>
+</h2>
+<p>Sometimes we want a single test rather than a count: could the data
+have arisen if no unit was harmed? No unit was harmed when every effect
+on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>
+is at least 0. Then every effect on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>Y</mi></mrow><annotation encoding="application/x-tex">-Y</annotation></semantics></math>
+is at most 0, and in particular the largest effect on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>Y</mi></mrow><annotation encoding="application/x-tex">-Y</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mi>τ</mi><msub><mo stretchy="false" form="postfix">)</mo><mrow><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub></mrow><annotation encoding="application/x-tex">(-\tau)_{(n)}</annotation></semantics></math>,
+is at most 0. So the null hypothesis “no one was harmed” is the
+hypothesis that the largest effect on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>Y</mi></mrow><annotation encoding="application/x-tex">-Y</annotation></semantics></math>
+is at most 0. In <code><a href="../reference/cmrss.html">cmrss()</a></code> the largest effect is
+<code>quantile = 1</code>, and the threshold is <code>c = 0</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">no_harm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cmrss.html">cmrss</a></span><span class="op">(</span><span class="op">-</span><span class="va">y</span> <span class="op">~</span> <span class="va">z</span>, data <span class="op">=</span> <span class="va">sim</span>, quantile <span class="op">=</span> <span class="fl">1</span>, c <span class="op">=</span> <span class="fl">0</span>, set <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>                 nperm <span class="op">=</span> <span class="va">nperm</span>, tol <span class="op">=</span> <span class="va">tol</span><span class="op">)</span></span>
+<span><span class="va">no_harm</span><span class="op">$</span><span class="va">test</span></span>
+<span><span class="co">#&gt; $k</span></span>
+<span><span class="co">#&gt; [1] 200</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $c</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $p.value</span></span>
+<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<p>Many patterns of effects satisfy this null hypothesis. The test
+computes its p-value under the pattern that makes harm hardest to
+detect, in which no unit’s outcome changes at all. That p-value is
+therefore valid for every pattern in which no one was harmed. With
+<code>set = "all"</code>, <code><a href="../reference/cmrss.html">cmrss()</a></code> tests the treated and the
+control units separately and doubles the smaller of the two p-values,
+for the same reason the counts above halved <code>alpha</code>.</p>
+<p>None of the 1000 simulated random assignments produced a test
+statistic as large as the observed one, so the p-value is below 1/1000 =
+0.001. (cmrss() reports such a p-value as 0.) At the 5 percent level we
+reject the hypothesis that no one was harmed. That agrees with the
+counts above, where we found at least 7 harmed units.</p>
+<p>For the teachers, analyzed within sites:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">t_no_harm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cmrss.html">cmrss</a></span><span class="op">(</span><span class="op">-</span><span class="va">gain</span> <span class="op">~</span> <span class="va">TxAny</span> <span class="op">|</span> <span class="va">Site</span>, data <span class="op">=</span> <span class="va">electric_teachers</span>,</span>
+<span>                   quantile <span class="op">=</span> <span class="fl">1</span>, c <span class="op">=</span> <span class="fl">0</span>, set <span class="op">=</span> <span class="st">"all"</span>, nperm <span class="op">=</span> <span class="va">nperm</span>,</span>
+<span>                   tol <span class="op">=</span> <span class="va">tol</span>, opt.method <span class="op">=</span> <span class="st">"ILP_highs"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in cmrss(-gain ~ TxAny | Site, data = electric_teachers, quantile = 1,</span></span>
+<span><span class="co">#&gt; : 29 of 233 units (12 percent) share the outcome value -10. Tied outcomes are</span></span>
+<span><span class="co">#&gt; ranked by their order in the data, so reordering the rows can change p-values</span></span>
+<span><span class="co">#&gt; and confidence bounds (see https://github.com/davidk91919/CMRSS/issues/5).</span></span>
+<span><span class="va">t_no_harm</span><span class="op">$</span><span class="va">test</span></span>
+<span><span class="co">#&gt; $k</span></span>
+<span><span class="co">#&gt; [1] 233</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $c</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $p.value</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<p>The p-value is 1. We do not reject the hypothesis that no teacher was
+harmed. That agrees with the plot, where no upper bound fell below 0. As
+before, a large p-value is not evidence that no teacher was harmed: from
+the analysis of gain, as many as 170 teachers could have been.</p>
+<div class="section level3">
+<h3 id="the-same-test-with-the-packages-p-value-functions">The same test with the package’s p-value functions<a class="anchor" aria-label="anchor" href="#the-same-test-with-the-packages-p-value-functions"></a>
+</h3>
+<p><code><a href="../reference/cmrss.html">cmrss()</a></code> calls the package’s p-value functions, and we
+can call them directly. They need the treatment and outcome as vectors,
+a list of rank statistics, and the position k of the effect being
+tested. <code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code> counts k over all n units, and the
+hypothesis it tests concerns the treated units: at most n - k of them
+have an effect above c. With k = n and c = 0 on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>y</mi></mrow><annotation encoding="application/x-tex">-y</annotation></semantics></math>,
+that is the hypothesis that no treated unit was harmed. If no unit was
+harmed then no treated unit was harmed, so a small p-value here also
+rejects the hypothesis that no unit was harmed.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">zeta</span> <span class="op">&lt;-</span> <span class="va">no_harm</span><span class="op">$</span><span class="va">s</span>    <span class="co"># the default polynomial parameters cmrss() used</span></span>
+<span><span class="va">ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">zeta</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Polynomial"</span>, r <span class="op">=</span> <span class="va">s</span>, std <span class="op">=</span> <span class="cn">TRUE</span>, scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">p_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/comb_p_val_cre.html">comb_p_val_cre</a></span><span class="op">(</span><span class="va">sim</span><span class="op">$</span><span class="va">z</span>, <span class="op">-</span><span class="va">sim</span><span class="op">$</span><span class="va">y</span>, k <span class="op">=</span> <span class="va">n</span>, c <span class="op">=</span> <span class="fl">0</span>, <span class="va">ml</span>, nperm <span class="op">=</span> <span class="va">nperm</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">p_cmrss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cmrss.html">cmrss</a></span><span class="op">(</span><span class="op">-</span><span class="va">y</span> <span class="op">~</span> <span class="va">z</span>, data <span class="op">=</span> <span class="va">sim</span>, quantile <span class="op">=</span> <span class="fl">1</span>, c <span class="op">=</span> <span class="fl">0</span>, set <span class="op">=</span> <span class="st">"treat"</span>,</span>
+<span>                 nperm <span class="op">=</span> <span class="va">nperm</span>, tol <span class="op">=</span> <span class="va">tol</span><span class="op">)</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">p.value</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>comb_p_val_cre <span class="op">=</span> <span class="va">p_direct</span>, cmrss <span class="op">=</span> <span class="va">p_cmrss</span><span class="op">)</span></span>
+<span><span class="co">#&gt; comb_p_val_cre          cmrss </span></span>
+<span><span class="co">#&gt;              0              0</span></span></code></pre></div>
+<p>The two p-values are equal because, with the same random seed, both
+compute the same test. <code><a href="../reference/cmrss.html">cmrss()</a></code> with
+<code>set = "treat"</code> calls <code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code> with
+exactly these arguments.</p>
+<p>For a block-randomized experiment the function is
+<code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code>. It counts k over the treated units only,
+so the largest treated effect is <code>k = sum(Z)</code>, and it needs
+one list of score specifications per block for each statistic.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="va">electric_teachers</span></span>
+<span><span class="va">n_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">Site</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ml_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">t_no_harm</span><span class="op">$</span><span class="va">s</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_sites</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">b</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Polynomial"</span>, r <span class="op">=</span> <span class="va">s</span>, std <span class="op">=</span> <span class="cn">TRUE</span>, scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/pval_comb_block.html">pval_comb_block</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">TxAny</span>, <span class="op">-</span><span class="va">d</span><span class="op">$</span><span class="va">gain</span>, k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">TxAny</span><span class="op">)</span>, c <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>                block <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">Site</span><span class="op">)</span>, methods.list.all <span class="op">=</span> <span class="va">ml_sites</span>,</span>
+<span>                null.max <span class="op">=</span> <span class="va">nperm</span>, opt.method <span class="op">=</span> <span class="st">"ILP_highs"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in pval_comb_block(d$TxAny, -d$gain, k = sum(d$TxAny), c = 0, block =</span></span>
+<span><span class="co">#&gt; factor(d$Site), : 29 of 233 units (12 percent) share the outcome value -10.</span></span>
+<span><span class="co">#&gt; Tied outcomes are ranked by their order in the data, so reordering the rows can</span></span>
+<span><span class="co">#&gt; change p-values and confidence bounds (see</span></span>
+<span><span class="co">#&gt; https://github.com/davidk91919/CMRSS/issues/5).</span></span>
+<span><span class="co">#&gt;   p.value test.stat </span></span>
+<span><span class="co">#&gt;  1.000000 -4.168928</span></span></code></pre></div>
+<p>The result gives the p-value and the observed test statistic. The
+p-value of 1 agrees with the result from <code><a href="../reference/cmrss.html">cmrss()</a></code> above.</p>
+<p><code>set = "treat"</code> in place of <code>set = "all"</code> tests
+the narrower hypothesis that no treated unit was harmed. A test at a
+single <code>alpha</code> stands on its own; the halving of
+<code>alpha</code> used for the counts applies only when two statements
+are reported together.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="choices-that-change-the-answer">Choices that change the answer<a class="anchor" aria-label="anchor" href="#choices-that-change-the-answer"></a>

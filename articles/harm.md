@@ -361,6 +361,147 @@ are each at least as large as the 200th, so at least 233 - 200 + 1 = 34
 teachers gained at least that much. No upper bound is below 0, so there
 is no filled circle: we cannot place any teacher’s effect below 0.
 
+## A p-value for the hypothesis that no one was harmed
+
+Sometimes we want a single test rather than a count: could the data have
+arisen if no unit was harmed? No unit was harmed when every effect on
+$`Y`$ is at least 0. Then every effect on $`-Y`$ is at most 0, and in
+particular the largest effect on $`-Y`$, $`(-\tau)_{(n)}`$, is at most
+0. So the null hypothesis “no one was harmed” is the hypothesis that the
+largest effect on $`-Y`$ is at most 0. In
+[`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+the largest effect is `quantile = 1`, and the threshold is `c = 0`:
+
+``` r
+
+no_harm <- cmrss(-y ~ z, data = sim, quantile = 1, c = 0, set = "all",
+                 nperm = nperm, tol = tol)
+no_harm$test
+#> $k
+#> [1] 200
+#> 
+#> $c
+#> [1] 0
+#> 
+#> $p.value
+#> [1] 0
+```
+
+Many patterns of effects satisfy this null hypothesis. The test computes
+its p-value under the pattern that makes harm hardest to detect, in
+which no unit’s outcome changes at all. That p-value is therefore valid
+for every pattern in which no one was harmed. With `set = "all"`,
+[`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+tests the treated and the control units separately and doubles the
+smaller of the two p-values, for the same reason the counts above halved
+`alpha`.
+
+None of the 1000 simulated random assignments produced a test statistic
+as large as the observed one, so the p-value is below 1/1000 = 0.001.
+(cmrss() reports such a p-value as 0.) At the 5 percent level we reject
+the hypothesis that no one was harmed. That agrees with the counts
+above, where we found at least 7 harmed units.
+
+For the teachers, analyzed within sites:
+
+``` r
+
+t_no_harm <- cmrss(-gain ~ TxAny | Site, data = electric_teachers,
+                   quantile = 1, c = 0, set = "all", nperm = nperm,
+                   tol = tol, opt.method = "ILP_highs")
+#> Warning in cmrss(-gain ~ TxAny | Site, data = electric_teachers, quantile = 1,
+#> : 29 of 233 units (12 percent) share the outcome value -10. Tied outcomes are
+#> ranked by their order in the data, so reordering the rows can change p-values
+#> and confidence bounds (see https://github.com/davidk91919/CMRSS/issues/5).
+t_no_harm$test
+#> $k
+#> [1] 233
+#> 
+#> $c
+#> [1] 0
+#> 
+#> $p.value
+#> [1] 1
+```
+
+The p-value is 1. We do not reject the hypothesis that no teacher was
+harmed. That agrees with the plot, where no upper bound fell below 0. As
+before, a large p-value is not evidence that no teacher was harmed: from
+the analysis of gain, as many as 170 teachers could have been.
+
+### The same test with the package’s p-value functions
+
+[`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+calls the package’s p-value functions, and we can call them directly.
+They need the treatment and outcome as vectors, a list of rank
+statistics, and the position k of the effect being tested.
+[`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md)
+counts k over all n units, and the hypothesis it tests concerns the
+treated units: at most n - k of them have an effect above c. With k = n
+and c = 0 on $`-y`$, that is the hypothesis that no treated unit was
+harmed. If no unit was harmed then no treated unit was harmed, so a
+small p-value here also rejects the hypothesis that no unit was harmed.
+
+``` r
+
+zeta <- no_harm$s    # the default polynomial parameters cmrss() used
+ml <- lapply(zeta, function(s) {
+  list(name = "Polynomial", r = s, std = TRUE, scale = FALSE)
+})
+set.seed(5)
+p_direct <- comb_p_val_cre(sim$z, -sim$y, k = n, c = 0, ml, nperm = nperm)
+set.seed(5)
+p_cmrss <- cmrss(-y ~ z, data = sim, quantile = 1, c = 0, set = "treat",
+                 nperm = nperm, tol = tol)$test$p.value
+c(comb_p_val_cre = p_direct, cmrss = p_cmrss)
+#> comb_p_val_cre          cmrss 
+#>              0              0
+```
+
+The two p-values are equal because, with the same random seed, both
+compute the same test.
+[`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+with `set = "treat"` calls
+[`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md)
+with exactly these arguments.
+
+For a block-randomized experiment the function is
+[`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md).
+It counts k over the treated units only, so the largest treated effect
+is `k = sum(Z)`, and it needs one list of score specifications per block
+for each statistic.
+
+``` r
+
+d <- electric_teachers
+n_sites <- length(unique(d$Site))
+ml_sites <- lapply(t_no_harm$s, function(s) {
+  lapply(seq_len(n_sites), function(b) {
+    list(name = "Polynomial", r = s, std = TRUE, scale = FALSE)
+  })
+})
+pval_comb_block(d$TxAny, -d$gain, k = sum(d$TxAny), c = 0,
+                block = factor(d$Site), methods.list.all = ml_sites,
+                null.max = nperm, opt.method = "ILP_highs")
+#> Warning in pval_comb_block(d$TxAny, -d$gain, k = sum(d$TxAny), c = 0, block =
+#> factor(d$Site), : 29 of 233 units (12 percent) share the outcome value -10.
+#> Tied outcomes are ranked by their order in the data, so reordering the rows can
+#> change p-values and confidence bounds (see
+#> https://github.com/davidk91919/CMRSS/issues/5).
+#>   p.value test.stat 
+#>  1.000000 -4.168928
+```
+
+The result gives the p-value and the observed test statistic. The
+p-value of 1 agrees with the result from
+[`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+above.
+
+`set = "treat"` in place of `set = "all"` tests the narrower hypothesis
+that no treated unit was harmed. A test at a single `alpha` stands on
+its own; the halving of `alpha` used for the counts applies only when
+two statements are reported together.
+
 ## Choices that change the answer
 
 With the argument `set`, we choose whose effects are bounded: `"treat"`,
