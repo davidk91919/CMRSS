@@ -206,15 +206,17 @@ the helped and harmed counts together, we compute each at `alpha / 2`.
 
 With `s`, we choose the rank statistics that `cmrss()` combines. A rank
 statistic replaces each outcome by its rank and adds up a score for the rank
-of every treated unit. The Stephenson statistic with parameter s gives the
-unit at rank r, counting from the smallest outcome, the score
-choose(r - 1, s - 1). With s = 2 the score is r - 1, so every rank counts.
-With a large s nearly all the score sits on the few largest outcomes. With a small s the combined test has more power
-against effects shared by most units. With a large s it has more power
-against large effects in a few units. The default combines three values of s, from 2 up to
-a maximum set by the numbers of treated and control units. In the
-simulation above they were `r paste(helped$s, collapse = ", ")`. The section "Choosing s" in
-`?cmrss` gives the rule and the simulations behind it.
+of every treated unit. By default `cmrss()` uses polynomial scores: the
+unit at rank r among n, counting from the smallest outcome, gets the score
+$(r/(n + 1))^{s - 1}$. With s = 2 the score is proportional to the rank, so
+every rank counts. With a large s nearly all the score sits on the few
+largest outcomes. With a small s the combined test has more power against
+effects shared by most units. With a large s it has more power against
+large effects in a few units. The default combines three values of s, from
+2 up to a maximum set by the numbers of treated and control units. In the
+simulation above they were `r paste(helped$s, collapse = ", ")`. The section
+"Choosing s" in `?cmrss` gives the rule, the simulations behind it, and the
+alternative Stephenson scores (`scores = "stephenson"`).
 
 The method is built for outcomes that take many different values. With a
 binary outcome, every observed outcome is 0 or 1, so each unit is tied with
