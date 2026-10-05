@@ -1,5 +1,17 @@
 # Changelog
 
+## CMRSS 0.2.16
+
+### Documentation
+
+- `README.md` installed the package from `jwbowers/CMRSS` and showed
+  that repository’s check badge. GitHub now redirects `jwbowers/CMRSS`
+  to the archived `bowers-illinois-edu/CMRSS_archive`, so the
+  instructions installed an old version. The README now installs from
+  `davidk91919/CMRSS`, shows that repository’s badge, and links the
+  pkgdown site. `DESCRIPTION` points `URL` and `BugReports` at
+  `davidk91919/CMRSS`, where the issues are filed.
+
 ## CMRSS 0.2.15
 
 ### Documentation
@@ -67,7 +79,7 @@
   two values or when one value is shared by at least two units and more
   than 5 percent of them. Tied outcomes are ranked by row order, so
   reordering rows can change results (issue
-  [\#5](https://github.com/bowers-illinois-edu/CMRSS/issues/5)).
+  [\#5](https://github.com/davidk91919/CMRSS/issues/5)).
   `electric_teachers$gain` triggers the warning: 29 of 233 teachers
   share one value. No returned number changes.
 

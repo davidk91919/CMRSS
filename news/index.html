@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.15</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.16</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,7 +23,7 @@
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/bowers-illinois-edu/CMRSS/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidk91919/CMRSS/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -33,9 +33,17 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/bowers-illinois-edu/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/davidk91919/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.16" id="cmrss-0216">CMRSS 0.2.16<a class="anchor" aria-label="anchor" href="#cmrss-0216"></a></h2>
+<div class="section level3">
+<h3 id="documentation-0-2-16">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-2-16"></a></h3>
+<ul><li>
+<code>README.md</code> installed the package from <code>jwbowers/CMRSS</code> and showed that repository’s check badge. GitHub now redirects <code>jwbowers/CMRSS</code> to the archived <code>bowers-illinois-edu/CMRSS_archive</code>, so the instructions installed an old version. The README now installs from <code>davidk91919/CMRSS</code>, shows that repository’s badge, and links the pkgdown site. <code>DESCRIPTION</code> points <code>URL</code> and <code>BugReports</code> at <code>davidk91919/CMRSS</code>, where the issues are filed.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.15" id="cmrss-0215">CMRSS 0.2.15<a class="anchor" aria-label="anchor" href="#cmrss-0215"></a></h2>
 <div class="section level3">
@@ -55,7 +63,7 @@
 <code><a href="../reference/cmrss.html">cmrss()</a></code> reads an experiment from a formula and a data frame: <code>gain ~ TxAny</code> for a completely randomized experiment, <code>gain ~ TxAny | Site</code> for a block-randomized one. It returns lower confidence bounds for every sorted effect in the chosen set (<code>"treat"</code>, <code>"control"</code> or <code>"all"</code>) and, given <code>quantile</code>, a p-value for the hypothesis that the effect at that proportion of the set is at most <code>c</code>. It converts the proportion into the <code>k</code> each underlying function expects, which differs between <code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code> (all units) and <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code> (treated units), and reports the <code>k</code> used. Writing <code>-gain</code> on the left bounds effects on minus the outcome, which is how to ask whether anyone could have been harmed. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> reports how many units have bounds above <code>c</code>.</li>
 <li>The rank statistics are polynomial scores, (r/(n + 1))^(s - 1), with parameters <code>s</code> (the paper’s zeta); <code>scores = "stephenson"</code> uses Stephenson scores choose(r - 1, s - 1) instead. The default is three values, 2, s_max and round(sqrt(2 s_max)), where s_max = 4 m / q_min (at most n / 2) and q_min is the fewest treated units whose holding the top ranks would give a p-value at or below <code>alpha</code>. The section “Choosing s” of <code><a href="../reference/cmrss.html">?cmrss</a></code> gives the reasoning and a simulation comparing grids. Polynomial scores are never 0, so they work in blocks of any size; with Stephenson scores, an s above a block’s size is lowered to that size so the block is not dropped.</li>
 <li>
-<code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code>, <code><a href="../reference/com_conf_quant_larger_cre.html">com_conf_quant_larger_cre()</a></code>, <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code>, <code><a href="../reference/com_block_conf_quant_larger.html">com_block_conf_quant_larger()</a></code> and <code><a href="../reference/cmrss.html">cmrss()</a></code> now warn, with class <code>"cmrss_ties_warning"</code>, when the outcome takes two values or when one value is shared by at least two units and more than 5 percent of them. Tied outcomes are ranked by row order, so reordering rows can change results (issue <a href="https://github.com/bowers-illinois-edu/CMRSS/issues/5" class="external-link">#5</a>). <code>electric_teachers$gain</code> triggers the warning: 29 of 233 teachers share one value. No returned number changes.</li>
+<code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code>, <code><a href="../reference/com_conf_quant_larger_cre.html">com_conf_quant_larger_cre()</a></code>, <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code>, <code><a href="../reference/com_block_conf_quant_larger.html">com_block_conf_quant_larger()</a></code> and <code><a href="../reference/cmrss.html">cmrss()</a></code> now warn, with class <code>"cmrss_ties_warning"</code>, when the outcome takes two values or when one value is shared by at least two units and more than 5 percent of them. Tied outcomes are ranked by row order, so reordering rows can change results (issue <a href="https://github.com/davidk91919/CMRSS/issues/5" class="external-link">#5</a>). <code>electric_teachers$gain</code> triggers the warning: 29 of 233 teachers share one value. No returned number changes.</li>
 </ul></div>
 </div>
     <div class="section level2">

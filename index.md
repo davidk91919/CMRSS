@@ -8,7 +8,7 @@
 
 ``` r
 
-devtools::install_github("jwbowers/CMRSS")
+devtools::install_github("davidk91919/CMRSS")
 ```
 
 ### Solver Dependencies
@@ -35,6 +35,9 @@ HiGHS is a high-performance open-source solver that requires no license.
 
 Both solvers produce equivalent results. HiGHS is recommended for users
 without a Gurobi license.
+
+Documentation, including the vignette “Could anyone have been harmed?”,
+is at <https://bowers-illinois-edu.github.io/CMRSS/>.
 
 ## Load the Package
 
