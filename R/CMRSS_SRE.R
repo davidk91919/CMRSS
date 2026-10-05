@@ -1047,11 +1047,23 @@ pval_comb_block <- function(Z, Y, k, c,
   # With p = m - k, the LP is feasible only when k is in 1..m; outside this
   # range the LP is infeasible, the test statistic returns Inf, and the
   # function previously reported p.value = 0 silently (false rejection).
+  # The message speaks to the user: it says what k counts and gives the
+  # range, rather than citing a source line they cannot see.
   if (!is.numeric(k) || length(k) != 1L || k < 1 || k > m) {
-    stop(sprintf(
-      "k = %s is outside the feasible range 1..sum(Z) = %d for the current LP coverage constraint p = m - k at R/CMRSS_SRE.R:1034.",
+    stop(sprintf(paste0(
+      "k = %s, but pval_comb_block() tests the k-th smallest effect among ",
+      "the treated units, so k must be between 1 and sum(Z) = %d. ",
+      "For the 90th percentile of treated effects use k = floor(0.9 * sum(Z)). ",
+      "For quantiles of all units' effects use ",
+      "com_block_conf_quant_larger(set = \"all\")."),
       format(k), m
     ))
+  }
+  # tau_(2.5) is not a quantile, so a fractional k would answer a question
+  # nobody can state; the LP would accept it without complaint.
+  if (k != round(k)) {
+    stop(sprintf("k = %s must be a whole number between 1 and sum(Z) = %d.",
+                 format(k), m))
   }
 
   block.sum <- summary_block(Z, block)

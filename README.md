@@ -62,8 +62,14 @@ Y <- Z * Y1 + (1 - Z) * Y0
 methods.list.all <- list()
 methods.list.all[[1]] <- lapply(1:s, function(i) list(name = "Wilcoxon", scale = FALSE))
 
+# Test H0: the k-th smallest effect among the treated units is at most c.
+# pval_comb_block counts k over the treated units, so 1 <= k <= sum(Z).
+# k = floor(0.9 * sum(Z)) asks about the 90th percentile of treated effects.
+k <- floor(0.9 * sum(Z))
+c <- 0
+
 # Compute p-value using HiGHS solver
-result <- pval_comb_block(Z, Y, k = floor(0.9 * N), c = 0,
+result <- pval_comb_block(Z, Y, k = k, c = c,
                           block, methods.list.all,
                           opt.method = "ILP_highs")
 print(result)
@@ -95,13 +101,16 @@ get_default_solver()  # Returns "highs" or "gurobi"
 
 ### Comparing Solvers
 
-Both HiGHS and Gurobi produce equivalent results. You can verify this:
+Both HiGHS and Gurobi produce equivalent results. You can verify this,
+using `Z`, `Y`, `block`, `k`, `c` and `methods.list.all` from the Quick Start:
 
 ```r
-# Same results with different solvers
+# Same results with different solvers (requires a Gurobi license)
+set.seed(1)
 result_highs <- pval_comb_block(Z, Y, k, c, block, methods.list.all,
                                 opt.method = "ILP_highs")
 
+set.seed(1)
 result_gurobi <- pval_comb_block(Z, Y, k, c, block, methods.list.all,
                                  opt.method = "ILP_gurobi")
 
@@ -154,8 +163,9 @@ methods.list.all <- list(
   lapply(1:s, function(i) list(name = "Stephenson", s = 3, scale = FALSE))
 )
 
-# Test H0: tau_(k) <= 0 at 90th percentile
-result <- pval_comb_block(Z, Y, k = floor(0.9 * N), c = 0,
+# Test H0: the 90th percentile of the treated units' effects is at most 0.
+# k counts treated units, so it must lie between 1 and sum(Z).
+result <- pval_comb_block(Z, Y, k = floor(0.9 * sum(Z)), c = 0,
                           block, methods.list.all,
                           opt.method = "ILP_highs")
 cat("P-value:", result["p.value"], "\n")
