@@ -222,6 +222,16 @@ test_that("print reports how many units have effects above c", {
   expect_output(print(fit), paste0("at least ", n_above, " of 15"))
 })
 
+test_that("print gives the confidence level without rounding", {
+  # alpha = 0.025, used when two analyses are reported together, is 97.5
+  # percent confidence, not 98.
+  d <- make_cre()
+  set.seed(9)
+  fit <- cmrss(y ~ z, data = d, set = "treat", alpha = 0.025, nperm = 200,
+               tol = 0.1)
+  expect_output(print(fit), "97.5 percent confidence")
+})
+
 test_that("print says which outcome the effects are on", {
   # With -y on the left the count is of effects on -y, that is, units whose
   # effect on y is negative; the printed line must not hide the sign.

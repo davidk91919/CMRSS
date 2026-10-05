@@ -21,9 +21,9 @@ print.cmrss <- function(x, ...) {
               paste(x$s, collapse = ", "), x$nperm))
   # Naming the outcome matters when it is -y: the count is then of units
   # whose effect on y is below -c.
-  cat(sprintf(paste0("With %.0f percent confidence, at least %d of %d %s",
+  cat(sprintf(paste0("With %s percent confidence, at least %d of %d %s",
                      "units have effects on %s above %s.\n"),
-              100 * (1 - x$alpha), n_above, size,
+              format(100 * (1 - x$alpha)), n_above, size,
               if (nzchar(group)) paste0(group, " ") else "", x$outcome,
               format(x$c)))
   if (!is.null(x$test)) {
