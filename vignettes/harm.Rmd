@@ -60,7 +60,8 @@ positive effects. `cmrss()` reports this count for the smallest such k.
 
 Lower bounds count units with positive effects. To count harmed units we
 need to show that some effects are below 0. A lower bound cannot show
-that. We count them by analyzing minus the outcome. Each unit's effect on
+that. To count them, we multiply every outcome by -1 and analyze the new
+outcome, $-Y$, in place of $Y$. Each unit's effect on
 $-Y$ is $(-Y_i(1)) - (-Y_i(0)) = -\tau_i$. A harmed unit, with
 $\tau_i < 0$, therefore has a positive effect on $-Y$. The count of units
 with positive effects on $-Y$ is a count of harmed units. In `cmrss()` the
