@@ -156,6 +156,123 @@ first
 
 There k = 194, so the count is $`200 - 194 + 1 = 7`$ harmed units.
 
+### Every sorted effect at once
+
+The two counts come from two lists of 200 bounds, one from each
+analysis. A plot of both lists shows what we can say about every sorted
+effect, not only whether it is above or below 0.
+
+Both analyses used the default rank statistics of
+[`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md):
+polynomial rank scores with zeta = 2, 11, 66, combined into one test.
+The section “Choosing s” of the [`cmrss()`
+documentation](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.html#choosing-s)
+explains how
+[`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+chooses these values from the numbers of treated and control units.
+
+For the k-th smallest effect, $`\tau_{(k)}`$, the analysis of `y` gives
+a lower bound, `helped$bounds$lower[k]`. The analysis of `-y` gives an
+upper bound. Its j-th smallest effect is $`-\tau_{(n - j + 1)}`$, so
+minus its lower bound at position j is an upper bound for
+$`\tau_{(n - j + 1)}`$. Setting $`j = n - k + 1`$, the upper bound for
+$`\tau_{(k)}`$ is `-harmed$bounds$lower[n - k + 1]`, and
+[`rev()`](https://rdrr.io/r/base/rev.html) puts the whole list in the
+order of k. Each analysis ran at 97.5 percent confidence, so all 200
+lower bounds and all 200 upper bounds hold together with 95 percent
+confidence.
+
+The function below draws the two lists. The units, sorted from smallest
+to largest effect, run along the horizontal axis. The solid line is the
+lower bound for each sorted effect, and the dashed line is the upper
+bound. Where a bound is $`-\infty`$ or $`+\infty`$, we have no limit on
+that side, so no line is drawn, and a note above the plot gives the
+number of such effects. An open circle marks the first position where
+the lower bound rises above 0, and a filled circle marks the last
+position where the upper bound is still below 0. A dotted line runs from
+each mark down to the horizontal axis, labeled with the mark’s k.
+
+``` r
+
+plot_bounds <- function(lower, upper, truth = NULL, zeta = NULL, mark_k = NULL,
+                        ylab = "95% bounds on the k-th smallest effect",
+                        unit = "units") {
+  n <- length(lower)
+  k <- seq_len(n)
+  finite <- c(lower[is.finite(lower)], upper[is.finite(upper)], truth)
+  plot(NA, xlim = c(1, n), ylim = range(finite), xaxt = "n",
+       xlab = paste(unit, "sorted from smallest to largest effect (k)"),
+       ylab = ylab)
+  if (!is.null(zeta)) title(main = paste("Polynomial rank scores, zeta =",
+                                         paste(zeta, collapse = ", ")),
+                            font.main = 1, cex.main = 0.9, line = 1.6)
+  axis(1, at = unique(c(1, pretty(k)[pretty(k) > 1 & pretty(k) < n], n)))
+  abline(h = 0, lty = 2, col = "grey50")
+  if (!is.null(truth)) lines(k, sort(truth), type = "s", lwd = 3,
+                             col = "grey70")
+  # Infinite bounds become NA, so lines() leaves those positions blank.
+  lines(k, ifelse(is.finite(lower), lower, NA), type = "s", lwd = 2,
+        col = "#C0502E")
+  lines(k, ifelse(is.finite(upper), upper, NA), type = "s", lwd = 2,
+        lty = 2, col = "#1F4E79")
+  usr <- par("usr")
+  # Each marked point gets a dotted line down to the horizontal axis and a
+  # label giving its k, so the position can be read off the plot.
+  mark <- function(k_at, y, pch) {
+    segments(k_at, usr[3], k_at, y, lty = 3)
+    points(k_at, y, pch = pch, cex = 1.6)
+    # The label runs up the dotted line from the axis, clear of the bounds.
+    text(k_at, usr[3], paste("k =", k_at), srt = 90, adj = c(-0.1, -0.4),
+         cex = 0.8)
+  }
+  helped_from <- which(lower > 0)[1]
+  harmed_to <- max(c(0, which(upper < 0)))
+  if (!is.na(helped_from)) mark(helped_from, lower[helped_from], pch = 1)
+  if (harmed_to > 0) mark(harmed_to, upper[harmed_to], pch = 16)
+  for (k_at in mark_k) mark(k_at, lower[k_at], pch = 2)
+  n_no_lower <- sum(!is.finite(lower))
+  n_no_upper <- sum(!is.finite(upper))
+  notes <- c(if (n_no_lower > 0) paste("no lower bound for the", n_no_lower,
+                                      "smallest effects"),
+             if (n_no_upper > 0) paste("no upper bound for the", n_no_upper,
+                                      "largest effects"))
+  if (length(notes) > 0) mtext(paste(notes, collapse = "; "), side = 3,
+                               line = 0.2, cex = 0.8)
+  invisible(list(helped_from = helped_from, harmed_to = harmed_to))
+}
+```
+
+``` r
+
+sim_lower <- helped$bounds$lower
+sim_upper <- -rev(harmed$bounds$lower)
+marks <- plot_bounds(sim_lower, sim_upper, truth = tau, zeta = helped$s)
+legend("topleft", bty = "n", lwd = c(2, 2, 3), lty = c(1, 2, 1),
+       col = c("#C0502E", "#1F4E79", "grey70"),
+       legend = c("lower bound", "upper bound", "true sorted effects"))
+```
+
+![Lower and upper 95 percent bounds for each of the 200 sorted effects
+in the simulation, with the true sorted effects as a grey
+line.](harm_files/figure-html/sim-plot-1.png)
+
+Four readings of the plot, each with the arithmetic behind it:
+
+- The open circle is at k = 183, where the lower bound first rises
+  above 0. The effects at positions 183 through 200 are all above 0, so
+  at least $`200 - 183 + 1 = 18`$ units were helped.
+- The filled circle is at k = 7, the last position where the upper bound
+  is below 0. The effects at positions 1 through 7 are all below 0, so
+  at least 7 units were harmed.
+- Between the circles, each interval from the solid line to the dashed
+  line contains 0. For those 175 positions we cannot tell from these
+  data whether the effect is positive, negative, or zero.
+- The grey line is the true sorted effects. It is at $`-3`$ for k = 1 to
+  40, at 0 for k = 41 to 100, and at 2 for k = 101 to 200. At every k it
+  lies between the two bounds. The method is built so that in at least
+  95 of every 100 experiments like this one, every true effect lies
+  between its bounds. In this experiment they all did.
+
 ## The teacher professional-development experiment
 
 The `electric_teachers` data come from an experiment with 233 elementary
@@ -217,6 +334,33 @@ A failure to show harm is not evidence that no teacher was harmed. From
 the analysis of `gain`, as many as 233 - 63 = 170 teachers could have
 been harmed.
 
+The same plot for the teachers, analyzed within sites, shows which
+sorted effects we can place above or below 0. These analyses also used
+the default polynomial rank scores, here with zeta = 2, 11, 59.
+
+``` r
+
+t_lower <- t_helped$bounds$lower
+t_upper <- -rev(t_harmed$bounds$lower)
+k_example <- 200
+t_marks <- plot_bounds(t_lower, t_upper, unit = "teachers", zeta = t_helped$s,
+                       mark_k = k_example,
+                       ylab = "95% bounds on the k-th smallest effect on gain")
+```
+
+![Lower and upper 95 percent bounds for each of the 233 sorted effects
+of the professional development program on
+gain.](harm_files/figure-html/teachers-plot-1.png)
+
+The open circle is at k = 171. The lower bound first rises above 0
+there, so at least 233 - 171 + 1 = 63 teachers (27 percent) gained from
+the program. The bound also says how much they gained. The triangle is
+at k = 200. There the lower bound is 10 points, so the 200th smallest
+effect is at least 10 points. The effects at positions 200 through 233
+are each at least as large as the 200th, so at least 233 - 200 + 1 = 34
+teachers gained at least that much. No upper bound is below 0, so there
+is no filled circle: we cannot place any teacher’s effect below 0.
+
 ## Choices that change the answer
 
 With the argument `set`, we choose whose effects are bounded: `"treat"`,
@@ -228,8 +372,10 @@ report the helped and harmed counts together, we compute each at
 
 With `s`, we choose the rank statistics that
 [`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
-combines. A rank statistic replaces each outcome by its rank and adds up
-a score for the rank of every treated unit. By default
+combines. For polynomial scores the paper behind this package calls
+these parameters zeta, and the plot titles above use that name. A rank
+statistic replaces each outcome by its rank and adds up a score for the
+rank of every treated unit. By default
 [`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
 uses polynomial scores: the unit at rank r among n, counting from the
 smallest outcome, gets the score $`(r/(n + 1))^{s - 1}`$. With s = 2 the

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.16</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.17</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -238,6 +238,122 @@ above 0:</p>
 <p>There k = 194, so the count is
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mo>−</mo><mn>194</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">200 - 194 + 1 = 7</annotation></semantics></math>
 harmed units.</p>
+<div class="section level3">
+<h3 id="every-sorted-effect-at-once">Every sorted effect at once<a class="anchor" aria-label="anchor" href="#every-sorted-effect-at-once"></a>
+</h3>
+<p>The two counts come from two lists of 200 bounds, one from each
+analysis. A plot of both lists shows what we can say about every sorted
+effect, not only whether it is above or below 0.</p>
+<p>Both analyses used the default rank statistics of
+<code><a href="../reference/cmrss.html">cmrss()</a></code>: polynomial rank scores with zeta = 2, 11, 66,
+combined into one test. The section “Choosing s” of the <a href="https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.html#choosing-s"><code>cmrss()</code>
+documentation</a> explains how <code><a href="../reference/cmrss.html">cmrss()</a></code> chooses these values
+from the numbers of treated and control units.</p>
+<p>For the k-th smallest effect,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">\tau_{(k)}</annotation></semantics></math>,
+the analysis of <code>y</code> gives a lower bound,
+<code>helped$bounds$lower[k]</code>. The analysis of <code>-y</code>
+gives an upper bound. Its j-th smallest effect is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><msub><mi>τ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mi>j</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msub></mrow><annotation encoding="application/x-tex">-\tau_{(n - j + 1)}</annotation></semantics></math>,
+so minus its lower bound at position j is an upper bound for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mi>j</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">\tau_{(n - j + 1)}</annotation></semantics></math>.
+Setting
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mi>n</mi><mo>−</mo><mi>k</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">j = n - k + 1</annotation></semantics></math>,
+the upper bound for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">\tau_{(k)}</annotation></semantics></math>
+is <code>-harmed$bounds$lower[n - k + 1]</code>, and <code><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev()</a></code>
+puts the whole list in the order of k. Each analysis ran at 97.5 percent
+confidence, so all 200 lower bounds and all 200 upper bounds hold
+together with 95 percent confidence.</p>
+<p>The function below draws the two lists. The units, sorted from
+smallest to largest effect, run along the horizontal axis. The solid
+line is the lower bound for each sorted effect, and the dashed line is
+the upper bound. Where a bound is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>∞</mi></mrow><annotation encoding="application/x-tex">-\infty</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mi>∞</mi></mrow><annotation encoding="application/x-tex">+\infty</annotation></semantics></math>,
+we have no limit on that side, so no line is drawn, and a note above the
+plot gives the number of such effects. An open circle marks the first
+position where the lower bound rises above 0, and a filled circle marks
+the last position where the upper bound is still below 0. A dotted line
+runs from each mark down to the horizontal axis, labeled with the mark’s
+k.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plot_bounds</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">lower</span>, <span class="va">upper</span>, <span class="va">truth</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">zeta</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">mark_k</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                        <span class="va">ylab</span> <span class="op">=</span> <span class="st">"95% bounds on the k-th smallest effect"</span>,</span>
+<span>                        <span class="va">unit</span> <span class="op">=</span> <span class="st">"units"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lower</span><span class="op">)</span></span>
+<span>  <span class="va">k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span>  <span class="va">finite</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lower</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">lower</span><span class="op">)</span><span class="op">]</span>, <span class="va">upper</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">upper</span><span class="op">)</span><span class="op">]</span>, <span class="va">truth</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="cn">NA</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">finite</span><span class="op">)</span>, xaxt <span class="op">=</span> <span class="st">"n"</span>,</span>
+<span>       xlab <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">unit</span>, <span class="st">"sorted from smallest to largest effect (k)"</span><span class="op">)</span>,</span>
+<span>       ylab <span class="op">=</span> <span class="va">ylab</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">zeta</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/graphics/title.html" class="external-link">title</a></span><span class="op">(</span>main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Polynomial rank scores, zeta ="</span>,</span>
+<span>                                         <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">zeta</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                            font.main <span class="op">=</span> <span class="fl">1</span>, cex.main <span class="op">=</span> <span class="fl">0.9</span>, line <span class="op">=</span> <span class="fl">1.6</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/pretty.html" class="external-link">pretty</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/pretty.html" class="external-link">pretty</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/pretty.html" class="external-link">pretty</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="op">&lt;</span> <span class="va">n</span><span class="op">]</span>, <span class="va">n</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, lty <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="st">"grey50"</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">truth</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">k</span>, <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">truth</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"s"</span>, lwd <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>                             col <span class="op">=</span> <span class="st">"grey70"</span><span class="op">)</span></span>
+<span>  <span class="co"># Infinite bounds become NA, so lines() leaves those positions blank.</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">k</span>, <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">lower</span><span class="op">)</span>, <span class="va">lower</span>, <span class="cn">NA</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"s"</span>, lwd <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>        col <span class="op">=</span> <span class="st">"#C0502E"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">k</span>, <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">upper</span><span class="op">)</span>, <span class="va">upper</span>, <span class="cn">NA</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"s"</span>, lwd <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>        lty <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="st">"#1F4E79"</span><span class="op">)</span></span>
+<span>  <span class="va">usr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="st">"usr"</span><span class="op">)</span></span>
+<span>  <span class="co"># Each marked point gets a dotted line down to the horizontal axis and a</span></span>
+<span>  <span class="co"># label giving its k, so the position can be read off the plot.</span></span>
+<span>  <span class="va">mark</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">k_at</span>, <span class="va">y</span>, <span class="va">pch</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/segments.html" class="external-link">segments</a></span><span class="op">(</span><span class="va">k_at</span>, <span class="va">usr</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>, <span class="va">k_at</span>, <span class="va">y</span>, lty <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">k_at</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="va">pch</span>, cex <span class="op">=</span> <span class="fl">1.6</span><span class="op">)</span></span>
+<span>    <span class="co"># The label runs up the dotted line from the axis, clear of the bounds.</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">k_at</span>, <span class="va">usr</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"k ="</span>, <span class="va">k_at</span><span class="op">)</span>, srt <span class="op">=</span> <span class="fl">90</span>, adj <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.1</span>, <span class="op">-</span><span class="fl">0.4</span><span class="op">)</span>,</span>
+<span>         cex <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">helped_from</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">lower</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span>  <span class="va">harmed_to</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">upper</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">helped_from</span><span class="op">)</span><span class="op">)</span> <span class="fu">mark</span><span class="op">(</span><span class="va">helped_from</span>, <span class="va">lower</span><span class="op">[</span><span class="va">helped_from</span><span class="op">]</span>, pch <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">harmed_to</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="fu">mark</span><span class="op">(</span><span class="va">harmed_to</span>, <span class="va">upper</span><span class="op">[</span><span class="va">harmed_to</span><span class="op">]</span>, pch <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">k_at</span> <span class="kw">in</span> <span class="va">mark_k</span><span class="op">)</span> <span class="fu">mark</span><span class="op">(</span><span class="va">k_at</span>, <span class="va">lower</span><span class="op">[</span><span class="va">k_at</span><span class="op">]</span>, pch <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">n_no_lower</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">lower</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">n_no_upper</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">upper</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">notes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="kw">if</span> <span class="op">(</span><span class="va">n_no_lower</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"no lower bound for the"</span>, <span class="va">n_no_lower</span>,</span>
+<span>                                      <span class="st">"smallest effects"</span><span class="op">)</span>,</span>
+<span>             <span class="kw">if</span> <span class="op">(</span><span class="va">n_no_upper</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"no upper bound for the"</span>, <span class="va">n_no_upper</span>,</span>
+<span>                                      <span class="st">"largest effects"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">notes</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">notes</span>, collapse <span class="op">=</span> <span class="st">"; "</span><span class="op">)</span>, side <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>                               line <span class="op">=</span> <span class="fl">0.2</span>, cex <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>helped_from <span class="op">=</span> <span class="va">helped_from</span>, harmed_to <span class="op">=</span> <span class="va">harmed_to</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sim_lower</span> <span class="op">&lt;-</span> <span class="va">helped</span><span class="op">$</span><span class="va">bounds</span><span class="op">$</span><span class="va">lower</span></span>
+<span><span class="va">sim_upper</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">harmed</span><span class="op">$</span><span class="va">bounds</span><span class="op">$</span><span class="va">lower</span><span class="op">)</span></span>
+<span><span class="va">marks</span> <span class="op">&lt;-</span> <span class="fu">plot_bounds</span><span class="op">(</span><span class="va">sim_lower</span>, <span class="va">sim_upper</span>, truth <span class="op">=</span> <span class="va">tau</span>, zeta <span class="op">=</span> <span class="va">helped</span><span class="op">$</span><span class="va">s</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, bty <span class="op">=</span> <span class="st">"n"</span>, lwd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#C0502E"</span>, <span class="st">"#1F4E79"</span>, <span class="st">"grey70"</span><span class="op">)</span>,</span>
+<span>       legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lower bound"</span>, <span class="st">"upper bound"</span>, <span class="st">"true sorted effects"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="harm_files/figure-html/sim-plot-1.png" class="r-plt" alt="Lower and upper 95 percent bounds for each of the 200 sorted effects in the simulation, with the true sorted effects as a grey line." width="672"></p>
+<p>Four readings of the plot, each with the arithmetic behind it:</p>
+<ul>
+<li>The open circle is at k = 183, where the lower bound first rises
+above 0. The effects at positions 183 through 200 are all above 0, so at
+least
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mo>−</mo><mn>183</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">200 - 183 + 1 = 18</annotation></semantics></math>
+units were helped.</li>
+<li>The filled circle is at k = 7, the last position where the upper
+bound is below 0. The effects at positions 1 through 7 are all below 0,
+so at least 7 units were harmed.</li>
+<li>Between the circles, each interval from the solid line to the dashed
+line contains 0. For those 175 positions we cannot tell from these data
+whether the effect is positive, negative, or zero.</li>
+<li>The grey line is the true sorted effects. It is at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">-3</annotation></semantics></math>
+for k = 1 to 40, at 0 for k = 41 to 100, and at 2 for k = 101 to 200. At
+every k it lies between the two bounds. The method is built so that in
+at least 95 of every 100 experiments like this one, every true effect
+lies between its bounds. In this experiment they all did.</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="the-teacher-professional-development-experiment">The teacher professional-development experiment<a class="anchor" aria-label="anchor" href="#the-teacher-professional-development-experiment"></a>
@@ -258,7 +374,7 @@ formula. Computing bounds within sites requires an optimization solver,
 such as the one in the <code>highs</code> package. As in the simulation,
 we compute the helped and harmed counts at <code>alpha = 0.025</code>
 each.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">electric_teachers</span><span class="op">)</span></span>
 <span><span class="va">t_helped</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cmrss.html">cmrss</a></span><span class="op">(</span><span class="va">gain</span> <span class="op">~</span> <span class="va">TxAny</span> <span class="op">|</span> <span class="va">Site</span>, data <span class="op">=</span> <span class="va">electric_teachers</span>,</span>
 <span>                  set <span class="op">=</span> <span class="st">"all"</span>, alpha <span class="op">=</span> <span class="fl">0.025</span>, nperm <span class="op">=</span> <span class="va">nperm</span>, tol <span class="op">=</span> <span class="va">tol</span>,</span>
@@ -293,6 +409,25 @@ program. Analyzing <code>-gain</code>, we cannot show that any teacher
 was harmed. A failure to show harm is not evidence that no teacher was
 harmed. From the analysis of <code>gain</code>, as many as 233 - 63 =
 170 teachers could have been harmed.</p>
+<p>The same plot for the teachers, analyzed within sites, shows which
+sorted effects we can place above or below 0. These analyses also used
+the default polynomial rank scores, here with zeta = 2, 11, 59.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">t_lower</span> <span class="op">&lt;-</span> <span class="va">t_helped</span><span class="op">$</span><span class="va">bounds</span><span class="op">$</span><span class="va">lower</span></span>
+<span><span class="va">t_upper</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">t_harmed</span><span class="op">$</span><span class="va">bounds</span><span class="op">$</span><span class="va">lower</span><span class="op">)</span></span>
+<span><span class="va">k_example</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
+<span><span class="va">t_marks</span> <span class="op">&lt;-</span> <span class="fu">plot_bounds</span><span class="op">(</span><span class="va">t_lower</span>, <span class="va">t_upper</span>, unit <span class="op">=</span> <span class="st">"teachers"</span>, zeta <span class="op">=</span> <span class="va">t_helped</span><span class="op">$</span><span class="va">s</span>,</span>
+<span>                       mark_k <span class="op">=</span> <span class="va">k_example</span>,</span>
+<span>                       ylab <span class="op">=</span> <span class="st">"95% bounds on the k-th smallest effect on gain"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="harm_files/figure-html/teachers-plot-1.png" class="r-plt" alt="Lower and upper 95 percent bounds for each of the 233 sorted effects of the professional development program on gain." width="672"></p>
+<p>The open circle is at k = 171. The lower bound first rises above 0
+there, so at least 233 - 171 + 1 = 63 teachers (27 percent) gained from
+the program. The bound also says how much they gained. The triangle is
+at k = 200. There the lower bound is 10 points, so the 200th smallest
+effect is at least 10 points. The effects at positions 200 through 233
+are each at least as large as the 200th, so at least 233 - 200 + 1 = 34
+teachers gained at least that much. No upper bound is below 0, so there
+is no filled circle: we cannot place any teacher’s effect below 0.</p>
 </div>
 <div class="section level2">
 <h2 id="choices-that-change-the-answer">Choices that change the answer<a class="anchor" aria-label="anchor" href="#choices-that-change-the-answer"></a>
@@ -304,10 +439,12 @@ bounded: <code>"treat"</code>, <code>"control"</code>, or
 <code>alpha</code>. When we report the helped and harmed counts
 together, we compute each at <code>alpha / 2</code>.</p>
 <p>With <code>s</code>, we choose the rank statistics that
-<code><a href="../reference/cmrss.html">cmrss()</a></code> combines. A rank statistic replaces each outcome by
-its rank and adds up a score for the rank of every treated unit. By
-default <code><a href="../reference/cmrss.html">cmrss()</a></code> uses polynomial scores: the unit at rank r
-among n, counting from the smallest outcome, gets the score
+<code><a href="../reference/cmrss.html">cmrss()</a></code> combines. For polynomial scores the paper behind
+this package calls these parameters zeta, and the plot titles above use
+that name. A rank statistic replaces each outcome by its rank and adds
+up a score for the rank of every treated unit. By default
+<code><a href="../reference/cmrss.html">cmrss()</a></code> uses polynomial scores: the unit at rank r among n,
+counting from the smallest outcome, gets the score
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>s</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">(r/(n + 1))^{s - 1}</annotation></semantics></math>.
 With s = 2 the score is proportional to the rank, so every rank counts.
 With a large s nearly all the score sits on the few largest outcomes.
