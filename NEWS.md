@@ -11,6 +11,15 @@
   200 units are harmed while the average effect is positive, and through
   `electric_teachers`. `knitr` and `rmarkdown` join Suggests.
 
+## Other changes
+
+- The HiGHS solvers no longer print "LP matrix packed vector contains ...
+  values ... ignored" on every solve. Stephenson scores with a large s give
+  constraint-matrix entries at or below 1e-9, which HiGHS ignores and warns
+  about. The package now removes them before calling HiGHS, so HiGHS solves
+  the same problem as before. On `electric_teachers`, within sites, with s =
+  2, 11, 59, every bound from `cmrss()` is identical before and after.
+
 # CMRSS 0.2.14
 
 ## New

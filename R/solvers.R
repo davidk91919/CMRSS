@@ -56,6 +56,16 @@ get_default_solver <- function() {
 }
 
 
+# HiGHS ignores constraint-matrix entries with absolute value at most 1e-9
+# and warns once per solve. Stephenson scores with a large s produce such
+# entries, and a confidence interval solves hundreds of problems, so the
+# warnings swamped the output. Removing the entries ourselves gives HiGHS the
+# matrix it would have used anyway, so no solution changes.
+drop_tiny_entries <- function(i, j, x, tiny = 1e-9) {
+  keep <- abs(x) > tiny
+  list(i = i[keep], j = j[keep], x = x[keep])
+}
+
 #' Optimization function using HiGHS solver
 #'
 #' Solves the integer/linear programming problem for computing the minimum test
@@ -200,7 +210,9 @@ HiGHS_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE,
 
   ## Create sparse constraint matrix
   n_constraints <- B + 1 + H + H
-  A <- Matrix::sparseMatrix(i = Ai, j = Aj, x = Ax, dims = c(n_constraints, n_vars))
+  kept <- drop_tiny_entries(Ai, Aj, Ax)
+  A <- Matrix::sparseMatrix(i = kept$i, j = kept$j, x = kept$x,
+                            dims = c(n_constraints, n_vars))
 
   ## Right-hand side values
   ## Constraints 1 (B equalities): rhs = 1
@@ -643,7 +655,9 @@ HiGHS_sol_stratum_com <- function(coeflist, p, exact = TRUE) {
     Ai[(indx[i] + 1):indx[i + 1]] <- i
     Ax[(n + indx[i] + 1):(n + indx[i + 1])] <- coeflist[[i]][1, ]
   }
-  A <- Matrix::sparseMatrix(i = Ai, j = Aj, x = Ax, dims = c(B + 1, n))
+  kept <- drop_tiny_entries(Ai, Aj, Ax)
+  A <- Matrix::sparseMatrix(i = kept$i, j = kept$j, x = kept$x,
+                            dims = c(B + 1, n))
 
   # Right-hand side and bounds
   rhs <- c(rep(1, B), p)
