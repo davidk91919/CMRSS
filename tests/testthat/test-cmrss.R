@@ -222,6 +222,15 @@ test_that("print reports how many units have effects above c", {
   expect_output(print(fit), paste0("at least ", n_above, " of 15"))
 })
 
+test_that("print says which outcome the effects are on", {
+  # With -y on the left the count is of effects on -y, that is, units whose
+  # effect on y is negative; the printed line must not hide the sign.
+  d <- make_cre()
+  set.seed(8)
+  fit <- cmrss(-y ~ z, data = d, set = "treat", nperm = 200, tol = 0.1)
+  expect_output(print(fit), "effects on -y above 0")
+})
+
 test_that("a tied outcome produces one warning per call, not several", {
   d <- make_cre()
   d$y <- round(d$y)  # few distinct values

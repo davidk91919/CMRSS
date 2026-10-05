@@ -229,7 +229,8 @@ cmrss <- function(formula, data, quantile = NULL, c = 0, set = "all",
     bounds = data.frame(k = seq_len(size), proportion = seq_len(size) / size,
                         lower = lower),
     test = test, set = set, scores = scores, s = s, c = c, alpha = alpha,
-    nperm = nperm, n = n, m = m, blocked = !is.null(block), call = match.call()
+    nperm = nperm, n = n, m = m, blocked = !is.null(block),
+    outcome = paste(deparse(formula[[2]]), collapse = " "), call = match.call()
   ), class = "cmrss")
 }
 

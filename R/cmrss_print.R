@@ -19,10 +19,13 @@ print.cmrss <- function(x, ...) {
   cat(sprintf("%s scores with parameters %s; %d simulated assignments\n",
               if (x$scores == "stephenson") "Stephenson" else "Polynomial",
               paste(x$s, collapse = ", "), x$nperm))
+  # Naming the outcome matters when it is -y: the count is then of units
+  # whose effect on y is below -c.
   cat(sprintf(paste0("With %.0f percent confidence, at least %d of %d %s",
-                     "units have effects above %s.\n"),
+                     "units have effects on %s above %s.\n"),
               100 * (1 - x$alpha), n_above, size,
-              if (nzchar(group)) paste0(group, " ") else "", format(x$c)))
+              if (nzchar(group)) paste0(group, " ") else "", x$outcome,
+              format(x$c)))
   if (!is.null(x$test)) {
     cat(sprintf(paste0("Test that effect number k = %d, counting up from ",
                        "the smallest of the %d %seffects, is at most %s: ",
