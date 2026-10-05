@@ -1,3 +1,17 @@
+# CMRSS 0.2.17
+
+## Documentation
+
+- The harm vignette now plots the lower and upper bounds for every sorted
+  effect. The sorted position k runs along the horizontal axis and the bound
+  up the vertical axis, with a dashed line at 0. Infinite bounds are not
+  drawn; a note gives how many there are. Circles mark where the lower bound
+  first rises above 0 and where the upper bound is last below 0, and the
+  text works out the count each one gives. Each plot's title states the
+  polynomial zeta values used, and the text links the section of `?cmrss`
+  that explains the default. The simulated example also plots the true
+  sorted effects. The plotting function is written out in the vignette.
+
 # CMRSS 0.2.16
 
 ## Documentation
