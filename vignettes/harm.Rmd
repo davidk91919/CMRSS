@@ -151,69 +151,103 @@ $200 - `r first$k` + 1 = `r 200 - first$k + 1`$ harmed units.
 
 ### Every sorted effect at once
 
-The two counts come from two lists of 200 bounds. A plot of both lists
-shows the bounds for every sorted effect, not only whether each is above or
-below 0. For the k-th smallest effect on $y$, $\tau_{(k)}$, the analysis of
-`y` gives a lower bound directly: `helped$bounds$lower[k]`. The analysis of
-`-y` gives an upper bound. Its j-th smallest effect is
-$-\tau_{(n - j + 1)}$, so its lower bound for that effect, with the sign
-changed, is an upper bound for $\tau_{(n - j + 1)}$. Setting
-$j = n - k + 1$ gives the upper bound for $\tau_{(k)}$:
-`-harmed$bounds$lower[n - k + 1]`. Because each analysis ran at 97.5
-percent confidence, all 200 lower bounds and all 200 upper bounds hold
-together with 95 percent confidence.
+The two counts come from two lists of 200 bounds, one from each analysis.
+A plot of both lists shows what we can say about every sorted effect, not
+only whether it is above or below 0.
 
-The function below draws the bounds in the layout of the figures in the
-paper behind this package: the sorted position k runs up the vertical
-axis, and the bound for $\tau_{(k)}$ runs along the horizontal axis.
-Between the two lines lie the values of $\tau_{(k)}$ that the data do not
-rule out. Where a bound is $-\infty$ or $+\infty$, meaning the data put no
-limit on that side, its line runs to the edge of the box around the plot.
+Both analyses used the default rank statistics of `cmrss()`: polynomial
+rank scores with zeta = `r paste(helped$s, collapse = ", ")`, combined into
+one test. The section "Choosing s" of the
+[`cmrss()` documentation](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.html#choosing-s)
+explains how `cmrss()` chooses these values from the numbers of treated and
+control units.
+
+For the k-th smallest effect, $\tau_{(k)}$, the analysis of `y` gives a lower
+bound, `helped$bounds$lower[k]`. The analysis of `-y` gives an upper bound.
+Its j-th smallest effect is $-\tau_{(n - j + 1)}$, so minus its lower bound
+at position j is an upper bound for $\tau_{(n - j + 1)}$. Setting
+$j = n - k + 1$, the upper bound for $\tau_{(k)}$ is
+`-harmed$bounds$lower[n - k + 1]`, and `rev()` puts the whole list in the
+order of k. Each analysis ran at 97.5 percent confidence, so all 200 lower
+bounds and all 200 upper bounds hold together with 95 percent confidence.
+
+The function below draws the two lists. The units, sorted from smallest to
+largest effect, run along the horizontal axis. The solid line is the lower
+bound for each sorted effect, and the dashed line is the upper bound. Where
+a bound is $-\infty$ or $+\infty$, we have no limit on that side, so
+no line is drawn and a note gives the number of such effects. An open
+circle marks the first position where the lower bound rises above 0, and a
+filled circle marks the last position where the upper bound is still below
+0.
 
 ```{r plot-fn}
-plot_bounds <- function(lower, upper, truth = NULL, xlim = NULL,
-                        xlab = "individual effect") {
+plot_bounds <- function(lower, upper, truth = NULL, zeta = NULL,
+                        ylab = "95% bounds on the k-th smallest effect",
+                        unit = "units") {
   n <- length(lower)
+  k <- seq_len(n)
   finite <- c(lower[is.finite(lower)], upper[is.finite(upper)], truth)
-  if (is.null(xlim)) xlim <- range(finite)
-  plot(NA, xlim = xlim, ylim = c(1, n), xlab = xlab,
-       ylab = "k, position in the sorted effects")
-  # An infinite bound runs to the frame, beyond every finite bound, so it
-  # cannot be mistaken for the smallest or largest finite one.
-  edge <- par("usr")[1:2]
-  lo <- ifelse(is.finite(lower), lower, edge[1])
-  hi <- ifelse(is.finite(upper), upper, edge[2])
-  segments(lo, 1:n, hi, 1:n, col = "grey85")
-  lines(lo, 1:n, type = "s", lwd = 2)
-  lines(hi, 1:n, type = "s", lwd = 2, lty = 2)
-  if (!is.null(truth)) points(sort(truth), 1:n, pch = 16, cex = 0.4,
-                              col = "red")
-  abline(v = 0, col = "grey40")
+  plot(NA, xlim = c(1, n), ylim = range(finite), xaxt = "n",
+       xlab = paste(unit, "sorted from smallest to largest effect (k)"),
+       ylab = ylab,
+       main = if (!is.null(zeta)) paste("Polynomial rank scores, zeta =",
+                                        paste(zeta, collapse = ", ")),
+       font.main = 1, cex.main = 0.9)
+  axis(1, at = unique(c(1, pretty(k)[pretty(k) > 1 & pretty(k) < n], n)))
+  abline(h = 0, lty = 2, col = "grey50")
+  if (!is.null(truth)) points(k, sort(truth), pch = 16, cex = 0.5,
+                              col = "grey60")
+  # Infinite bounds become NA, so lines() leaves those positions blank.
+  lines(k, ifelse(is.finite(lower), lower, NA), type = "s", lwd = 2,
+        col = "#C0502E")
+  lines(k, ifelse(is.finite(upper), upper, NA), type = "s", lwd = 2,
+        lty = 2, col = "#1F4E79")
+  helped_from <- which(lower > 0)[1]
+  harmed_to <- max(c(0, which(upper < 0)))
+  if (!is.na(helped_from)) points(helped_from, lower[helped_from], cex = 1.6)
+  if (harmed_to > 0) points(harmed_to, upper[harmed_to], pch = 16,
+                            cex = 1.6)
+  n_no_lower <- sum(!is.finite(lower))
+  n_no_upper <- sum(!is.finite(upper))
+  usr <- par("usr")
+  if (n_no_lower > 0) text(1, usr[3], adj = c(0, -0.5), cex = 0.8,
+                           paste("No lower bound for the", n_no_lower,
+                                 "smallest effects"))
+  if (n_no_upper > 0) text(n, usr[4], adj = c(1, 1.5), cex = 0.8,
+                           paste("No upper bound for the", n_no_upper,
+                                 "largest effects"))
+  invisible(list(helped_from = helped_from, harmed_to = harmed_to))
 }
 ```
 
-```{r sim-plot, fig.width = 6, fig.height = 5, fig.alt = "Lower and upper bounds for each of the 200 sorted effects in the simulation, with the true sorted effects as points."}
+```{r sim-plot, fig.width = 7, fig.height = 5, fig.alt = "Lower and upper 95 percent bounds for each of the 200 sorted effects in the simulation, with the true sorted effects as grey points."}
 sim_lower <- helped$bounds$lower
 sim_upper <- -rev(harmed$bounds$lower)
-plot_bounds(sim_lower, sim_upper, truth = tau)
-legend("bottomright", bty = "n", bg = "white",
-       legend = c("lower bound", "upper bound", "true effect"),
-       lty = c(1, 2, NA), lwd = c(2, 2, NA), pch = c(NA, NA, 16),
-       col = c("black", "black", "red"))
+marks <- plot_bounds(sim_lower, sim_upper, truth = tau, zeta = helped$s)
+legend("topleft", bty = "n", lwd = c(2, 2, NA), lty = c(1, 2, NA),
+       pch = c(NA, NA, 16), col = c("#C0502E", "#1F4E79", "grey60"),
+       legend = c("lower bound", "upper bound", "true effect"))
 ```
 
-`rev()` puts the bounds from the analysis of `-y` in the order of k: its
-last row, j = 200, bounds $\tau_{(1)}$, and its first row bounds
-$\tau_{(200)}$.
+Four readings of the plot, each with the arithmetic behind it:
 
-The red points are the true sorted effects: 40 at $-3$, 60 at 0, and 100 at
-2. Every point lies between its two lines. With 95 percent confidence
-we expect this in at least 95 of every 100 experiments like this one, and it
-happened in this one. The top `r sum(sim_lower > 0)` rows have a lower bound above 0;
-those are the units counted above as helped. The bottom
-`r sum(sim_upper < 0)` rows have an upper bound below 0; those are the
-harmed units. In the rows between, the interval contains 0, and the data
-cannot say whether those effects are positive, negative, or zero.
+- The open circle is at k = `r marks$helped_from`, where the lower bound
+  first rises above 0. The effects at positions `r marks$helped_from`
+  through 200 are all above 0, so at least
+  $200 - `r marks$helped_from` + 1 = `r 200 - marks$helped_from + 1`$ units
+  were helped.
+- The filled circle is at k = `r marks$harmed_to`, the last position where
+  the upper bound is below 0. The effects at positions 1 through
+  `r marks$harmed_to` are all below 0, so at least `r marks$harmed_to` units
+  were harmed.
+- Between the circles, each interval from the solid line to the dashed line
+  contains 0. For those `r marks$helped_from - marks$harmed_to - 1` positions
+  we cannot tell from these data whether the effect is positive, negative,
+  or zero.
+- The grey points are the true sorted effects: 40 at $-3$, 60 at 0, and 100
+  at 2. Each lies between its two bounds. The method is built so that in at least
+  95 of every 100 experiments like this one, every true effect lies between
+  its bounds. In this experiment they all did.
 
 ## The teacher professional-development experiment
 
@@ -262,15 +296,27 @@ bounds.
 `r if (has_highs && t_n_harmed == 0) "Analyzing \x60-gain\x60, we cannot show that any teacher was harmed. A failure to show harm is not evidence that no teacher was harmed." else if (has_highs) paste0("Analyzing \x60-gain\x60, we find at least ", t_n_harmed, " harmed teachers.") else ""`
 `r if (has_highs) paste0("From the analysis of \x60gain\x60, as many as 233 - ", t_n_helped, " = ", 233 - t_n_helped, " teachers could have been harmed.") else ""`
 
-The same plot for the teachers, analyzed within sites, shows for which
-sorted effects the data rule out 0, and on which side.
+The same plot for the teachers, analyzed within sites, shows which sorted
+effects we can place above or below 0. These analyses also used the
+default polynomial rank scores, here with zeta =
+`r if (has_highs) paste(t_helped$s, collapse = ", ") else "(not computed)"`.
 
-```{r teachers-plot, eval = has_highs, fig.width = 6, fig.height = 5, fig.alt = "Lower and upper bounds for each of the 233 sorted effects of the professional development program on gain."}
-plot_bounds(t_helped$bounds$lower, -rev(t_harmed$bounds$lower),
-            xlab = "effect on gain, in percentage points")
+```{r teachers-plot, eval = has_highs, fig.width = 7, fig.height = 5, fig.alt = "Lower and upper 95 percent bounds for each of the 233 sorted effects of the professional development program on gain."}
+t_lower <- t_helped$bounds$lower
+t_upper <- -rev(t_harmed$bounds$lower)
+t_marks <- plot_bounds(t_lower, t_upper, unit = "teachers", zeta = t_helped$s,
+                       ylab = "95% bounds on the k-th smallest effect on gain")
+k_example <- 200
+points(k_example, t_lower[k_example], pch = 2, cex = 1.6)
 ```
 
-`r if (has_highs) paste0("In the top ", t_n_helped, " rows the lower bound is above 0. ", if (t_n_harmed == 0) "No row has an upper bound below 0: the dashed line stays to the right of the vertical line at 0." else paste0("In the bottom ", t_n_harmed, " rows the upper bound is below 0.")) else ""`
+```{r teachers-plot-skip, include = FALSE}
+if (!has_highs) t_marks <- NULL
+```
+
+`r if (has_highs) paste0("The open circle is at k = ", t_marks$helped_from, ". The lower bound first rises above 0 there, so at least 233 - ", t_marks$helped_from, " + 1 = ", 233 - t_marks$helped_from + 1, " teachers (", round(100 * (233 - t_marks$helped_from + 1) / 233), " percent) gained from the program.") else ""`
+`r if (has_highs) paste0("The bound also says how much they gained. The triangle is at k = ", k_example, ". There the lower bound is ", round(t_lower[k_example], 1), " points, so the ", k_example, "th smallest effect is at least ", round(t_lower[k_example], 1), " points. The effects at positions ", k_example, " through 233 are each at least as large as the ", k_example, "th, so at least 233 - ", k_example, " + 1 = ", 233 - k_example + 1, " teachers gained at least that much.") else ""`
+`r if (has_highs && t_marks$harmed_to == 0) "No upper bound is below 0, so there is no filled circle: we cannot place any teacher's effect below 0." else ""`
 
 ## Choices that change the answer
 
@@ -280,7 +326,9 @@ With the argument `set`, we choose whose effects are bounded: `"treat"`,
 With `alpha`, we choose the confidence level, 1 - `alpha`. When we report
 the helped and harmed counts together, we compute each at `alpha / 2`.
 
-With `s`, we choose the rank statistics that `cmrss()` combines. A rank
+With `s`, we choose the rank statistics that `cmrss()` combines. For
+polynomial scores the paper behind this package calls these parameters
+zeta, and the plot titles above use that name. A rank
 statistic replaces each outcome by its rank and adds up a score for the rank
 of every treated unit. By default `cmrss()` uses polynomial scores: the
 unit at rank r among n, counting from the smallest outcome, gets the score
