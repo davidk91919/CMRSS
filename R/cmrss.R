@@ -16,11 +16,13 @@
 #'   lower bounds into upper bounds on the original effects: the way to ask
 #'   whether anyone could have been harmed.
 #' @param data A data frame holding the variables in `formula`.
-#' @param quantile Optional proportion strictly between 0 and 1. When given,
+#' @param quantile Optional proportion above 0 and at most 1. When given,
 #'   `cmrss()` tests whether the effect at that proportion of the units in
 #'   `set` is at most `c`. For example, `quantile = 0.9, set = "treat"` with
 #'   164 treated units tests the floor(0.9 x 164) = 147th smallest of their
-#'   effects. The `k` used is reported in the result.
+#'   effects. The `k` used is reported in the result. `quantile = 1` tests
+#'   the largest effect; with `-outcome` on the left and `c = 0` it tests the
+#'   null hypothesis that no unit in `set` was harmed.
 #' @param c The threshold in the tested hypothesis, and the value against
 #'   which `print()` counts bounds.
 #' @param set Which units' effects to bound: `"treat"`, `"control"`, or
@@ -188,8 +190,8 @@ cmrss <- function(formula, data, quantile = NULL, c = 0, set = "all",
 
   if (!is.null(quantile) &&
       (!is.numeric(quantile) || length(quantile) != 1L ||
-       quantile <= 0 || quantile >= 1)) {
-    stop("quantile must be a single proportion strictly between 0 and 1.")
+       quantile <= 0 || quantile > 1)) {
+    stop("quantile must be a single proportion above 0 and at most 1.")
   }
 
   # One warning per call: check here, then muffle the same warning from the

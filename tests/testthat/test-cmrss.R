@@ -209,9 +209,26 @@ test_that("missing values are refused and counted", {
   expect_error(cmrss(y ~ z, data = d, nperm = 100), "2 rows")
 })
 
-test_that("quantile must be a proportion strictly between 0 and 1", {
+test_that("quantile = 1 tests the largest effect: with -y, the null that no one was harmed", {
+  # No unit harmed means every effect on y is >= 0, so every effect on -y is
+  # <= 0, so the largest effect on -y is <= 0: the hypothesis tau_(n) <= 0
+  # for -y, with k = n. For the treated set in a CRE, comb_p_val_cre counts
+  # k over all n units, so the largest treated effect is its k = n.
+  d <- make_cre()
+  set.seed(10)
+  fit <- cmrss(-y ~ z, data = d, quantile = 1, c = 0, set = "treat",
+               nperm = 500, tol = 0.1)
+  set.seed(10)
+  p_by_hand <- comb_p_val_cre(d$z, -d$y, k = 30, c = 0, poly(s_default),
+                              nperm = 500)
+  expect_equal(fit$test$k, 15)
+  expect_equal(fit$test$p.value, p_by_hand)
+})
+
+test_that("quantile must be a proportion above 0 and at most 1", {
   d <- make_cre()
   expect_error(cmrss(y ~ z, data = d, quantile = 1.5, nperm = 100), "quantile")
+  expect_error(cmrss(y ~ z, data = d, quantile = 0, nperm = 100), "quantile")
 })
 
 ## Output ------------------------------------------------------------------------
