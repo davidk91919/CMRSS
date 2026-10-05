@@ -28,11 +28,13 @@ whether anyone could have been harmed.}
 
 \item{data}{A data frame holding the variables in \code{formula}.}
 
-\item{quantile}{Optional proportion strictly between 0 and 1. When given,
+\item{quantile}{Optional proportion above 0 and at most 1. When given,
 \code{cmrss()} tests whether the effect at that proportion of the units in
 \code{set} is at most \code{c}. For example, \verb{quantile = 0.9, set = "treat"} with
 164 treated units tests the floor(0.9 x 164) = 147th smallest of their
-effects. The \code{k} used is reported in the result.}
+effects. The \code{k} used is reported in the result. \code{quantile = 1} tests
+the largest effect; with \code{-outcome} on the left and \code{c = 0} it tests the
+null hypothesis that no unit in \code{set} was harmed.}
 
 \item{c}{The threshold in the tested hypothesis, and the value against
 which \code{print()} counts bounds.}

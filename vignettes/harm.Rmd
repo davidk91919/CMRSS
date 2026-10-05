@@ -330,6 +330,49 @@ if (!has_highs) t_marks <- NULL
 `r if (has_highs) paste0("The bound also says how much they gained. The triangle is at k = ", k_example, ". There the lower bound is ", round(t_lower[k_example], 1), " points, so the ", k_example, "th smallest effect is at least ", round(t_lower[k_example], 1), " points. The effects at positions ", k_example, " through 233 are each at least as large as the ", k_example, "th, so at least 233 - ", k_example, " + 1 = ", 233 - k_example + 1, " teachers gained at least that much.") else ""`
 `r if (has_highs && t_marks$harmed_to == 0) "No upper bound is below 0, so there is no filled circle: we cannot place any teacher's effect below 0." else ""`
 
+## A p-value for the hypothesis that no one was harmed
+
+Sometimes we want a single test rather than a count: could the data have
+arisen if no unit was harmed? No unit was harmed when every effect on $Y$ is
+at least 0. Then every effect on $-Y$ is at most 0, and in particular the
+largest effect on $-Y$, $(-\tau)_{(n)}$, is at most 0. So the null
+hypothesis "no one was harmed" is the hypothesis that the largest effect on
+$-Y$ is at most 0. In `cmrss()` the largest effect is `quantile = 1`, and
+the threshold is `c = 0`:
+
+```{r sim-noharm}
+no_harm <- cmrss(-y ~ z, data = sim, quantile = 1, c = 0, set = "all",
+                 nperm = nperm, tol = tol)
+no_harm$test
+```
+
+Many patterns of effects satisfy this null hypothesis. The test computes
+its p-value under the pattern that makes harm hardest to detect, in which
+no unit's outcome changes at all. That p-value is therefore valid for every
+pattern in which no one was harmed. With `set = "all"`, `cmrss()` tests the
+treated and the control units separately and doubles the smaller of the two
+p-values, for the same reason the counts above halved `alpha`.
+
+`r if (no_harm$test$p.value == 0) paste0("None of the ", nperm, " simulated random assignments produced a test statistic as large as the observed one, so the p-value is below 1/", nperm, " = ", 1 / nperm, ". (cmrss() reports such a p-value as 0.) ") else paste0("The p-value is ", signif(no_harm$test$p.value, 2), ". ")`At the 5 percent level we reject the hypothesis that no one was harmed.
+That agrees with the counts above, where we found at least `r n_harmed`
+harmed units.
+
+For the teachers, analyzed within sites:
+
+```{r teachers-noharm, eval = has_highs}
+t_no_harm <- cmrss(-gain ~ TxAny | Site, data = electric_teachers,
+                   quantile = 1, c = 0, set = "all", nperm = nperm,
+                   tol = tol, opt.method = "ILP_highs")
+t_no_harm$test
+```
+
+`r if (has_highs) paste0("The p-value is ", signif(t_no_harm$test$p.value, 2), ". We do not reject the hypothesis that no teacher was harmed. That agrees with the plot, where no upper bound fell below 0. As before, a large p-value is not evidence that no teacher was harmed: from the analysis of gain, as many as ", 233 - t_n_helped, " teachers could have been.") else ""`
+
+`set = "treat"` in place of `set = "all"` tests the narrower hypothesis that
+no treated unit was harmed. A test at a single `alpha` stands on its own;
+the halving of `alpha` used for the counts applies only when two statements
+are reported together.
+
 ## Choices that change the answer
 
 With the argument `set`, we choose whose effects are bounded: `"treat"`,

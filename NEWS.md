@@ -1,3 +1,18 @@
+# CMRSS 0.2.18
+
+## New
+
+- `cmrss()` accepts `quantile = 1`, which tests the largest effect in
+  `set`. With `-outcome` on the left of the formula and `c = 0`, that is a
+  test of the null hypothesis that no unit was harmed. It used to require a
+  quantile strictly below 1.
+
+## Documentation
+
+- The harm vignette has a new section, "A p-value for the hypothesis that
+  no one was harmed", with the test for the simulated example and for
+  `electric_teachers`.
+
 # CMRSS 0.2.17
 
 ## Documentation
