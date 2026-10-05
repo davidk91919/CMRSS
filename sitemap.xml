@@ -1,11 +1,9 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/404.html</loc></url>
-<url><loc>https://bowers-illinois-edu.github.io/CMRSS/AGENTS.html</loc></url>
-<url><loc>https://bowers-illinois-edu.github.io/CMRSS/CLAUDE.html</loc></url>
-<url><loc>https://bowers-illinois-edu.github.io/CMRSS/HANDOFF.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/LICENSE-text.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/LICENSE.html</loc></url>
-<url><loc>https://bowers-illinois-edu.github.io/CMRSS/PLAN.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/articles/harm.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/articles/index.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/authors.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/index.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/news/index.html</loc></url>
@@ -17,9 +15,11 @@
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/add_thread_param.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/assign_CRE.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/assign_block.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/check_outcome_ties.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/ci_lower_quantile_exp.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/ci_lower_quantile_gen.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/ci_lower_quantile_generalize.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger_trt.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/com_conf_quant_larger_cre.html</loc></url>
@@ -32,6 +32,7 @@
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/comparison_methods.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/correct_hypergeom.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/default_score_parameters.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/electric_teachers.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/get_default_solver.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/index.html</loc></url>
@@ -39,6 +40,7 @@
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/method_berger_boos.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/method_caughey.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/method_chen_li.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/min_detectable_treated.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/min_p_multiple_rank_sum.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/min_stat_path.html</loc></url>
@@ -50,6 +52,8 @@
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/parse_opt_method.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/poly_sd.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/poly_strata_sd.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/polynomial_methods.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/print.cmrss.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/pval_cre.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/rank_score.html</loc></url>
@@ -62,6 +66,7 @@
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/solve_stratum_optimization.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/solver_available.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/sort_treat.html</loc></url>
+<url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/stephenson_methods.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/summary_block.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/threshold_correct_hypergeom.html</loc></url>
 <url><loc>https://bowers-illinois-edu.github.io/CMRSS/reference/weight_scheme.html</loc></url>

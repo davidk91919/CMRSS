@@ -6,6 +6,9 @@
   : Generate complete randomization assignments
 - [`assign_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/assign_block.md)
   : Generate block-randomized treatment assignments
+- [`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+  : Inference about quantiles of individual treatment effects from a
+  formula
 - [`com_block_conf_quant_larger()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger.md)
   : Simultaneous bound for confidence interval using combined rank sum
   statistic on stratified randomized experiment
@@ -33,6 +36,8 @@
   : Generate null distributions for multiple rank sum statistics
 - [`parse_opt_method()`](https://bowers-illinois-edu.github.io/CMRSS/reference/parse_opt_method.md)
   : Parse optimization method string
+- [`print(`*`<cmrss>`*`)`](https://bowers-illinois-edu.github.io/CMRSS/reference/print.cmrss.md)
+  : Print a cmrss result
 - [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
   : Combined test statistic and combined p-value for randomization test
   for quantiles of individual treatment effects (treated-only)

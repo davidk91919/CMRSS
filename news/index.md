@@ -1,5 +1,103 @@
 # Changelog
 
+## CMRSS 0.2.15
+
+### Documentation
+
+- New vignette, “Could anyone have been harmed?”
+  ([`vignette("harm", package = "CMRSS")`](https://bowers-illinois-edu.github.io/CMRSS/articles/harm.md)).
+  It shows how analyzing minus the outcome turns the package’s lower
+  bounds into a lower count of harmed units, how the count of helped
+  units gives an upper count of units that could have been harmed, and
+  why the two analyses run at `alpha / 2` when reported together. It
+  works through a simulated experiment in which 40 of 200 units are
+  harmed while the average effect is positive, and through
+  `electric_teachers`. `knitr` and `rmarkdown` join Suggests.
+
+### Other changes
+
+- The HiGHS solvers no longer print “LP matrix packed vector contains …
+  values … ignored” on every solve. Stephenson scores with a large s
+  give constraint-matrix entries at or below 1e-9, which HiGHS ignores
+  and warns about. The package now removes them before calling HiGHS, so
+  HiGHS solves the same problem as before. On `electric_teachers`,
+  within sites, with s = 2, 11, 59, every bound from
+  [`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+  is identical before and after.
+
+## CMRSS 0.2.14
+
+### New
+
+- [`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+  reads an experiment from a formula and a data frame: `gain ~ TxAny`
+  for a completely randomized experiment, `gain ~ TxAny | Site` for a
+  block-randomized one. It returns lower confidence bounds for every
+  sorted effect in the chosen set (`"treat"`, `"control"` or `"all"`)
+  and, given `quantile`, a p-value for the hypothesis that the effect at
+  that proportion of the set is at most `c`. It converts the proportion
+  into the `k` each underlying function expects, which differs between
+  [`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md)
+  (all units) and
+  [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
+  (treated units), and reports the `k` used. Writing `-gain` on the left
+  bounds effects on minus the outcome, which is how to ask whether
+  anyone could have been harmed.
+  [`print()`](https://rdrr.io/r/base/print.html) reports how many units
+  have bounds above `c`.
+- The rank statistics are polynomial scores, (r/(n + 1))^(s - 1), with
+  parameters `s` (the paper’s zeta); `scores = "stephenson"` uses
+  Stephenson scores choose(r - 1, s - 1) instead. The default is three
+  values, 2, s_max and round(sqrt(2 s_max)), where s_max = 4 m / q_min
+  (at most n / 2) and q_min is the fewest treated units whose holding
+  the top ranks would give a p-value at or below `alpha`. The section
+  “Choosing s” of
+  [`?cmrss`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+  gives the reasoning and a simulation comparing grids. Polynomial
+  scores are never 0, so they work in blocks of any size; with
+  Stephenson scores, an s above a block’s size is lowered to that size
+  so the block is not dropped.
+- [`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md),
+  [`com_conf_quant_larger_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_conf_quant_larger_cre.md),
+  [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md),
+  [`com_block_conf_quant_larger()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger.md)
+  and
+  [`cmrss()`](https://bowers-illinois-edu.github.io/CMRSS/reference/cmrss.md)
+  now warn, with class `"cmrss_ties_warning"`, when the outcome takes
+  two values or when one value is shared by at least two units and more
+  than 5 percent of them. Tied outcomes are ranked by row order, so
+  reordering rows can change results (issue
+  [\#5](https://github.com/bowers-illinois-edu/CMRSS/issues/5)).
+  `electric_teachers$gain` triggers the warning: 29 of 233 teachers
+  share one value. No returned number changes.
+
+## CMRSS 0.2.13
+
+### Bug fixes
+
+- The two stratified examples in `README.md`, the Quick Start and
+  Example 1, stopped with an error. They passed `k = floor(0.9 * N)`,
+  counted over all N units, to
+  [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md),
+  which since 0.2.7 counts `k` over the treated units only and so
+  requires `1 <= k <= sum(Z)`. Both now use `k = floor(0.9 * sum(Z))`.
+  The “Comparing Solvers” example used `k` and `c` without defining
+  them; the Quick Start now defines both, and the comparison sets the
+  same seed before each solver so the two null distributions match.
+- [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)’s
+  error for an out-of-range `k` now says that `k` counts treated units,
+  gives the range `1..sum(Z)`, and points to
+  `com_block_conf_quant_larger(set = "all")` for quantiles of all units.
+  It used to cite a source line, `R/CMRSS_SRE.R:1034`, that a user of
+  the installed package cannot see.
+- [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
+  now refuses a `k` that is not a whole number. It used to return a
+  p-value for, say, `k = 2.5`.
+
+`tests/testthat/test-readme-examples.R` runs every R chunk of the README
+from a source checkout, so a stale example now fails `devtools::test()`.
+No returned number changes.
+
 ## CMRSS 0.2.12
 
 ### Bug fixes

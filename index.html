@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.15</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,12 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/harm.html">Could anyone have been harmed?</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -107,8 +113,14 @@
 <span><span class="va">methods.list.all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">methods.list.all</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">s</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Wilcoxon"</span>, scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Test H0: the k-th smallest effect among the treated units is at most c.</span></span>
+<span><span class="co"># pval_comb_block counts k over the treated units, so 1 &lt;= k &lt;= sum(Z).</span></span>
+<span><span class="co"># k = floor(0.9 * sum(Z)) asks about the 90th percentile of treated effects.</span></span>
+<span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="fl">0.9</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">Z</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">c</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span></span>
 <span><span class="co"># Compute p-value using HiGHS solver</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pval_comb_block.html">pval_comb_block</a></span><span class="op">(</span><span class="va">Z</span>, <span class="va">Y</span>, k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="fl">0.9</span> <span class="op">*</span> <span class="va">N</span><span class="op">)</span>, c <span class="op">=</span> <span class="fl">0</span>,</span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pval_comb_block.html">pval_comb_block</a></span><span class="op">(</span><span class="va">Z</span>, <span class="va">Y</span>, k <span class="op">=</span> <span class="va">k</span>, c <span class="op">=</span> <span class="va">c</span>,</span>
 <span>                          <span class="va">block</span>, <span class="va">methods.list.all</span>,</span>
 <span>                          opt.method <span class="op">=</span> <span class="st">"ILP_highs"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
@@ -171,12 +183,14 @@
 <div class="section level3">
 <h3 id="comparing-solvers">Comparing Solvers<a class="anchor" aria-label="anchor" href="#comparing-solvers"></a>
 </h3>
-<p>Both HiGHS and Gurobi produce equivalent results. You can verify this:</p>
+<p>Both HiGHS and Gurobi produce equivalent results. You can verify this, using <code>Z</code>, <code>Y</code>, <code>block</code>, <code>k</code>, <code>c</code> and <code>methods.list.all</code> from the Quick Start:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Same results with different solvers</span></span>
+<code class="sourceCode R"><span><span class="co"># Same results with different solvers (requires a Gurobi license)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">result_highs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pval_comb_block.html">pval_comb_block</a></span><span class="op">(</span><span class="va">Z</span>, <span class="va">Y</span>, <span class="va">k</span>, <span class="va">c</span>, <span class="va">block</span>, <span class="va">methods.list.all</span>,</span>
 <span>                                opt.method <span class="op">=</span> <span class="st">"ILP_highs"</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">result_gurobi</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pval_comb_block.html">pval_comb_block</a></span><span class="op">(</span><span class="va">Z</span>, <span class="va">Y</span>, <span class="va">k</span>, <span class="va">c</span>, <span class="va">block</span>, <span class="va">methods.list.all</span>,</span>
 <span>                                 opt.method <span class="op">=</span> <span class="st">"ILP_gurobi"</span><span class="op">)</span></span>
 <span></span>
@@ -233,8 +247,9 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">s</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Stephenson"</span>, s <span class="op">=</span> <span class="fl">3</span>, scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Test H0: tau_(k) &lt;= 0 at 90th percentile</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pval_comb_block.html">pval_comb_block</a></span><span class="op">(</span><span class="va">Z</span>, <span class="va">Y</span>, k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="fl">0.9</span> <span class="op">*</span> <span class="va">N</span><span class="op">)</span>, c <span class="op">=</span> <span class="fl">0</span>,</span>
+<span><span class="co"># Test H0: the 90th percentile of the treated units' effects is at most 0.</span></span>
+<span><span class="co"># k counts treated units, so it must lie between 1 and sum(Z).</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pval_comb_block.html">pval_comb_block</a></span><span class="op">(</span><span class="va">Z</span>, <span class="va">Y</span>, k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="fl">0.9</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">Z</span><span class="op">)</span><span class="op">)</span>, c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                          <span class="va">block</span>, <span class="va">methods.list.all</span>,</span>
 <span>                          opt.method <span class="op">=</span> <span class="st">"ILP_highs"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"P-value:"</span>, <span class="va">result</span><span class="op">[</span><span class="st">"p.value"</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
