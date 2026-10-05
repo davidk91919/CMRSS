@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,18 @@
       <small>Source: <a href="https://github.com/bowers-illinois-edu/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.12" id="cmrss-0212">CMRSS 0.2.12<a class="anchor" aria-label="anchor" href="#cmrss-0212"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-12">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-12"></a></h3>
+<ul><li>
+<code><a href="../reference/com_block_conf_quant_larger.html">com_block_conf_quant_larger()</a></code> now relabels a caller-supplied <code>Z.perm</code> for the control bounds. Those bounds come from the relabeled experiment, in which <code>Z</code> becomes <code>1 - Z</code> and <code>Y</code> becomes <code>-Y</code>, and each simulated assignment has to be relabeled the same way. The function passed <code>Z.perm</code> through unchanged for <code>set = "control"</code> and for the control half of <code>set = "all"</code>, so every simulated assignment scored the wrong units; on the <code>electric_teachers</code> data every control bound came back <code>-Inf</code>. <code><a href="../reference/com_conf_quant_larger_cre.html">com_conf_quant_larger_cre()</a></code> already relabeled <code>Z.perm</code>.</li>
+<li>The stratified interval function now counts the simulated assignments it actually has when it picks the critical value. It took position <code>floor(null.max * alpha) + 1</code> of the sorted null distribution using the argument <code>null.max</code>, even when the caller supplied a <code>Z.perm</code> or <code>stat.null</code> of a different length. With a 2000-column <code>Z.perm</code>, the default <code>null.max = 10^4</code> and <code>alpha = 0.10</code>, it took position 1001 of 2000 and so tested at level 0.50. <code>null.max</code> is now set to <code>length(stat.null)</code>.</li>
+<li>
+<code>com_block_conf_quant_larger(set = "all")</code> now stops when given <code>stat.null</code>. The two halves of <code>set = "all"</code> need different null distributions whenever a stratum is not half treated, so one vector cannot serve both.</li>
+</ul><p>Results change only for callers who pass <code>Z.perm</code> or <code>stat.null</code>. When neither is passed, <code>length(stat.null)</code> equals <code>null.max</code> and the bounds are unchanged. None of the stratified scripts in the combined_stephenson_tests paper passes either argument. Tests are in <code>tests/testthat/test-sre-ci-user-null.R</code>.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.11" id="cmrss-0211">CMRSS 0.2.11<a class="anchor" aria-label="anchor" href="#cmrss-0211"></a></h2>
 <div class="section level3">

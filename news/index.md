@@ -1,5 +1,38 @@
 # Changelog
 
+## CMRSS 0.2.12
+
+### Bug fixes
+
+- [`com_block_conf_quant_larger()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger.md)
+  now relabels a caller-supplied `Z.perm` for the control bounds. Those
+  bounds come from the relabeled experiment, in which `Z` becomes
+  `1 - Z` and `Y` becomes `-Y`, and each simulated assignment has to be
+  relabeled the same way. The function passed `Z.perm` through unchanged
+  for `set = "control"` and for the control half of `set = "all"`, so
+  every simulated assignment scored the wrong units; on the
+  `electric_teachers` data every control bound came back `-Inf`.
+  [`com_conf_quant_larger_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_conf_quant_larger_cre.md)
+  already relabeled `Z.perm`.
+- The stratified interval function now counts the simulated assignments
+  it actually has when it picks the critical value. It took position
+  `floor(null.max * alpha) + 1` of the sorted null distribution using
+  the argument `null.max`, even when the caller supplied a `Z.perm` or
+  `stat.null` of a different length. With a 2000-column `Z.perm`, the
+  default `null.max = 10^4` and `alpha = 0.10`, it took position 1001 of
+  2000 and so tested at level 0.50. `null.max` is now set to
+  `length(stat.null)`.
+- `com_block_conf_quant_larger(set = "all")` now stops when given
+  `stat.null`. The two halves of `set = "all"` need different null
+  distributions whenever a stratum is not half treated, so one vector
+  cannot serve both.
+
+Results change only for callers who pass `Z.perm` or `stat.null`. When
+neither is passed, `length(stat.null)` equals `null.max` and the bounds
+are unchanged. None of the stratified scripts in the
+combined_stephenson_tests paper passes either argument. Tests are in
+`tests/testthat/test-sre-ci-user-null.R`.
+
 ## CMRSS 0.2.11
 
 ### New
