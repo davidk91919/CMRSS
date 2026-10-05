@@ -22,7 +22,8 @@ the fork. Read top to bottom.
 
 ## TL;DR for the next session (2026-10-05 onward)
 
-This section covers the work of 2026-10-04 and 2026-10-05. Everything below
+This section covers the work of 2026-10-04 and 2026-10-05, through CMRSS
+0.2.18. Everything below
 it is older and still accurate except where this section says otherwise.
 
 ### What Jake asked for
@@ -37,33 +38,41 @@ Four items from Jake's to-do list, all now written:
    useful for. It became a warning for binary and heavily tied outcomes.
 4. Suggestions from agents playing different kinds of users, filed as issues.
 
-### Four pull requests on David's repository, stacked
+Later on 2026-10-05 he also asked for the README to install from the right
+repository (#17), for plots of the bounds in the style of his slides (#18),
+and for a p-value for the null hypothesis that no one was harmed, shown
+both with `cmrss()` and with `comb_p_val_cre()` / `pval_comb_block()`
+(#19). For that test, `cmrss(-y ~ z, quantile = 1, c = 0)`: no one harmed
+means the largest effect on -y is at most 0.
+
+### Pull requests on David's repository, all merged
 
 All work went to `davidk91919/CMRSS` by pull request, because Jake wants
-David's repository to stay current on every source file. Each branch is built
-on the one before, so they must be merged in this order:
+David's repository to stay current on every source file. Jake merged each
+one; the permission classifier blocked the assistant's `gh pr merge`.
 
-    PR   branch                 version  content
-    #1   fix-sre-ci-user-null   0.2.12   Z.perm / stat.null defects in SRE intervals
-    #2   fix-readme-k           0.2.13   README examples, out-of-range k message
-    #13  cmrss-interface        0.2.14   cmrss(), tie warning, default scores
-    #14  vignette-harm          0.2.15   harm vignette, HiGHS warnings, site, this file
+    PR   version  content
+    #1   0.2.12   Z.perm / stat.null defects in SRE intervals
+    #2   0.2.13   README examples, out-of-range k message
+    #13  0.2.14   cmrss(), tie warning, default scores
+    #14  0.2.15   harm vignette, HiGHS warnings, site workflow, handoff
+    #17  0.2.16   README installs from davidk91919/CMRSS, not the archived repo
+    #18  0.2.17   vignette plots of lower and upper bounds for every k
+    #19  0.2.18   quantile = 1; vignette test of "no one was harmed"
 
-None was merged when this was written. The permission classifier blocked the
-assistant's `gh pr merge`, so Jake merges. Until #1 and #2 are merged, #13 and
-#14 also show the commits beneath them on GitHub.
+As of 2026-10-05, `main` is at `e7de57c` (0.2.18) in both repositories, and
+the site https://bowers-illinois-edu.github.io/CMRSS/ shows that version,
+including https://bowers-illinois-edu.github.io/CMRSS/articles/harm.html.
 
-After the merges, the fork has to catch up, because the public site is built
-from the fork's `main`:
+The site is built from the fork's `main`, so after every merge on David's
+repository the fork has to catch up:
 
     git fetch upstream
     git checkout main
     git merge --ff-only upstream/main
     git push origin main
 
-Then check that https://bowers-illinois-edu.github.io/CMRSS/articles/harm.html
-loads and that https://bowers-illinois-edu.github.io/CMRSS/HANDOFF.html no
-longer does.
+The site build then takes about 15 minutes.
 
 ### Decisions Jake made
 
@@ -131,6 +140,8 @@ neither `Z.perm` nor `stat.null`, so the submitted numbers do not move.
     #11  examples inside \dontrun{}
     #12  R-CMD-check fails on Linux and Windows at test-pval-cre.R:82
     #15  HiGHS and Gurobi differ by tol on 2 of 233 Stephenson bounds
+    #16  R-CMD-check fails on Windows and Linux at test-pval-cre.R:82;
+         Jake declined loosening the test, so the checks stay red until #12
 
 #12 matters before anyone trusts CI. On `main` since at least 2026-09-10 the
 check fails on every platform but macOS, at one test comparing
@@ -138,8 +149,7 @@ check fails on every platform but macOS, at one test comparing
 permutations. The unconfirmed guess is that `pval_comb_block` compares
 standardized statistics with `>=`, and rounding puts null draws that tie the
 observed value on either side, differently by platform. A fix changes
-reported p-values, so it is held with item 2A and 4A. The PR checks on #1,
-#2, #13 and #14 show this failure; it is not theirs.
+reported p-values, so it is held with item 2A and 4A. Every PR's checks show this failure; it is not theirs (#16).
 
 ### Open questions
 
@@ -152,10 +162,8 @@ reported p-values, so it is held with item 2A and 4A. The PR checks on #1,
   size it did not. If that holds generally, one set of s values serves blocks
   of different sizes.
 - The cause of #15.
-- Jake was reading the rendered vignette line by line and stopping where it
-  failed him. He had reached the section on counting harmed units with a
-  minus sign. The sentences written while merging the first-reader report
-  have had no cold read except his.
+- Jake read the vignette through and declared it done on 2026-10-05. The
+  sections added afterwards (#19) have had no cold read.
 
 ### Things a future session will get wrong
 
@@ -171,7 +179,7 @@ reported p-values, so it is held with item 2A and 4A. The PR checks on #1,
   `.Rbuildignore` says. The site workflow therefore deletes AGENTS.md,
   CLAUDE.md, HANDOFF.md and PLAN.md from its checkout before building, and
   deploys with `clean: true` so the copies already online are removed.
-- Version numbers: 0.2.12 to 0.2.15 belong to the four pull requests above.
+- Version numbers: 0.2.12 to 0.2.18 belong to the pull requests above.
   The held branch `min-stat-breakpoints` is 0.3.0. Do not reuse a number.
 - Jake's writing rules apply to every reply. He asked on 2026-10-04 for
   decisions one at a time, each self-contained with one example, for short
@@ -197,9 +205,15 @@ reported p-values, so it is held with item 2A and 4A. The PR checks on #1,
   before and after); `tests/testthat/test-highs-tiny-coefficients.R`;
   `.Rbuildignore`; `.github/workflows/pkgdown.yaml`; this file.
 
-### Test and check status at the top of #14
+- #17: `README.md`, `DESCRIPTION` (`URL`, `BugReports`), a test in
+  `tests/testthat/test-readme-examples.R`.
+- #18: `vignettes/harm.Rmd` (`plot_bounds()`, written out in the vignette).
+- #19: `R/cmrss.R` (`quantile` may equal 1), its Rd, a test in
+  `tests/testthat/test-cmrss.R`, `vignettes/harm.Rmd`.
 
-`devtools::test()`: 353 pass, 0 fail, 4 skip (the four skips are the
+### Test and check status at 0.2.18
+
+`devtools::test()`: 358 pass, 0 fail, 4 skip (the four skips are the
 unwritten `perm_pvalue()`, PLAN.md item 4A). `devtools::check()` with the
 vignette built: 0 errors, 0 warnings, 0 notes. The two notes that every
 earlier section of this file reports are gone, because of the new
