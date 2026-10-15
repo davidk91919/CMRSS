@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.18</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.19</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,13 @@
       <small>Source: <a href="https://github.com/davidk91919/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.19" id="cmrss-0219">CMRSS 0.2.19<a class="anchor" aria-label="anchor" href="#cmrss-0219"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-2-19">Changed<a class="anchor" aria-label="anchor" href="#changed-0-2-19"></a></h3>
+<ul><li>Stephenson scores are now divided by the top unit’s score unless the method list sets <code>divide_by_top = FALSE</code>. The binomial coefficient choose(r - 1, s - 1) exceeds the largest double once it passes about 1e308: with s = 500 that happens from n = 1,032 on, and every p-value came back NA. The divided scores are computed on the log scale and run from 0 to 1. Without strata every p-value is unchanged. With strata of unequal size the test changes, because each stratum’s scores are divided by a different number; before, the largest stratum carried nearly all the weight once s was large.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.18" id="cmrss-0218">CMRSS 0.2.18<a class="anchor" aria-label="anchor" href="#cmrss-0218"></a></h2>
 <div class="section level3">
