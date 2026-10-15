@@ -72,8 +72,10 @@ test_that("the exported building blocks still compute what they did when interna
   expect_identical(rank_score(n, list(name = "Wilcoxon", scale = FALSE)),
                    as.numeric(seq_len(n)))
 
-  ## Stephenson scores with parameter s are choose(rank - 1, s - 1).
-  expect_identical(rank_score(n, list(name = "Stephenson", s = 3, scale = FALSE)),
+  ## Stephenson scores with parameter s are choose(rank - 1, s - 1). Since
+  ## 0.2.19 that needs divide_by_top = FALSE; left out, the scores are divided
+  ## by the top score (test-stephenson-divide-by-top.R).
+  expect_identical(rank_score(n, list(name = "Stephenson", s = 3, divide_by_top = FALSE, scale = FALSE)),
                    as.numeric(choose(seq_len(n) - 1, 2)))
 
   ## sort_treat returns the treated indices ordered by outcome, so applying it

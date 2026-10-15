@@ -16,6 +16,10 @@ rank_score(
 \itemize{
 \item \code{name}: "Wilcoxon", "Stephenson", or "Polynomial"
 \item \code{s}: (for Stephenson) the parameter s
+\item \code{divide_by_top}: (for Stephenson) logical. TRUE, and also
+when left out, divides every score by the top unit's score
+choose(n - 1, s - 1), so scores run from 0 to 1. FALSE gives the
+binomial coefficients choose(r - 1, s - 1) themselves.
 \item \code{r}: (for Polynomial) the power parameter
 \item \code{std}: (for Polynomial) logical, use Puri(1965) normalization
 \item \code{scale}: logical, standardize scores to mean 0 and sd 1
@@ -30,12 +34,24 @@ Stephenson, and Polynomial rank scores.
 }
 \details{
 Polynomial scores optionally use Puri(1965) normalization.
-Stephenson scores use binomial coefficients.
+Stephenson scores use binomial coefficients, by default divided by the
+top unit's score. The division is computed on the log scale,
+exp(lchoose(r - 1, s - 1) - lchoose(n - 1, s - 1)), because the
+coefficients themselves exceed the largest double once they pass about
+1e308: with s = 500, from n = 1,032 on, where the undivided scores are Inf
+and every p-value is NA. Without strata the division changes no p-value,
+since the observed statistic and every null draw are multiplied by the
+same constant. With strata of unequal size it changes the test, because
+each stratum's scores are divided by a different number: undivided, a
+stratum of 100 with s = 10 has top score choose(99, 9) = 1.7e12 and a
+stratum of 20 has choose(19, 9) = 92,378, so the larger stratum carries
+nearly all the weight.
 Wilcoxon scores are simply the ranks 1 to n.
 }
 \examples{
 rank_score(5, list(name = "Wilcoxon", scale = FALSE))
 rank_score(5, list(name = "Stephenson", s = 3, scale = FALSE))
+rank_score(5, list(name = "Stephenson", s = 3, divide_by_top = FALSE, scale = FALSE))
 rank_score(5, list(name = "Polynomial", r = 2, std = TRUE, scale = FALSE))
 
 }

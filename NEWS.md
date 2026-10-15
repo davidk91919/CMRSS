@@ -1,3 +1,17 @@
+# CMRSS 0.2.19
+
+## Changed
+
+- Stephenson scores are now divided by the top unit's score unless the
+  method list sets `divide_by_top = FALSE`. The binomial coefficient
+  choose(r - 1, s - 1) exceeds the largest double once it passes about
+  1e308: with s = 500 that happens from n = 1,032 on, and every p-value came
+  back NA. The divided scores are computed on the log scale and run from 0
+  to 1. Without strata every p-value is unchanged. With strata of unequal
+  size the test changes, because each stratum's scores are divided by a
+  different number; before, the largest stratum carried nearly all the
+  weight once s was large.
+
 # CMRSS 0.2.18
 
 ## New

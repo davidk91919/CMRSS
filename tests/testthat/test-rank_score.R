@@ -7,9 +7,11 @@ test_that("rank_score with scale=FALSE produces raw scores", {
   method.wil <- list(name = "Wilcoxon", scale = FALSE)
   expect_equal(rank_score(n, method.wil), c(1:n))
 
-  # Stephenson: should be choose(1:n - 1, s - 1) without normalization
+  # Stephenson: should be choose(1:n - 1, s - 1) without normalization.
+  # Since 0.2.19 the scores are divided by the top score unless
+  # divide_by_top = FALSE (test-stephenson-divide-by-top.R).
   s <- 3
-  method.ste <- list(name = "Stephenson", s = s, scale = FALSE)
+  method.ste <- list(name = "Stephenson", s = s, scale = FALSE, divide_by_top = FALSE)
   expected_ste <- choose(c(1:n) - 1, s - 1)
   expect_equal(rank_score(n, method.ste), expected_ste)
 })
