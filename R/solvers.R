@@ -66,6 +66,30 @@ drop_tiny_entries <- function(i, j, x, tiny = 1e-9) {
   list(i = i[keep], j = j[keep], x = x[keep])
 }
 
+# HiGHS's presolve, the pass that simplifies a program before solving it,
+# sometimes stops with a C++ error ("vector::reserve") on a program that
+# HiGHS solves without presolve. On the Illinois Campus Cluster (Linux,
+# x86-64, highs 1.14.0.2) it did so in 16 of 180,000 replications of a
+# stratified simulation, and the program that failed reached the same
+# optimum with presolve off there as with presolve on elsewhere. So a solve
+# that stops with an error is run once more with presolve off. The second
+# solve runs only after an error, so no result that HiGHS returned before is
+# changed; an error from both solves is raised with both messages.
+highs_solve_presolve_fallback <- function(...) {
+  first <- tryCatch(
+    highs::highs_solve(..., control = highs::highs_control(log_to_console = FALSE)),
+    error = function(e) e
+  )
+  if (!inherits(first, "error")) return(first)
+  second <- tryCatch(
+    highs::highs_solve(..., control = highs::highs_control(log_to_console = FALSE, presolve = "off")),
+    error = function(e) e
+  )
+  if (!inherits(second, "error")) return(second)
+  stop("HiGHS failed with presolve on (", conditionMessage(first),
+       ") and again with presolve off (", conditionMessage(second), ")", call. = FALSE)
+}
+
 #' Optimization function using HiGHS solver
 #'
 #' Solves the integer/linear programming problem for computing the minimum test
@@ -243,7 +267,7 @@ HiGHS_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE,
   }
 
   ## Solve with HiGHS
-  result <- highs::highs_solve(
+  result <- highs_solve_presolve_fallback(
     L = obj,
     lower = lower_bounds,
     upper = upper_bounds,
@@ -251,8 +275,7 @@ HiGHS_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE,
     lhs = lhs,
     rhs = rhs,
     types = types,
-    maximum = FALSE,  # minimize
-    control = highs::highs_control(log_to_console = FALSE)
+    maximum = FALSE  # minimize
   )
 
   ## Check if solution was found
@@ -674,7 +697,7 @@ HiGHS_sol_stratum_com <- function(coeflist, p, exact = TRUE) {
   }
 
   # Solve with HiGHS
-  result <- highs::highs_solve(
+  result <- highs_solve_presolve_fallback(
     L = Q,
     lower = lower_bounds,
     upper = upper_bounds,
@@ -682,8 +705,7 @@ HiGHS_sol_stratum_com <- function(coeflist, p, exact = TRUE) {
     lhs = lhs,
     rhs = rhs,
     types = types,
-    maximum = FALSE,
-    control = highs::highs_control(log_to_console = FALSE)
+    maximum = FALSE
   )
 
   if (result$status != 7) {

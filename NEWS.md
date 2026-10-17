@@ -1,3 +1,19 @@
+# CMRSS 0.2.20
+
+## Fixed
+
+- When HiGHS stops with an error on a stratified test's integer program,
+  CMRSS now solves the same program again with presolve off. Presolve is
+  the pass in which HiGHS simplifies a program before solving it. On the
+  Illinois Campus Cluster (Linux, x86-64, highs 1.14.0.2), presolve
+  stopped with the C++ error "vector::reserve" in 16 of 180,000
+  replications of a simulation in 20 strata of 50 units. Each time,
+  `pval_comb_block()` stopped without a p-value. On the program that
+  failed, HiGHS on the cluster with presolve off reaches the same optimum
+  as HiGHS on a Mac with presolve on. The second solve runs only after an
+  error, so no p-value CMRSS returned before changes. If both solves fail,
+  the error reports both messages.
+
 # CMRSS 0.2.19
 
 ## Changed
