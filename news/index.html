@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.19</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.20</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,13 @@
       <small>Source: <a href="https://github.com/davidk91919/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.20" id="cmrss-0220">CMRSS 0.2.20<a class="anchor" aria-label="anchor" href="#cmrss-0220"></a></h2>
+<div class="section level3">
+<h3 id="fixed-0-2-20">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-2-20"></a></h3>
+<ul><li>When HiGHS stops with an error on a stratified test’s integer program, CMRSS now solves the same program again with presolve off. Presolve is the pass in which HiGHS simplifies a program before solving it. On the Illinois Campus Cluster (Linux, x86-64, highs 1.14.0.2), presolve stopped with the C++ error “vector::reserve” in 16 of 180,000 replications of a simulation in 20 strata of 50 units. Each time, <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code> stopped without a p-value. On the program that failed, HiGHS on the cluster with presolve off reaches the same optimum as HiGHS on a Mac with presolve on. The second solve runs only after an error, so no p-value CMRSS returned before changes. If both solves fail, the error reports both messages.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.19" id="cmrss-0219">CMRSS 0.2.19<a class="anchor" aria-label="anchor" href="#cmrss-0219"></a></h2>
 <div class="section level3">
