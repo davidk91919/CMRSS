@@ -90,6 +90,47 @@ highs_solve_presolve_fallback <- function(...) {
        ") and again with presolve off (", conditionMessage(second), ")", call. = FALSE)
 }
 
+# Finite bounds for the variables of HiGHS_sol_com()'s program that hold
+# the statistics (eta_h) and their largest standardized value (theta).
+# Without bounds, HiGHS 1.14.0.2 sometimes stopped on the program with a
+# C++ error ("vector::reserve" on Linux, "vector" on macOS); in a
+# simulation in 20 strata of 50 units one program failed with presolve on
+# and off, and it solved with either once these variables had bounds
+# (tests/testthat/test-highs-bounded-statistics.R).
+#
+# The bounds exclude no choice of the x's, so no optimum changes. The
+# program sets one x to 1 in each stratum (in the relaxation, the x's of a
+# stratum are weights that sum to 1), so eta_h is a sum over strata of one
+# coefficient per stratum, or of a weighted average of them, and lies
+# between the sum of each stratum's smallest coefficient and the sum of its
+# largest. theta is at least every (eta_h - mu_h) / sigma_h, so it is at
+# least the largest of the standardized lower ends; at the optimum it
+# equals the largest (eta_h - mu_h) / sigma_h, which is at most the largest
+# of the standardized upper ends. The bounds are widened by a millionth,
+# relative, so that rounding cannot cut off a choice: the program computes
+# theta's rows with 1 / sigma_h, and drop_tiny_entries() moves each
+# stratum's coefficients by at most 1e-9.
+highs_com_bounds <- function(coeflists, weight, mb, ms_list) {
+  H <- length(coeflists)
+  B <- length(coeflists[[1]])
+  lo <- hi <- numeric(H)
+  for (h in seq_len(H)) {
+    ## each stratum's coefficients in statistic h's row, as HiGHS_sol_com() writes them
+    t_b <- lapply(seq_len(B), function(b) weight[b] * (1 / mb[b]) * coeflists[[h]][[b]][2, ])
+    lo[h] <- sum(vapply(t_b, min, numeric(1)))
+    hi[h] <- sum(vapply(t_b, max, numeric(1)))
+  }
+  lower <- c(lo, max((lo - ms_list$mu) / ms_list$sigma))
+  upper <- c(hi, max((hi - ms_list$mu) / ms_list$sigma))
+  lower <- lower - 1e-6 * pmax(1, abs(lower))
+  upper <- upper + 1e-6 * pmax(1, abs(upper))
+  ## a bound that is not a finite number (a sigma of 0, say) leaves its
+  ## variable unbounded, as CMRSS wrote it before 0.2.21
+  lower[!is.finite(lower)] <- -Inf
+  upper[!is.finite(upper)] <- Inf
+  list(lower = lower, upper = upper)
+}
+
 #' Optimization function using HiGHS solver
 #'
 #' Solves the integer/linear programming problem for computing the minimum test
@@ -252,10 +293,11 @@ HiGHS_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE,
 
   ## Variable bounds
   ## x's: [0, 1] for LP, binary for ILP
-  ## eta's: [-Inf, Inf]
-  ## theta: [-Inf, Inf]
-  lower_bounds <- c(rep(0, nn), rep(-Inf, H + 1))
-  upper_bounds <- c(rep(1, nn), rep(Inf, H + 1))
+  ## eta's and theta: the bounds of highs_com_bounds(), which exclude no
+  ## choice of the x's; without them HiGHS sometimes stops with an error
+  bnd <- highs_com_bounds(coeflists, weight, mb, ms_list)
+  lower_bounds <- c(rep(0, nn), bnd$lower)
+  upper_bounds <- c(rep(1, nn), bnd$upper)
 
   ## Variable types
   ## HiGHS uses: "C" = continuous, "I" = integer
