@@ -35,12 +35,12 @@ bounds_sre <- function() {
 
 ## The arguments pval_comb_block() (comb.method = 1) passes to
 ## HiGHS_sol_com() for its k, built the way pval_comb_block() builds them.
-sol_com_args <- function(d, k, exact = TRUE) {
+sol_com_args <- function(d, k, exact = TRUE, c = 0) {
   bs <- CMRSS:::summary_block(d$Z, d$block)
   weight <- CMRSS:::weight_scheme(bs, "asymp.opt")
   scores <- lapply(d$ml, function(ml) CMRSS:::score_all_blocks(bs$nb, ml))
   list(Z = d$Z, block = bs$block, weight = weight,
-       coeflists = CMRSS:::comb_matrix_block(d$Z, d$Y, bs$block, 0, d$ml, scores, bs),
+       coeflists = CMRSS:::comb_matrix_block(d$Z, d$Y, bs$block, c, d$ml, scores, bs),
        p = sum(d$Z) - k,
        ms_list = CMRSS:::mu_sigma_list(d$Z, bs$block, weight, d$ml, scores, bs),
        exact = exact, block.sum = bs)
@@ -67,11 +67,17 @@ test_that("the bounds contain every value the statistics can take", {
   expect_true(all(sweep(values, 2, bnd$lower, ">=")))
   expect_true(all(sweep(values, 2, bnd$upper, "<=")))
   ## and each eta's bounds are its smallest and largest values, as is
-  ## theta's upper bound, up to the padding against rounding. theta's lower
-  ## bound can sit below its smallest value, because the statistics can
-  ## reach their smallest values at different choices.
-  expect_equal(bnd$lower[1:H], apply(eta, 2, min), tolerance = 1e-5)
-  expect_equal(bnd$upper, unname(apply(values, 2, max)), tolerance = 1e-5)
+  ## theta's upper bound, up to the padding: a millionth of the value
+  ## against rounding, plus 0.001 so that a variable whose smallest and
+  ## largest values coincide is not nearly fixed (see the test of equal
+  ## coefficients below). theta's lower bound can sit below its smallest
+  ## value, because the statistics can reach their smallest values at
+  ## different choices.
+  pad <- function(x) 1e-3 + 1e-6 * pmax(1, abs(x))
+  lo_eta <- apply(eta, 2, min)
+  hi_all <- unname(apply(values, 2, max))
+  expect_equal(bnd$lower[1:H], lo_eta - pad(lo_eta), tolerance = 1e-12)
+  expect_equal(bnd$upper, hi_all + pad(hi_all), tolerance = 1e-12)
 })
 
 test_that("bounding the statistics changes no optimum, exact or relaxed", {
@@ -87,6 +93,37 @@ test_that("bounding the statistics changes no optimum, exact or relaxed", {
   })
   unbounded <- mapply(solve_at, grid$k, grid$exact)
   expect_equal(bounded, unbounded, tolerance = 1e-9)
+})
+
+test_that("a program whose strata's coefficients are all equal solves to its optimum, presolve on and off", {
+  skip_if_not(solver_available("highs"), "HiGHS not available")
+  ## With c = 100 every treated unit's Y - c ranks below every control, so
+  ## the treated units take the lowest ranks in their stratum whatever the
+  ## number exempted, and each stratum's coefficients are one number
+  ## repeated. Each eta's smallest and largest values then coincide. With
+  ## bounds widened only by a millionth of that value, HiGHS 1.14.0.2
+  ## returned the status "Solve error" and objective 0 on such a program
+  ## with presolve on, and "Infeasible" with it off.
+  d <- bounds_sre()
+  a <- sol_com_args(d, k = sum(d$Z), c = 100)
+  mb <- a$block.sum$mb
+  ## (equal up to rounding: each is a sum of the same scores in a different order)
+  expect_true(all(vapply(a$coeflists, function(cl)
+    all(vapply(cl, function(m) diff(range(m[2, ])) < 1e-12, TRUE)), TRUE)))
+  ## the only choice: every stratum exempts no unit (p = 0)
+  eta <- vapply(a$coeflists, function(cl)
+    sum(vapply(seq_along(cl), function(b) a$weight[b] / mb[b] * cl[[b]][2, 1], 0)), 0)
+  optimum <- max((eta - a$ms_list$mu) / a$ms_list$sigma)
+
+  real <- highs::highs_solve
+  for (presolve in c("on", "off")) {
+    local_mocked_bindings(highs_solve = function(..., control) {
+      control$presolve <- presolve
+      real(..., control = control)
+    }, .package = "highs")
+    expect_no_warning(result <- do.call(CMRSS:::HiGHS_sol_com, a))
+    expect_equal(result$obj, optimum, tolerance = 1e-9, label = paste("presolve", presolve))
+  }
 })
 
 test_that("the program that stopped HiGHS with presolve on and off solves once bounded", {

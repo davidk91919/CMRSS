@@ -985,6 +985,16 @@ com_null_dist_block_stratum <- function(Z, block, methods.list.all,
 #' @return The p-value (and test statistic) for testing the specified
 #'   null hypothesis of interest.
 #'
+#' @section When HiGHS does not reach an optimum:
+#' The p-value needs the minimum of an integer program. If HiGHS finishes
+#' without reaching an optimum, the function stops with an error that
+#' suggests \code{opt.method = "LP_highs"} (the relaxed program, whose
+#' minimum is no larger, so its p-value is at least the one the integer
+#' program would give) or
+#' \code{opt.method = "ILP_gurobi"}. A simulation that must keep going can
+#' set \code{options(CMRSS.solver_failure = "na")}; the p-value is then
+#' \code{NA}, with a warning.
+#'
 #' @examples
 #' \dontrun{
 #' # Load the electric teachers dataset

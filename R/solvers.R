@@ -109,7 +109,12 @@ highs_solve_presolve_fallback <- function(...) {
 # of the standardized upper ends. The bounds are widened by a millionth,
 # relative, so that rounding cannot cut off a choice: the program computes
 # theta's rows with 1 / sigma_h, and drop_tiny_entries() moves each
-# stratum's coefficients by at most 1e-9.
+# stratum's coefficients by at most 1e-9. They are widened by a further
+# 0.001 because when every stratum's coefficients are equal a variable's
+# lower and upper ends coincide, and HiGHS 1.14.0.2 failed on the nearly
+# fixed variables that the millionth alone left ("Solve error" with
+# objective 0 where the optimum was -3.266, or "Infeasible" with presolve
+# off). Jake chose the 0.001 on 2026-10-18.
 highs_com_bounds <- function(coeflists, weight, mb, ms_list) {
   H <- length(coeflists)
   B <- length(coeflists[[1]])
@@ -122,13 +127,46 @@ highs_com_bounds <- function(coeflists, weight, mb, ms_list) {
   }
   lower <- c(lo, max((lo - ms_list$mu) / ms_list$sigma))
   upper <- c(hi, max((hi - ms_list$mu) / ms_list$sigma))
-  lower <- lower - 1e-6 * pmax(1, abs(lower))
-  upper <- upper + 1e-6 * pmax(1, abs(upper))
+  lower <- lower - 1e-6 * pmax(1, abs(lower)) - 1e-3
+  upper <- upper + 1e-6 * pmax(1, abs(upper)) + 1e-3
   ## a bound that is not a finite number (a sigma of 0, say) leaves its
   ## variable unbounded, as CMRSS wrote it before 0.2.21
   lower[!is.finite(lower)] <- -Inf
   upper[!is.finite(upper)] <- Inf
   list(lower = lower, upper = upper)
+}
+
+# HiGHS can finish a solve without reaching an optimum and still return an
+# objective value. A stratified p-value rests on the minimum of the
+# program, so a number that is not the minimum gives a wrong p-value (an
+# objective above the minimum gives one that is too small). Through 0.2.20
+# CMRSS warned and used the number anyway. Jake decided on 2026-10-18 that
+# in ordinary use CMRSS stops and says what to try, and that a simulation,
+# which must keep going, can set options(CMRSS.solver_failure = "na") to
+# get NA, and so an NA p-value, with a warning.
+highs_objective <- function(result) {
+  if (result$status == 7) {  # 7 = kOptimal in HiGHS
+    return(result$objective_value)
+  }
+  mode <- getOption("CMRSS.solver_failure", "error")
+  if (!(identical(mode, "error") || identical(mode, "na"))) {
+    stop("options(CMRSS.solver_failure) must be \"error\" or \"na\", not ",
+         deparse(mode), ".", call. = FALSE)
+  }
+  msg <- paste0("HiGHS did not find an optimal solution (status: ",
+                result$status_message, ").")
+  if (mode == "na") {
+    warning(msg, " The objective is NA because options(CMRSS.solver_failure = \"na\") is set.",
+            call. = FALSE)
+    return(NA_real_)
+  }
+  stop(msg, " The p-value needs the minimum of the program, so CMRSS cannot",
+       " report one from this solve. Two things to try: opt.method = \"LP_highs\"",
+       " solves the relaxed program, whose minimum is no larger, so its p-value",
+       " is at least the one the integer program would give; or",
+       " opt.method = \"ILP_gurobi\" if Gurobi is",
+       " installed. In a simulation, options(CMRSS.solver_failure = \"na\")",
+       " returns an NA p-value with a warning instead of stopping.", call. = FALSE)
 }
 
 #' Optimization function using HiGHS solver
@@ -320,12 +358,8 @@ HiGHS_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE,
     maximum = FALSE  # minimize
   )
 
-  ## Check if solution was found
-  if (result$status != 7) {  # 7 = kOptimal in HiGHS
-    warning("HiGHS solver did not find optimal solution. Status: ", result$status_message)
-  }
-
-  return(list(sol = result$primal_solution, obj = result$objective_value))
+  ## A solve without an optimum stops, or gives NA (highs_objective())
+  return(list(sol = result$primal_solution, obj = highs_objective(result)))
 }
 
 
@@ -750,11 +784,8 @@ HiGHS_sol_stratum_com <- function(coeflist, p, exact = TRUE) {
     maximum = FALSE
   )
 
-  if (result$status != 7) {
-    warning("HiGHS solver did not find optimal solution. Status: ", result$status_message)
-  }
-
-  return(list(sol = result$primal_solution, obj = result$objective_value))
+  ## A solve without an optimum stops, or gives NA (highs_objective())
+  return(list(sol = result$primal_solution, obj = highs_objective(result)))
 }
 
 
