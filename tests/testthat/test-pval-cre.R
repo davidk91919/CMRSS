@@ -13,7 +13,8 @@
 # controls' xi is unconstrained.  Assigning all (n - m) controls to xi = c
 # absorbs (n - m) of RIQITE's all-units constraint slack, leaving exactly
 # k_C = k_R - (n - m) treated units constrained.  With a shared Z.perm matrix
-# the two packages return identical p-values.
+# the two packages return identical p-values, except when a null draw
+# ties the observed value (see the Wilcoxon case below).
 
 test_that("pval_comb_block matches RIQITE::pval_quantile under shared null and k translation", {
   # Skip if RIQITE is not available
@@ -79,7 +80,18 @@ test_that("pval_comb_block matches RIQITE::pval_quantile under shared null and k
     stat.null = cms_null_wil, statistic = FALSE
   )
 
-  expect_equal(as.numeric(riqite_wil), as.numeric(cmrss_wil), tolerance = 1e-6)
+  # Here three null draws have the same rank sum as the smallest rank sum
+  # under the hypothesis, 598. RIQITE's Wilcoxon scores are the ranks
+  # divided by n, which have no exact binary form, so two of the three
+  # draws come out as 11.959999999999999 against a smallest value of
+  # 11.960000000000001. RIQITE compares them with a plain >= and returns
+  # 770/1000. CMRSS counts all three
+  # (R/ties.R). Wilcoxon scores are the ranks 1 to n, so every rank sum is
+  # a whole number and the p-value can be computed exactly; CMRSS is
+  # checked against that count rather than against RIQITE.
+  rank_sum_null <- colSums((1:n) * Z.perm)
+  rank_sum_min <- min_stat(Z, Y, k_R, c_val, score = 1:n)
+  expect_identical(as.numeric(cmrss_wil), sum(rank_sum_null >= rank_sum_min) / nperm)
 
   # --- Stephenson ---
   riq_null_ste <- RIQITE::null_dist(n, m, nperm = nperm, Z.perm = Z.perm,

@@ -140,6 +140,9 @@ test_that("pval_comb_block still uses the uncorrected form", {
   # so that wiring in the correction cannot happen silently: whoever makes
   # that change has to come here and delete this test, which is the moment
   # to check that the R&R replication run has already happened.
+  # From 0.2.21 the uncorrected share is computed by share_at_least()
+  # (R/ties.R), which counts null draws tied with stat.min up to rounding
+  # but adds nothing to numerator or denominator.
   src <- deparse(CMRSS:::pval_comb_block)
-  expect_true(any(grepl("mean(stat.null >= stat.min)", src, fixed = TRUE)))
+  expect_true(any(grepl("share_at_least(stat.null, stat.min)", src, fixed = TRUE)))
 })

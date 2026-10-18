@@ -377,7 +377,9 @@ pval_cre <- function(Z, Y, k, c,
   stat.min = min_stat(Z, Y, k, c, score = score, ind.sort.treat = ind.sort.treat, method.list = method.list )
 
   # p-value #
-  pval = mean( stat.null >= stat.min )
+  # A null draw that equals stat.min up to rounding counts as at or above it
+  # (see R/ties.R); a plain >= let rounding decide and could make p too small.
+  pval = share_at_least( stat.null, stat.min )
 
   return(pval)
 }
@@ -427,9 +429,19 @@ comb_null_dist_cre = function(n, m, methods.list, Z.perm = NULL, nperm = 10^4, s
   # p = 0 on data where the same permutations gave p = 0.8.
   nperm = ncol(stat.null.mult)
 
+  # Each draw's tail share is the share of draws at or above it, counted with
+  # the rule pval_cre() uses for the observed statistic (R/ties.R), so that
+  # the observed and null shares are comparable. Before 0.2.21 this was
+  # 1 - (rank - 1) / nperm with rank() deciding near-ties by rounding, and
+  # 1 - 997/1000 is not the 3/1000 that pval_cre() computes as a count over
+  # nperm. findInterval(..., left.open = TRUE) counts the sorted draws
+  # strictly below each threshold, which gives every draw's share in
+  # O(nperm log nperm) rather than one comparison of all draws per draw.
   tail.prob = matrix(NA, nrow = H, ncol = nperm)
   for(j in 1 : H){
-    tail.prob[j, ] = 1 - (rank(stat.null.mult[j,], ties.method = "min") - 1) / nperm
+    x = stat.null.mult[j, ]
+    below = findInterval(x - tie_tolerance(x), sort(x), left.open = TRUE)
+    tail.prob[j, ] = (nperm - below) / nperm
   }
 
   result = apply(tail.prob, 2, min)
@@ -546,7 +558,8 @@ comb_p_val_cre = function(Z, Y, k, c, methods.list,
   null.dist.comb = comb_null_dist_cre(n, m, methods.list, Z.perm, nperm, stat.null.mult)
 
   min.pval = min_p_multiple_rank_sum(Z, Y, k, c, methods.list, Z.perm, nperm, stat.null.mult)
-  result = mean(null.dist.comb <= min.pval) # XL: I changed
+  # The same tie rule as for the single statistics (R/ties.R).
+  result = share_at_most(null.dist.comb, min.pval)
   return(result)
 }
 
@@ -589,6 +602,12 @@ com_conf_quant_larger_trt <- function( Z, Y, methods.list = NULL,
   null.dist.comb = comb_null_dist_cre(n, m, methods.list, Z.perm, nperm, stat.null.mult)
 
   # find threshold such that valid p-value <= alpha <===> min_pval < something <===>  -min_pval > -something #
+  # thres.minus.min.pval is -q, where q is the (floor(nperm * alpha) + 1)-th
+  # smallest null draw. comb_p_val_cre() counts draws at or below
+  # min.pval + tie_tolerance(min.pval) (R/ties.R), so it rejects iff that
+  # count is at most floor(nperm * alpha), iff q > min.pval + tolerance. The
+  # target functions below test exactly that, so the interval agrees with
+  # the p-value.
   thres.minus.min.pval = sort(-1*null.dist.comb, decreasing = TRUE)[ floor(nperm * alpha) + 1 ]
   thres = alpha
 
@@ -621,8 +640,8 @@ com_conf_quant_larger_trt <- function( Z, Y, methods.list = NULL,
       }
       ## XL: an alternative way that using minus min pval as the test statistic
       f <- function(c){
-        stat.min = -1 * min_p_multiple_rank_sum(Z, Y, k, c, methods.list, Z.perm, nperm, stat.null.mult)
-        return(stat.min - thres.minus.min.pval)
+        min.pval = min_p_multiple_rank_sum(Z, Y, k, c, methods.list, Z.perm, nperm, stat.null.mult)
+        return(-min.pval - tie_tolerance(min.pval) - thres.minus.min.pval)
       }
 
       # check whether f(-Inf) = f(c.min) > 0 #
@@ -669,8 +688,8 @@ com_conf_quant_larger_trt <- function( Z, Y, methods.list = NULL,
       }
       ## XL: an alternative way that using minus min pval as the test statistic
       f <- function(c){
-        stat.min = -1 * min_p_multiple_rank_sum(Z, Y, k, c, methods.list, Z.perm, nperm, stat.null.mult)
-        return(stat.min - thres.minus.min.pval)
+        min.pval = min_p_multiple_rank_sum(Z, Y, k, c, methods.list, Z.perm, nperm, stat.null.mult)
+        return(-min.pval - tie_tolerance(min.pval) - thres.minus.min.pval)
       }
 
       # check whether f(-Inf) = f(c.min) > 0 #

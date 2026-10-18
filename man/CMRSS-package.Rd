@@ -12,8 +12,8 @@ Randomization inference for quantiles of individual treatment effects using comb
 Useful links:
 \itemize{
   \item \url{https://bowers-illinois-edu.github.io/CMRSS/}
-  \item \url{https://github.com/bowers-illinois-edu/CMRSS}
-  \item Report bugs at \url{https://github.com/bowers-illinois-edu/CMRSS/issues}
+  \item \url{https://github.com/davidk91919/CMRSS}
+  \item Report bugs at \url{https://github.com/davidk91919/CMRSS/issues}
 }
 
 }

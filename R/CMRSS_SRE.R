@@ -1090,7 +1090,11 @@ pval_comb_block <- function(Z, Y, k, c,
     coeflists <- comb_matrix_block(Z, Y, block, c, methods.list.all, scores.list.all, block.sum)
     stat.min <- solve_optimization(Z, block, weight, coeflists, p, ms_list,
                                     exact, block.sum, solver)$obj
-    pval <- mean(stat.null >= stat.min)
+    # Null draws equal to stat.min up to rounding count as at or above it
+    # (R/ties.R): stat.min comes from an integer program and the draws from
+    # sums over permuted assignments, so equal values can differ in the last
+    # digits.
+    pval <- share_at_least(stat.null, stat.min)
 
   } else {
     # Method 2: Max across methods within each stratum first, then combine
@@ -1107,7 +1111,11 @@ pval_comb_block <- function(Z, Y, k, c,
     coeflist <- max_comb_matrix_block_stratum(Z, Y, block, c, methods.list.all,
                                               scores.list.all, block.sum = NULL, weight = weight)
     stat.min <- solve_stratum_optimization(coeflist, p, exact = exact, solver = solver)$obj
-    pval <- mean(stat.null >= stat.min)
+    # Null draws equal to stat.min up to rounding count as at or above it
+    # (R/ties.R): stat.min comes from an integer program and the draws from
+    # sums over permuted assignments, so equal values can differ in the last
+    # digits.
+    pval <- share_at_least(stat.null, stat.min)
   }
 
   if (statistic == TRUE) {
@@ -1227,6 +1235,10 @@ com_block_conf_quant_larger_trt <- function(Z, Y,
   # from null.max; using null.max then picks the wrong order statistic (with
   # 2000 draws and null.max = 10^4, alpha = 0.10 became alpha = 0.50).
   null.max <- length(stat.null)
+  # pval_comb_block() counts draws at or above stat.min - tie_tolerance(stat.min)
+  # (R/ties.R), so it rejects iff that count is at most floor(null.max * alpha),
+  # iff thres < stat.min - tolerance. The target functions below test exactly
+  # that, so the interval agrees with the p-value.
   thres <- sort(stat.null, decreasing = TRUE)[floor(null.max * alpha) + 1]
 
   Y1.max <- max(Y[Z == 1])
@@ -1258,7 +1270,7 @@ com_block_conf_quant_larger_trt <- function(Z, Y,
                                                     scores.list.all, block.sum, weight = weight)
           stat.min <- solve_stratum_optimization(coeflist, p, exact = exact, solver = solver)$obj
         }
-        return(stat.min - thres)
+        return(stat.min - tie_tolerance(stat.min) - thres)
       }
 
       tmp1 <- f(c.min)
@@ -1324,7 +1336,7 @@ com_block_conf_quant_larger_trt <- function(Z, Y,
                                                     scores.list.all, block.sum = NULL, weight = weight)
           stat.min <- solve_stratum_optimization(coeflist, p, exact = exact, solver = solver)$obj
         }
-        return(stat.min - thres)
+        return(stat.min - tie_tolerance(stat.min) - thres)
       }
 
       tmp1 <- f(c.min)
