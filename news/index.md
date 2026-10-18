@@ -1,5 +1,73 @@
 # Changelog
 
+## CMRSS 0.2.21
+
+### Fixed
+
+- A null draw that equals the smallest value of the statistic under the
+  hypothesis now counts as at or above it even when rounding puts it a
+  few digits lower. The p-value is the share of null draws at or above
+  that smallest value. CMRSS computes the smallest value by a sum over
+  the observed ranks or by an integer program, and each null draw by a
+  sum over a permuted assignment. So values that are equal in exact
+  arithmetic could differ in their last digits. When the null draw came
+  out lower it was not counted, and the p-value was too small. Two
+  numbers now count as equal when they differ by less than 1e-9 times
+  the larger of 1 and the size of the observed number.
+- CMRSS applies this rule (new file `R/ties.R`) in
+  [`pval_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_cre.md),
+  in both p-value lines of
+  [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md),
+  in the combined p-value of
+  [`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md),
+  and in the null draws’ shares in
+  [`comb_null_dist_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_null_dist_cre.md).
+  Those shares were computed as 1 - 997/1000, which is not the 3/1000
+  that
+  [`pval_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_cre.md)
+  computes for the same count. Both interval functions decide whether to
+  reject a value of c by the same rule, so each interval’s limits agree
+  with its p-values.
+- A p-value from
+  [`pval_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_cre.md)
+  or
+  [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
+  can only rise under this change, by at most the share of null draws
+  tied with the observed value. The combined p-value of
+  [`comb_p_val_cre()`](https://bowers-illinois-edu.github.io/CMRSS/reference/comb_p_val_cre.md)
+  can move either way, because the null draws’ shares it is compared
+  with change by the same rule. Tests in
+  `tests/testthat/test-tied-null-draws.R` compare CMRSS with p-values
+  and interval limits computed in whole numbers.
+- The integer program that CMRSS gives HiGHS for a stratified test now
+  has finite bounds on the variable holding each statistic and on the
+  variable holding the largest standardized statistic. The Gurobi
+  program is unchanged. Without the bounds, HiGHS 1.14.0.2 stopped with
+  the C++ error “vector::reserve” on one program in a simulation in 20
+  strata of 50 units, with presolve on and off. With them that program
+  solves under either setting. The bounds exclude no value the program’s
+  choices can produce, so no optimum changes. Each bound lies 0.001
+  beyond the smallest or largest value its variable can take. With a
+  margin of only a millionth of that value, HiGHS failed on a program
+  whose coefficients were equal within each stratum. It returned the
+  status “Solve error” and the objective 0, where the minimum was
+  -3.266.
+- When HiGHS finishes a stratified program without reaching an optimum,
+  [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
+  and
+  [`com_block_conf_quant_larger()`](https://bowers-illinois-edu.github.io/CMRSS/reference/com_block_conf_quant_larger.md)
+  now stop with an error. Through 0.2.20 CMRSS warned and used the
+  objective HiGHS returned, though that objective is not the minimum the
+  p-value needs. The error suggests two remedies.
+  `opt.method = "LP_highs"` solves the linear program in which the
+  choices need not be whole numbers. Its minimum is no larger, so its
+  p-value is at least the one the integer program would give.
+  `opt.method = "ILP_gurobi"` solves the integer program with Gurobi. A
+  simulation that must keep going can set
+  `options(CMRSS.solver_failure = "na")`.
+  [`pval_comb_block()`](https://bowers-illinois-edu.github.io/CMRSS/reference/pval_comb_block.md)
+  then returns an NA p-value and warns.
+
 ## CMRSS 0.2.20
 
 ### Fixed

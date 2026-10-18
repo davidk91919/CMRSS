@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CMRSS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,17 @@
       <small>Source: <a href="https://github.com/davidk91919/CMRSS/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.21" id="cmrss-0221">CMRSS 0.2.21<a class="anchor" aria-label="anchor" href="#cmrss-0221"></a></h2>
+<div class="section level3">
+<h3 id="fixed-0-2-21">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-2-21"></a></h3>
+<ul><li>A null draw that equals the smallest value of the statistic under the hypothesis now counts as at or above it even when rounding puts it a few digits lower. The p-value is the share of null draws at or above that smallest value. CMRSS computes the smallest value by a sum over the observed ranks or by an integer program, and each null draw by a sum over a permuted assignment. So values that are equal in exact arithmetic could differ in their last digits. When the null draw came out lower it was not counted, and the p-value was too small. Two numbers now count as equal when they differ by less than 1e-9 times the larger of 1 and the size of the observed number.</li>
+<li>CMRSS applies this rule (new file <code>R/ties.R</code>) in <code><a href="../reference/pval_cre.html">pval_cre()</a></code>, in both p-value lines of <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code>, in the combined p-value of <code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code>, and in the null draws’ shares in <code><a href="../reference/comb_null_dist_cre.html">comb_null_dist_cre()</a></code>. Those shares were computed as 1 - 997/1000, which is not the 3/1000 that <code><a href="../reference/pval_cre.html">pval_cre()</a></code> computes for the same count. Both interval functions decide whether to reject a value of c by the same rule, so each interval’s limits agree with its p-values.</li>
+<li>A p-value from <code><a href="../reference/pval_cre.html">pval_cre()</a></code> or <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code> can only rise under this change, by at most the share of null draws tied with the observed value. The combined p-value of <code><a href="../reference/comb_p_val_cre.html">comb_p_val_cre()</a></code> can move either way, because the null draws’ shares it is compared with change by the same rule. Tests in <code>tests/testthat/test-tied-null-draws.R</code> compare CMRSS with p-values and interval limits computed in whole numbers.</li>
+<li>The integer program that CMRSS gives HiGHS for a stratified test now has finite bounds on the variable holding each statistic and on the variable holding the largest standardized statistic. The Gurobi program is unchanged. Without the bounds, HiGHS 1.14.0.2 stopped with the C++ error “vector::reserve” on one program in a simulation in 20 strata of 50 units, with presolve on and off. With them that program solves under either setting. The bounds exclude no value the program’s choices can produce, so no optimum changes. Each bound lies 0.001 beyond the smallest or largest value its variable can take. With a margin of only a millionth of that value, HiGHS failed on a program whose coefficients were equal within each stratum. It returned the status “Solve error” and the objective 0, where the minimum was -3.266.</li>
+<li>When HiGHS finishes a stratified program without reaching an optimum, <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code> and <code><a href="../reference/com_block_conf_quant_larger.html">com_block_conf_quant_larger()</a></code> now stop with an error. Through 0.2.20 CMRSS warned and used the objective HiGHS returned, though that objective is not the minimum the p-value needs. The error suggests two remedies. <code>opt.method = "LP_highs"</code> solves the linear program in which the choices need not be whole numbers. Its minimum is no larger, so its p-value is at least the one the integer program would give. <code>opt.method = "ILP_gurobi"</code> solves the integer program with Gurobi. A simulation that must keep going can set <code>options(CMRSS.solver_failure = "na")</code>. <code><a href="../reference/pval_comb_block.html">pval_comb_block()</a></code> then returns an NA p-value and warns.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.20" id="cmrss-0220">CMRSS 0.2.20<a class="anchor" aria-label="anchor" href="#cmrss-0220"></a></h2>
 <div class="section level3">

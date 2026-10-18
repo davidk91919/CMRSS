@@ -151,7 +151,7 @@ b <- harmed$bounds
 first <- b[b$lower > 0, ][1, ]
 first
 #>       k proportion lower
-#> 194 194       0.97   0.1
+#> 194 194       0.97  0.05
 ```
 
 There k = 194, so the count is $`200 - 194 + 1 = 7`$ harmed units.

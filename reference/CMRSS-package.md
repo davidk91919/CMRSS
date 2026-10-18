@@ -12,9 +12,9 @@ Useful links:
 
 - <https://bowers-illinois-edu.github.io/CMRSS/>
 
-- <https://github.com/bowers-illinois-edu/CMRSS>
+- <https://github.com/davidk91919/CMRSS>
 
-- Report bugs at <https://github.com/bowers-illinois-edu/CMRSS/issues>
+- Report bugs at <https://github.com/davidk91919/CMRSS/issues>
 
 ## Author
 
