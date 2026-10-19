@@ -72,22 +72,56 @@ drop_tiny_entries <- function(i, j, x, tiny = 1e-9) {
 # x86-64, highs 1.14.0.2) it did so in 16 of 180,000 replications of a
 # stratified simulation, and the program that failed reached the same
 # optimum with presolve off there as with presolve on elsewhere. So a solve
-# that stops with an error is run once more with presolve off. The second
-# solve runs only after an error, so no result that HiGHS returned before is
-# changed; an error from both solves is raised with both messages.
-highs_solve_presolve_fallback <- function(...) {
-  first <- tryCatch(
-    highs::highs_solve(..., control = highs::highs_control(log_to_console = FALSE)),
-    error = function(e) e
+# that fails is run once more with presolve off.
+#
+# One program in 20 strata of 50 units failed with presolve on and off, and
+# solved under either setting once the variables holding the statistics had
+# finite bounds (highs_com_bounds()). CMRSS 0.2.21 gave every program those
+# bounds, but on other programs they led HiGHS to return, with the status
+# "optimal", a solution that is not the minimum: 0.9009 where the minimum
+# is 0.2546 (tests/testthat/test-highs-solve-order.R). A minimum that is too
+# large gives a p-value that is too small. So the bounded program, when
+# there is one (`bounded`, a function that returns its lower and upper
+# bounds), is solved only after both unbounded solves fail, again with
+# presolve on and then off. A program that solved under 0.2.20 therefore
+# gets the same answer.
+#
+# A solve fails when it stops with an error or ends with a status other than
+# optimal. When every solve fails, the last result that came back without
+# an error goes to highs_objective(), which stops or gives NA; when every
+# solve stopped with an error, the errors are raised together.
+highs_solve_presolve_fallback <- function(..., lower, upper, bounded = NULL) {
+  attempts <- list(
+    list(what = "presolve on", lower = lower, upper = upper, presolve = NULL),
+    list(what = "presolve off", lower = lower, upper = upper, presolve = "off")
   )
-  if (!inherits(first, "error")) return(first)
-  second <- tryCatch(
-    highs::highs_solve(..., control = highs::highs_control(log_to_console = FALSE, presolve = "off")),
-    error = function(e) e
-  )
-  if (!inherits(second, "error")) return(second)
-  stop("HiGHS failed with presolve on (", conditionMessage(first),
-       ") and again with presolve off (", conditionMessage(second), ")", call. = FALSE)
+  if (!is.null(bounded)) {
+    bnd <- bounded()
+    attempts <- c(attempts, list(
+      list(what = "bounded, presolve on", lower = bnd$lower, upper = bnd$upper, presolve = NULL),
+      list(what = "bounded, presolve off", lower = bnd$lower, upper = bnd$upper, presolve = "off")
+    ))
+  }
+  failures <- character(0)
+  returned <- NULL
+  for (a in attempts) {
+    control <- if (is.null(a$presolve)) {
+      highs::highs_control(log_to_console = FALSE)
+    } else {
+      highs::highs_control(log_to_console = FALSE, presolve = a$presolve)
+    }
+    result <- tryCatch(highs::highs_solve(..., lower = a$lower, upper = a$upper, control = control),
+                       error = function(e) e)
+    if (inherits(result, "error")) {
+      failures <- c(failures, paste0(a$what, " (", conditionMessage(result), ")"))
+      next
+    }
+    if (result$status == 7) return(result)  # 7 = kOptimal in HiGHS
+    failures <- c(failures, paste0(a$what, " (status: ", result$status_message, ")"))
+    returned <- result
+  }
+  if (!is.null(returned)) return(returned)
+  stop("HiGHS failed on every solve: ", paste(failures, collapse = "; "), call. = FALSE)
 }
 
 # Finite bounds for the variables of HiGHS_sol_com()'s program that hold
@@ -96,7 +130,9 @@ highs_solve_presolve_fallback <- function(...) {
 # C++ error ("vector::reserve" on Linux, "vector" on macOS); in a
 # simulation in 20 strata of 50 units one program failed with presolve on
 # and off, and it solved with either once these variables had bounds
-# (tests/testthat/test-highs-bounded-statistics.R).
+# (tests/testthat/test-highs-bounded-statistics.R). Since 0.2.22 the
+# bounded program is solved only after the unbounded one fails
+# (highs_solve_presolve_fallback()).
 #
 # The bounds exclude no choice of the x's, so no optimum changes. The
 # program sets one x to 1 in each stratum (in the relaxation, the x's of a
@@ -331,11 +367,15 @@ HiGHS_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE,
 
   ## Variable bounds
   ## x's: [0, 1] for LP, binary for ILP
-  ## eta's and theta: the bounds of highs_com_bounds(), which exclude no
-  ## choice of the x's; without them HiGHS sometimes stops with an error
-  bnd <- highs_com_bounds(coeflists, weight, mb, ms_list)
-  lower_bounds <- c(rep(0, nn), bnd$lower)
-  upper_bounds <- c(rep(1, nn), bnd$upper)
+  ## eta's and theta: none, as through 0.2.20. The bounds of
+  ## highs_com_bounds(), which exclude no choice of the x's, are used only
+  ## if HiGHS fails without them (highs_solve_presolve_fallback()).
+  lower_bounds <- c(rep(0, nn), rep(-Inf, H + 1))
+  upper_bounds <- c(rep(1, nn), rep(Inf, H + 1))
+  bounded <- function() {
+    bnd <- highs_com_bounds(coeflists, weight, mb, ms_list)
+    list(lower = c(rep(0, nn), bnd$lower), upper = c(rep(1, nn), bnd$upper))
+  }
 
   ## Variable types
   ## HiGHS uses: "C" = continuous, "I" = integer
@@ -355,7 +395,8 @@ HiGHS_sol_com <- function(Z, block, weight, coeflists, p, ms_list, exact = TRUE,
     lhs = lhs,
     rhs = rhs,
     types = types,
-    maximum = FALSE  # minimize
+    maximum = FALSE,  # minimize
+    bounded = bounded
   )
 
   ## A solve without an optimum stops, or gives NA (highs_objective())

@@ -20,6 +20,24 @@
 # the x's is excluded, so the optimum cannot change. The tests check this
 # against every choice in a small program, against the optimum of the same
 # programs without bounds, and on the program that failed.
+#
+# From 0.2.22 HiGHS solves the bounded program only after the unbounded
+# one fails with presolve on and off (test-highs-solve-order.R), because
+# on other programs the bounds led HiGHS to report a solution that is not
+# the minimum as optimal. The tests below that solve make the unbounded
+# solves fail on purpose, so that the bounded program is the one solved.
+
+## A stand-in for highs::highs_solve() that stops on the unbounded program
+## (theta, the last variable, has a finite lower bound only in the bounded
+## one) and solves the bounded program with `presolve`, or HiGHS's default.
+bounded_only <- function(presolve = NULL) {
+  real <- highs::highs_solve
+  function(..., lower, control) {
+    if (!is.finite(lower[length(lower)])) stop("unbounded program refused by the test")
+    if (!is.null(presolve)) control$presolve <- presolve
+    real(..., lower = lower, control = control)
+  }
+}
 
 ## A stratified experiment small enough to list every choice the program
 ## can make: 4 strata of 8 units with 4 treated in each, so 5 options per
@@ -85,13 +103,10 @@ test_that("bounding the statistics changes no optimum, exact or relaxed", {
   d <- bounds_sre()
   solve_at <- function(k, exact) do.call(CMRSS:::HiGHS_sol_com, sol_com_args(d, k, exact))$obj
   grid <- expand.grid(k = c(1, 4, 8, 12, 16), exact = c(TRUE, FALSE))
-  bounded <- mapply(solve_at, grid$k, grid$exact)
-  ## the same programs with the bounds removed, as CMRSS 0.2.20 wrote them
-  local_mocked_bindings(highs_com_bounds = function(coeflists, ...) {
-    H <- length(coeflists)
-    list(lower = rep(-Inf, H + 1), upper = rep(Inf, H + 1))
-  })
   unbounded <- mapply(solve_at, grid$k, grid$exact)
+  ## the same programs solved with the bounds
+  local_mocked_bindings(highs_solve = bounded_only(), .package = "highs")
+  bounded <- mapply(solve_at, grid$k, grid$exact)
   expect_equal(bounded, unbounded, tolerance = 1e-9)
 })
 
@@ -115,12 +130,8 @@ test_that("a program whose strata's coefficients are all equal solves to its opt
     sum(vapply(seq_along(cl), function(b) a$weight[b] / mb[b] * cl[[b]][2, 1], 0)), 0)
   optimum <- max((eta - a$ms_list$mu) / a$ms_list$sigma)
 
-  real <- highs::highs_solve
   for (presolve in c("on", "off")) {
-    local_mocked_bindings(highs_solve = function(..., control) {
-      control$presolve <- presolve
-      real(..., control = control)
-    }, .package = "highs")
+    local_mocked_bindings(highs_solve = bounded_only(presolve), .package = "highs")
     expect_no_warning(result <- do.call(CMRSS:::HiGHS_sol_com, a))
     expect_equal(result$obj, optimum, tolerance = 1e-9, label = paste("presolve", presolve))
   }
@@ -132,14 +143,10 @@ test_that("the program that stopped HiGHS with presolve on and off solves once b
   ## strata of 50 where the top fifth on a covariate gains: k = 450, five
   ## polynomial degrees, saved on the cluster. There HiGHS stopped on the
   ## unbounded program under every setting tried; on macOS it stops with
-  ## presolve off. HiGHS is made to run with presolve off here, so that
-  ## without the bounds the test fails on macOS too.
+  ## presolve off. Here the unbounded solves are made to fail, as on the
+  ## cluster, and the bounded program is solved with presolve off.
   a <- readRDS(test_path("fixtures", "highs_unbounded_failure.rds"))
-  real <- highs::highs_solve
-  local_mocked_bindings(highs_solve = function(..., control) {
-    control$presolve <- "off"
-    real(..., control = control)
-  }, .package = "highs")
+  local_mocked_bindings(highs_solve = bounded_only("off"), .package = "highs")
   expect_no_warning(result <- do.call(CMRSS:::HiGHS_sol_com, a))
   ## the optimum HiGHS reaches on the unbounded program with presolve on
   expect_equal(result$obj, 1.19090017031, tolerance = 1e-9)
