@@ -1,5 +1,38 @@
 # Changelog
 
+## CMRSS 0.2.22
+
+### Fixed
+
+- CMRSS 0.2.21 gave HiGHS finite bounds on the variable holding each
+  statistic and on the variable holding the largest standardized
+  statistic, in every program of the combined stratified test
+  (`comb.method = 1`). On some programs those bounds led HiGHS 1.14.0.2
+  to return, with the status “optimal”, a value of the combined
+  statistic that is not the smallest value the hypothesis allows. In
+  replication 1690 of a simulation in 20 strata of 50 units
+  (combined_stephenson_tests, the cell where the gap between strata
+  widens) that smallest value is 0.2546. With the bounds HiGHS returned
+  0.9009, and the p-value fell from 0.5420, the value Gurobi gives, to
+  0.2830. A smallest value that comes out too large gives a p-value that
+  is too small. Of the 6,120,000 p-values in the 18 cells of that
+  design, 13 were more than 10 of the 2000 null draws below Gurobi’s.
+- A HiGHS solve now counts as failed when it stops with an error or ends
+  with a status other than optimal. HiGHS solves a stratified program
+  first as CMRSS 0.2.20 did: without the bounds, with presolve on and
+  then with presolve off. Only when both fail does it solve the combined
+  program with the bounds, with presolve on and then off. The first two
+  solves are 0.2.20’s, so a program that 0.2.20 solved to an optimum
+  gets 0.2.20’s answer. The program for which the bounds were added in
+  0.2.21 (replication 5541 of the cell where the top fifth on a
+  covariate gains), which failed with presolve on and off without them,
+  still solves. Tests in `tests/testthat/test-highs-solve-order.R` check
+  the order of the solves and the program of replication 1690.
+- When every solve fails, CMRSS stops with an error that lists each
+  solve and why it failed. A simulation that sets
+  `options(CMRSS.solver_failure = "na")`, added in 0.2.21, gets an `NA`
+  p-value with a warning instead.
+
 ## CMRSS 0.2.21
 
 ### Fixed

@@ -116,13 +116,17 @@ hypothesis of interest.
 
 ## When HiGHS does not reach an optimum
 
-The p-value needs the minimum of an integer program. If HiGHS finishes
-without reaching an optimum, the function stops with an error that
-suggests `opt.method = "LP_highs"` (the relaxed program, whose minimum
-is no larger, so its p-value is at least the one the integer program
-would give) or `opt.method = "ILP_gurobi"`. A simulation that must keep
-going can set `options(CMRSS.solver_failure = "na")`; the p-value is
-then `NA`, with a warning.
+The p-value needs the minimum of an integer program. HiGHS solves it
+first with presolve on and, if that stops with an error or without an
+optimum, with presolve off. For the combined program (`comb.method = 1`)
+it then solves the program with finite bounds on the statistics, with
+presolve on and then off. If no solve reaches an optimum, the function
+stops with an error that suggests `opt.method = "LP_highs"` (the relaxed
+program, whose minimum is no larger, so its p-value is at least the one
+the integer program would give) or `opt.method = "ILP_gurobi"`. A
+simulation that must keep going can set
+`options(CMRSS.solver_failure = "na")`; the p-value is then `NA`, with a
+warning.
 
 ## Examples
 
