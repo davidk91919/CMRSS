@@ -13,7 +13,7 @@
   replication 1690 of a simulation in 20 strata of 50 units
   (combined_stephenson_tests, the cell where the gap between strata
   widens) that smallest value is 0.2546. With the bounds HiGHS returned
-  0.9009, and the p-value fell from 0.5420, the value Gurobi gives, to
+  0.9009. The p-value fell from 0.5420, the value Gurobi gives, to
   0.2830. A smallest value that comes out too large gives a p-value that
   is too small. Of the 6,120,000 p-values in the 18 cells of that
   design, 13 were more than 10 of the 2000 null draws below Gurobi’s.
