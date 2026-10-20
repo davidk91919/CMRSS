@@ -18,7 +18,212 @@ CMRSS 0.2.10 on `main`, the renumbering of the branch to 0.3.0 after both
 had claimed 0.2.10, the merge of `main` into the branch, the `both` remote
 that pushes to the fork and to David's repo in one command, and the fact
 that the paper now installs CMRSS from David's account rather than from
-the fork. Read top to bottom.
+the fork. Updated 2026-10-20 to record CMRSS 0.2.19 to 0.2.22, written
+for the regret study's runs on the Campus Cluster. Read top to bottom.
+
+## TL;DR for the next session (2026-10-20 onward)
+
+This section covers CMRSS 0.2.19 to 0.2.22, written between 2026-10-14
+and 2026-10-20, partly on the laptop and partly on koelsch. Everything
+below it is older and still accurate except where this section says
+otherwise. `KOELSCH_HANDOFF_2026-10-18.md` moved the work from the laptop to
+koelsch on 2026-10-18. This section supersedes it.
+
+### Why these versions exist
+
+The regret study in combined_stephenson_tests
+(`code/simulations/zeta_regret/`) runs `pval_comb_block()` with HiGHS on
+the Illinois Campus Cluster. Four problems turned up in that run, and
+each version fixes one of them.
+
+    version  commit   problem
+    0.2.19   751d829  Stephenson scores overflow to Inf when s is large
+    0.2.20   abcf3a4  HiGHS presolve stops with a C++ error on some programs
+    0.2.21   9a1b28a, one program fails with presolve on and off; separately,
+             3d2c550, rounding decides ties between null draws and the
+             16a7a2a  observed statistic
+    0.2.22   1dbaf3b, the 0.2.21 bounds give a wrong "optimal" answer on
+             0146cd5  other programs
+
+### 0.2.19: Stephenson scores divided by the top score
+
+choose(r - 1, s - 1) can exceed the largest double, about 1e308. With s = 500
+that happens from n = 1,032 on, and every p-value came back NA. Scores
+are now computed on the log scale and divided by the top unit's score,
+so they run from 0 to 1, unless a method sets `divide_by_top = FALSE`.
+Without strata no p-value changes. With strata of unequal size the test
+changes, because each stratum's scores are divided by a different number.
+
+### 0.2.20: a second HiGHS solve with presolve off
+
+Presolve is the pass in which HiGHS simplifies a program before solving
+it. On the cluster (Linux, x86-64, highs 1.14.0.2) it stopped with the C++
+error "vector::reserve" in 16 of 180,000 replications in 20 strata of 50
+units. A solve that stops with an error is now run again with presolve
+off. No p-value that CMRSS returned before changes.
+
+### 0.2.21: the tie rule, the bounds, and stopping on a failed solve
+
+0.2.21 made three changes, each in its own commit.
+
+- `9a1b28a` and `16a7a2a`: task 89 of the regret study (20 strata of 50,
+  pattern 17, "the top fifth on a covariate gains") stopped with the C++
+  error with presolve on and off, at replication 5541. With finite bounds
+  on the variables that hold each statistic (eta_h) and their largest
+  standardized value (theta), that program solves.
+  `highs_com_bounds()` in `R/solvers.R` computes the bounds: each eta_h
+  lies between the sum over strata of each stratum's smallest coefficient
+  and the sum of its largest. Each bound is widened by 1e-6 relative and
+  then by 0.001 more, because when a stratum's coefficients are all equal
+  the two ends coincide and HiGHS failed on the nearly fixed variables.
+  Jake chose the 0.001 on 2026-10-18.
+- `3d2c550`: the tie rule, new file `R/ties.R`. The p-value is the share
+  of null draws at or above the smallest value of the statistic under the
+  hypothesis. That smallest value comes from a sum over the observed ranks
+  or from an integer program. Each null draw comes from a sum over a
+  permuted assignment. So values equal in exact arithmetic could differ in
+  their last digits, and a plain `>=` left out a draw that came out lower,
+  which made the p-value too small. Two
+  numbers now count as equal when they differ by less than
+  1e-9 * max(1, abs(observed number)). Jake chose that margin, not 1e-7,
+  and one rule for every place below, on 2026-10-18:
+  `pval_cre()`, both p-value lines of `pval_comb_block()`, the combined
+  p-value of `comb_p_val_cre()`, the null draws' tail shares in
+  `comb_null_dist_cre()` (which were 1 - 997/1000 where `pval_cre()`
+  computes 3/1000), and, in both interval functions, the function whose
+  root is a confidence limit. That last change makes each interval exclude
+  a value of c exactly when the p-value at c is at or below alpha. A p-value from
+  `pval_cre()` or `pval_comb_block()` can only rise, by at most the share
+  of draws tied with the observed value. The combined p-value of
+  `comb_p_val_cre()` can move either way.
+- `16a7a2a` also changes what happens when HiGHS ends without an optimum.
+  Through 0.2.20, `HiGHS_sol_com()` and `HiGHS_sol_stratum_com()` warned
+  and used the objective anyway. Now `highs_objective()` stops with an
+  error that suggests `opt.method = "LP_highs"` or `"ILP_gurobi"`. A
+  simulation can set `options(CMRSS.solver_failure = "na")` to get an NA
+  p-value with a warning. Jake decided this on 2026-10-18. The Gurobi
+  functions do not check Gurobi's status, and 0.2.21 leaves them unchanged.
+
+### 0.2.22: the bounds only after the unbounded solves fail
+
+With the 0.2.21 bounds on every program, HiGHS returned with the status
+"optimal" values that are not the minimum. In replication 1690 of the cell
+in 20 strata of 50 where the gap between strata widens, HiGHS returned
+0.9009 with the bounds and 0.2546 without them. The p-value fell from
+0.5420, the value Gurobi gives, to 0.2830. A minimum that is too large
+gives a p-value that is too small. Of the 6,120,000 p-values in the 18
+cells of that design, 13 fell more than 10 of the 2000 null draws below
+Gurobi's.
+
+`highs_solve_presolve_fallback()` now tries up to four solves of the
+combined program (`comb.method = 1`), in this order, and returns the first
+that reaches an optimum:
+
+    1. no bounds, presolve on      (0.2.20's first solve)
+    2. no bounds, presolve off     (0.2.20's second solve)
+    3. bounds, presolve on
+    4. bounds, presolve off
+
+A solve fails when it stops with an error or ends with a status other
+than optimal. So a program that 0.2.20 solved to an optimum gets 0.2.20's
+answer, and the program of replication 5541 still solves, at solve 3. When
+all four fail, CMRSS stops with an error that lists each solve and why it
+failed, or gives NA under `CMRSS.solver_failure = "na"`. The
+within-stratum program (`comb.method = 2`, `HiGHS_sol_stratum_com()`) has
+no bounded version, so it gets solves 1 and 2 only.
+
+### Two existing tests changed
+
+- `test-pval-cre.R` compared `pval_comb_block()` with RIQITE for Wilcoxon
+  scores to 1e-6. That is the failure at `test-pval-cre.R:82` of issues
+  #12 and #16. RIQITE's scores are ranks divided by n, so two of three
+  null draws tied with the smallest rank sum, 598, came out as
+  11.959999999999999 against 11.960000000000001. RIQITE compares with a
+  plain `>=` and returns 770/1000. CMRSS now counts all three draws. The test
+  now checks CMRSS against the count in whole numbers,
+  `sum(rank_sum_null >= rank_sum_min) / nperm`, instead of against RIQITE.
+  R-CMD-check on David's repository passed for `1dbaf3b` (0.2.22, run
+  39275631147, 2026-10-19), so #12 and #16 can be closed. On 2026-10-20
+  both were still open.
+- `test-perm-pvalue-correction.R` holds a test that fails if someone adds
+  the Phipson and Smyth correction (PLAN item 4A), (1 + count) / (1 +
+  number of draws), without revisiting it. That test looked for the text
+  `mean(stat.null >= stat.min)`. It now looks for
+  `share_at_least(stat.null, stat.min)`. The tie rule adds nothing to the
+  numerator or the denominator, so item 4A is still open.
+
+### New tests
+
+    test-tied-null-draws.R          7 tests: p-values and interval limits
+                                    against counts in whole numbers
+    test-highs-bounded-statistics.R 4 tests: the bounds contain every value,
+                                    change no optimum, and solve the saved
+                                    program (fixture highs_unbounded_failure.rds)
+    test-solver-failure.R           4 tests: the error, the "na" option
+    test-highs-solve-order.R        5 tests: the order of the four solves and
+                                    the program of replication 1690
+                                    (fixture highs_wrong_optimum.rds)
+
+### Where the repositories stand, 2026-10-20
+
+`davidk91919/CMRSS` and `bowers-illinois-edu/CMRSS` are both at `0146cd5`
+(0.2.22). The koelsch session of 2026-10-18 to 2026-10-19 pushed 0.2.21
+and 0.2.22. On 2026-10-20 Jake said that changes go to David's repository
+by direct push, not by pull request, because the simulations on koelsch,
+the laptop and the cluster install CMRSS from it.
+
+Two facts matter when pushing from koelsch. First, `git fetch` over ssh fails
+there when the tmux session's ssh agent is gone ("Permission denied
+(publickey)"), and the remote-tracking branches then stay stale: on
+2026-10-20 `origin/main` still read `abcf3a4` when GitHub was at
+`0146cd5`. Check with
+`git ls-remote https://github.com/davidk91919/CMRSS.git main`. Second,
+`gh` is logged in through `GH_TOKEN`, so push over https:
+
+    git -c credential.helper='!gh auth git-credential' push https://github.com/davidk91919/CMRSS.git main
+    git -c credential.helper='!gh auth git-credential' push https://github.com/bowers-illinois-edu/CMRSS.git main
+
+### Test status at 0.2.22
+
+`devtools::test()` on koelsch, 2026-10-20, with the conda R
+`mambaR461` (`~/miniforge3/envs/mambaR461/bin`, which is not on the
+default PATH): 0 failures, 0 errors, 9 skips. Four skips are the
+unwritten `perm_pvalue()` (PLAN item 4A). Five need Gurobi, and that R
+does not have it. So the HiGHS-against-Gurobi checks in `test-solvers.R`
+did not run here. `devtools::check()` on koelsch, 2026-10-20, with the vignette
+built: 0 errors, 0 warnings, 0 notes.
+
+### What has been done in the paper repository
+
+The koelsch checkout `~/repos/combined_stephenson_tests_koelsch` holds
+this work, and its `HANDOFF_koelsch_2026-10-20.md` has the numbers.
+`renv.lock` names CMRSS 0.2.22 (`5e34c39`), and `cluster_env.sh` runs the
+image `jake_cluster-0.3p-5e34c39.sif` (`0c6cea5`). All 114 cells of the
+rules study were rerun with 0.2.22 on the Campus Cluster with HiGHS, in
+`ranks/rules_highs_0222` under
+`/projects/illinois/las/pol/jwbowers/repos/combined_stephenson_tests/data/simulations/zeta_regret/`.
+None has a missing p-value. Under 0.2.22 no stratified p-value is more
+than 9 of 2000 null draws from Gurobi's. On 2026-10-20 the 114 files were
+copied to `data/simulations/zeta_regret/ranks/rules_highs_0222` in the
+koelsch checkout, and their md5 sums match the cluster's.
+
+### Next, in order (from the paper repository's koelsch handoff)
+
+1. Ask Jake the order of the next steps before drafting the memo.
+2. Copy `ranks/rules_highs_0222` to the laptop.
+3. Recompute Figure 1 and the completely randomized application with
+   0.2.22.
+4. Write the note in `Memos/xinran_applications_2026-10/memo.qmd` from
+   those numbers. Jake reads it and sends it to Xinran.
+5. Update the timing table in README section 8.8 of the regret study.
+6. Decide whether `run_ranks_rules.R` sets
+   `options(CMRSS.solver_failure = "na")`.
+7. Fetch the CMRSS commits into the laptop's copy of CMRSS.
+
+`~/repos/combined_stephenson_tests` on koelsch (at `dbc23fa`) holds
+koelsch's Gurobi run with CMRSS 0.2.19, in `ranks/rules`; treat it as
+read only. The run that lazy-loaded CMRSS from its renv library (PID
+1823983) had ended by 2026-10-20.
 
 ## TL;DR for the next session (2026-10-05 onward)
 
