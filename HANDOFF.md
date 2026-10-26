@@ -1,5 +1,5 @@
 ---
-next: Jake chooses which open issue on davidk91919/CMRSS to take up next (#5 to #11, #15). The laptop copy reached 0.2.22 on 2026-10-26, and #12 and #16 were closed on 2026-10-20.
+next: Jake chooses which open issue on davidk91919/CMRSS to take up next (#5 to #11, #15). The laptop's checkout has been at 0.2.22 since 2026-10-26, and Jake closed #12 and #16 on 2026-10-20.
 kind: code
 project_kind: R package
 milestone: CMRSS version released with the AOAS resubmission of the combined Stephenson paper
@@ -203,12 +203,15 @@ does not have it. So the HiGHS-against-Gurobi checks in `test-solvers.R`
 did not run here. `devtools::check()` on koelsch, 2026-10-20, with the vignette
 built: 0 errors, 0 warnings, 0 notes.
 
-`devtools::test()` on the laptop, 2026-10-26, at `5259fe2` with R 4.6.1,
-HiGHS, and Gurobi: 0 failures, 712 passes, 4 skips, all four for the
-unwritten `perm_pvalue()`. Gurobi is installed on the laptop, so the
-Gurobi-gated tests that koelsch skipped ran here, including the
-HiGHS-against-Gurobi checks in `test-solvers.R`. The two warnings are the
-tied-outcome warning of issue #5, raised by the `electric_teachers` tests.
+On 2026-10-26, `devtools::test()` on the laptop, at `5259fe2` with R
+4.6.1, HiGHS, and Gurobi, gave 0 failures, 712 passes, 4 skips, and 2
+warnings. All four skips are tests of the unwritten `perm_pvalue()`.
+Gurobi is installed on the laptop, so the tests that run only when Gurobi
+is installed ran there, and none failed. They include the
+HiGHS-against-Gurobi checks in `test-solvers.R` that koelsch skipped. Both
+warnings come from tests on the `electric_teachers` data, where 29 of the
+233 teachers share the outcome value 10. CMRSS warns there that it ranks
+tied outcomes by their order in the data. Issue #5 tracks that behavior.
 
 ### What has been done in the paper repository
 
@@ -235,8 +238,9 @@ koelsch checkout, and their md5 sums match the cluster's.
 5. Update the timing table in README section 8.8 of the regret study.
 6. Decide whether `run_ranks_rules.R` sets
    `options(CMRSS.solver_failure = "na")`.
-7. Fetch the CMRSS commits into the laptop's copy of CMRSS. Done
-   2026-10-26: the laptop's `main` was fast-forwarded to `5259fe2`.
+7. Fetch the CMRSS commits into the laptop's copy of CMRSS. This step
+   was done on 2026-10-26, when the laptop's `main` was fast-forwarded to
+   `5259fe2`.
 
 `~/repos/combined_stephenson_tests` on koelsch (at `dbc23fa`) holds
 koelsch's Gurobi run with CMRSS 0.2.19, in `ranks/rules`; treat it as
