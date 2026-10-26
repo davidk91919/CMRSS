@@ -1,3 +1,13 @@
+---
+next: Jake chooses which open issue on davidk91919/CMRSS to take up next (#5 to #11, #15). The laptop copy reached 0.2.22 on 2026-10-26, and #12 and #16 were closed on 2026-10-20.
+kind: code
+project_kind: R package
+milestone: CMRSS version released with the AOAS resubmission of the combined Stephenson paper
+sessions_to_milestone: 3
+blocked_on:
+estimated_by: backfill 2026-10-25
+---
+
 # HANDOFF: CMRSS paper-vs-code audit
 
 Originally written 2026-04-26 after a paper-vs-code audit. Updated
@@ -193,6 +203,13 @@ does not have it. So the HiGHS-against-Gurobi checks in `test-solvers.R`
 did not run here. `devtools::check()` on koelsch, 2026-10-20, with the vignette
 built: 0 errors, 0 warnings, 0 notes.
 
+`devtools::test()` on the laptop, 2026-10-26, at `5259fe2` with R 4.6.1,
+HiGHS, and Gurobi: 0 failures, 712 passes, 4 skips, all four for the
+unwritten `perm_pvalue()`. Gurobi is installed on the laptop, so the
+Gurobi-gated tests that koelsch skipped ran here, including the
+HiGHS-against-Gurobi checks in `test-solvers.R`. The two warnings are the
+tied-outcome warning of issue #5, raised by the `electric_teachers` tests.
+
 ### What has been done in the paper repository
 
 The koelsch checkout `~/repos/combined_stephenson_tests_koelsch` holds
@@ -218,7 +235,8 @@ koelsch checkout, and their md5 sums match the cluster's.
 5. Update the timing table in README section 8.8 of the regret study.
 6. Decide whether `run_ranks_rules.R` sets
    `options(CMRSS.solver_failure = "na")`.
-7. Fetch the CMRSS commits into the laptop's copy of CMRSS.
+7. Fetch the CMRSS commits into the laptop's copy of CMRSS. Done
+   2026-10-26: the laptop's `main` was fast-forwarded to `5259fe2`.
 
 `~/repos/combined_stephenson_tests` on koelsch (at `dbc23fa`) holds
 koelsch's Gurobi run with CMRSS 0.2.19, in `ranks/rules`; treat it as
